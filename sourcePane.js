@@ -38,10 +38,12 @@ module.exports = {
     }
 
     var contentType = mime.lookup(newInstance.uri)
-    if (!contentType || !(contentType.startsWith('text') || contentType.includes('xml'))) {
-      let msg = 'A new text file has to have an file extension like .txt .ttl etc.'
-      alert(msg)
-      throw new Error(msg)
+    if (!newInstance.uri.endsWith('acl')) { // special case allow .acl files
+      if (!contentType || !(contentType.startsWith('text') || contentType.includes('xml'))) {
+        let msg = 'A new text file has to have an file extension like .txt .ttl etc.'
+        alert(msg)
+        throw new Error(msg)
+      }
     }
 
     return new Promise(function (resolve, reject) {
@@ -129,16 +131,16 @@ module.exports = {
     * @param {Integer} caretPos - the poisition starting at zero
     * @credit  https://stackoverflow.com/questions/512528/set-keyboard-caret-position-in-html-textbox
     */
-    function setCaretPosition(elem, caretPos) {
-      if(elem != null) {
-        if(elem.createTextRange) {
-          var range = elem.createTextRange();
-          range.move('character', caretPos);
-          range.select();
+    function setCaretPosition (elem, caretPos) {
+      if (elem != null) {
+        if (elem.createTextRange) {
+          var range = elem.createTextRange()
+          range.move('character', caretPos)
+          range.select()
         } else {
-          elem.focus();
-          if(elem.selectionStart) {
-              elem.setSelectionRange(caretPos, caretPos);
+          elem.focus()
+          if (elem.selectionStart) {
+            elem.setSelectionRange(caretPos, caretPos)
           }
         }
       }
@@ -151,9 +153,10 @@ module.exports = {
         $rdf.parse(data, kb, base, contentType)
       } catch (e) {
         statusRow.appendChild(UI.widgets.errorMessageBlock(dom, e))
-        for (let cause = e; cause = cause.cause; cause) {
+        for (let cause = e; cause.cause; cause = cause.cause) {
           if (cause.characterInFile) {
-            setCaretPosition(textArea, e2.characterInFile)
+            setCaretPosition(textArea, cause.characterInFile)
+            console.log('Syntax error at position: ' + cause.characterInFile)
           }
         }
         return false
