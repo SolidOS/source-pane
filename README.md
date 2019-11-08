@@ -13,4 +13,3 @@ the syntax is checked before they save it back.
 Once selected this pane as a view of a file, then the pen icon allows to switch to editing mode, and the check mark button allows the file to be saved back.
 
 Editing can be aborted by the cancel(X) button.
-
