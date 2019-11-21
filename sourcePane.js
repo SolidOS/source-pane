@@ -7,14 +7,14 @@
 
 const UI = require('solid-ui')
 const mime = require('mime-types')
-const kb = UI.store
 
 module.exports = {
   icon: UI.icons.iconBase + 'noun_109873.svg', // noun_109873_51A7F9.svg
 
   name: 'source',
 
-  label: function (subject) {
+  label: function (subject, context) {
+    var kb = context.session.store
     var typeURIs = kb.findTypeURIs(subject)
     var prefix = $rdf.Util.mediaTypeClass('text/*').uri.split('*')[0]
     for (var t in typeURIs) {
@@ -25,7 +25,8 @@ module.exports = {
   },
 
   // Create a new text file in a Solid system,
-  mintNew: function (newPaneOptions) {
+  mintNew: function (context, newPaneOptions) {
+    var kb = context.session.store
     var newInstance = newPaneOptions.newInstance
     if (!newInstance) {
       let uri = newPaneOptions.newBase
@@ -68,8 +69,9 @@ module.exports = {
     })
   },
 
-  render: function (subject, dom) {
-    const kb = UI.store
+  render: function (subject, context) {
+    const dom = context.dom
+    const kb = context.session.store
     const fetcher = kb.fetcher
     const editStyle =
       'font-family: monospace; font-size: 100%; min-width:60em; margin: 1em 0.2em 1em 0.2em; padding: 1em; border: 0.1em solid #888; border-radius: 0.5em;'
