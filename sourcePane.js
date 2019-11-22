@@ -56,7 +56,7 @@ module.exports = {
           contentType: contentType
         })
         .then(
-          function (response) {
+          function (_response) {
             console.log('New text file created: ' + newInstance.uri)
             newPaneOptions.newInstance = newInstance
             resolve(newPaneOptions)
@@ -122,7 +122,7 @@ module.exports = {
       myEditButton.style.visibility = 'collapse'
       textArea.removeAttribute('readonly')
     }
-    function setEdited (event) {
+    function setEdited (_event) {
       if (broken || !editing) return
       textArea.style.color = 'green'
       cancelButton.style.visibility = 'visible'
@@ -179,7 +179,7 @@ module.exports = {
       return true
     }
 
-    function saveBack (e) {
+    function saveBack (_event) {
       const data = textArea.value
       if (!checkSyntax(data, contentType, subject.uri)) {
         setEdited() // failed to save -> different from web
@@ -212,7 +212,7 @@ module.exports = {
       return response.ok
     }
 
-    function refresh (event) {
+    function refresh (_event) {
       fetcher
         .webOperation('GET', subject.uri)
         .then(function (response) {
