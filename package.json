@@ -1,6 +1,6 @@
 {
   "name": "source-pane",
-  "version": "2.2.1",
+  "version": "2.2.2",
   "description": "Solid-compatible Panes: Source editor",
   "main": "./sourcePane.js",
   "scripts": {
