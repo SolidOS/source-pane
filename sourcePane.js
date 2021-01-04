@@ -227,26 +227,26 @@ module.exports = {
             contentType = response.headers.get('content-type') // Should work but headers may be empty
             allowed = response.headers.get('allow')
             eTag = response.headers.get('etag')
+          } else {
+            const reqs = kb.each(
+              null,
+              kb.sym('http://www.w3.org/2007/ont/link#requestedURI'),
+              subject.uri
+            )
+            reqs.forEach(req => {
+              const rrr = kb.any(
+                req,
+                kb.sym('http://www.w3.org/2007/ont/link#response')
+              )
+              if (rrr && rrr.termType === 'NamedNode') {
+                contentType = kb.anyValue(rrr, UI.ns.httph('content-type'))
+                allowed = kb.anyValue(rrr, UI.ns.httph('allow'))
+                eTag = kb.anyValue(rrr, UI.ns.httph('etag'))
+                if (!eTag) console.log('sourcePane: No eTag on GET')
+              }
+            })
           }
 
-          const reqs = kb.each(
-            null,
-            kb.sym('http://www.w3.org/2007/ont/link#requestedURI'),
-            subject.uri
-          )
-          reqs.forEach(req => {
-            const rrr = kb.any(
-              req,
-              kb.sym('http://www.w3.org/2007/ont/link#response')
-            )
-            if (rrr) {
-              contentType = kb.anyValue(rrr, UI.ns.httph('content-type'))
-              allowed = kb.anyValue(rrr, UI.ns.httph('allow'))
-              eTag = kb.anyValue(rrr, UI.ns.httph('etag'))
-              if (!eTag) console.log('sourcePane: No eTag on GET')
-            }
-          })
-          // contentType = response.headers['content-type'] // Not available ?!
           if (!contentType) {
             readonly = true
             broken = true
