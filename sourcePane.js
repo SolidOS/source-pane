@@ -213,8 +213,18 @@ module.exports = {
     }
 
     function refresh (_event) {
+      // Use default fetch headers (such as Accept)
+      const options = fetcher.initFetchOptions(subject, {})
+      const { headers } = options
+      options.headers = new Headers()
+      for (const header in headers) {
+        if (typeof headers[header] === 'string') {
+          options.headers.set(header, headers[header])
+        }
+      }
+
       fetcher
-        .webOperation('GET', subject.uri)
+        .webOperation('GET', subject.uri, options)
         .then(function (response) {
           if (!happy(response, 'GET')) return
           const desc = response.responseText
