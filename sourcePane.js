@@ -14,10 +14,10 @@ module.exports = {
   name: 'source',
 
   label: function (subject, context) {
-    var kb = context.session.store
-    var typeURIs = kb.findTypeURIs(subject)
-    var prefix = $rdf.Util.mediaTypeClass('text/*').uri.split('*')[0]
-    for (var t in typeURIs) {
+    const kb = context.session.store
+    const typeURIs = kb.findTypeURIs(subject)
+    const prefix = $rdf.Util.mediaTypeClass('text/*').uri.split('*')[0]
+    for (const t in typeURIs) {
       if (t.startsWith(prefix)) return 'Source'
       if (t.includes('xml')) return 'XML Source'
     }
@@ -26,8 +26,8 @@ module.exports = {
 
   // Create a new text file in a Solid system,
   mintNew: function (context, newPaneOptions) {
-    var kb = context.session.store
-    var newInstance = newPaneOptions.newInstance
+    const kb = context.session.store
+    let newInstance = newPaneOptions.newInstance
     if (!newInstance) {
       let uri = newPaneOptions.newBase
       if (uri.endsWith('/')) {
@@ -38,7 +38,7 @@ module.exports = {
       newPaneOptions.newInstance = newInstance
     }
 
-    var contentType = mime.lookup(newInstance.uri)
+    const contentType = mime.lookup(newInstance.uri)
     if (
       !contentType ||
       !(contentType.startsWith('text') || contentType.includes('xml'))
@@ -75,21 +75,21 @@ module.exports = {
     const fetcher = kb.fetcher
     const editStyle =
       'font-family: monospace; font-size: 100%; min-width:60em; margin: 1em 0.2em 1em 0.2em; padding: 1em; border: 0.1em solid #888; border-radius: 0.5em;'
-    var readonly = true
-    var editing = false
-    var broken = false
+    let readonly = true
+    let editing = false
+    let broken = false
     // Set in refresh()
-    var contentType, allowed, eTag // Note it when we read and use it when we save
+    let contentType, allowed, eTag // Note it when we read and use it when we save
 
-    var div = dom.createElement('div')
+    const div = dom.createElement('div')
     div.setAttribute('class', 'sourcePane')
-    var table = div.appendChild(dom.createElement('table'))
-    var main = table.appendChild(dom.createElement('tr'))
-    var statusRow = table.appendChild(dom.createElement('tr'))
-    var controls = table.appendChild(dom.createElement('tr'))
+    const table = div.appendChild(dom.createElement('table'))
+    const main = table.appendChild(dom.createElement('tr'))
+    const statusRow = table.appendChild(dom.createElement('tr'))
+    const controls = table.appendChild(dom.createElement('tr'))
     controls.setAttribute('style', 'text-align: right;')
 
-    var textArea = main.appendChild(dom.createElement('textarea'))
+    const textArea = main.appendChild(dom.createElement('textarea'))
     textArea.setAttribute('style', editStyle)
 
     function editButton (dom) {
@@ -100,9 +100,9 @@ module.exports = {
       )
     }
 
-    var cancelButton = controls.appendChild(UI.widgets.cancelButton(dom))
-    var saveButton = controls.appendChild(UI.widgets.continueButton(dom))
-    var myEditButton = controls.appendChild(editButton(dom))
+    const cancelButton = controls.appendChild(UI.widgets.cancelButton(dom))
+    const saveButton = controls.appendChild(UI.widgets.continueButton(dom))
+    const myEditButton = controls.appendChild(editButton(dom))
 
     function setUnedited () {
       if (broken) return
@@ -150,7 +150,7 @@ module.exports = {
     function setCaretPosition (elem, caretPos) {
       if (elem != null) {
         if (elem.createTextRange) {
-          var range = elem.createTextRange()
+          const range = elem.createTextRange()
           range.move('character', caretPos)
           range.select()
         } else {
@@ -186,7 +186,7 @@ module.exports = {
         textArea.style.color = 'red'
         return
       }
-      var options = { data, contentType }
+      const options = { data, contentType }
       if (eTag) options.headers = { 'if-match': eTag } // avoid overwriting changed files -> status 412
       fetcher
         .webOperation('PUT', subject.uri, options)
@@ -217,7 +217,7 @@ module.exports = {
         .webOperation('GET', subject.uri)
         .then(function (response) {
           if (!happy(response, 'GET')) return
-          var desc = response.responseText
+          const desc = response.responseText
           textArea.rows = desc ? desc.split('\n').length + 2 : 2
           textArea.cols = 80
           textArea.value = desc
