@@ -225,9 +225,11 @@ module.exports = {
 
       fetcher
         .webOperation('GET', subject.uri, options)
-        .then(function (response) {
+        .then(async function (response) {
           if (!happy(response, 'GET')) return
-          const desc = response.responseText
+          let desc = response.responseText
+          // temporary patch for https://github.com/linkeddata/rdflib.js/issues/506
+          if (!desc) desc = await response.text()
           textArea.rows = desc ? desc.split('\n').length + 2 : 2
           textArea.cols = 80
           textArea.value = desc
