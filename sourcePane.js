@@ -228,7 +228,12 @@ module.exports = {
         .then(function (response) {
           if (!happy(response, 'GET')) return
           const desc = response.responseText
-          textArea.rows = desc ? desc.split('\n').length + 2 : 2
+          if (!desc) { // Defensive https://github.com/linkeddata/rdflib.js/issues/506
+            const msg = 'source pane: No text in response object!!'
+            statusRow.appendChild(UI.widgets.errorMessageBlock(dom, ç))
+            return // Never mis-represent the contents of the file.
+          }
+          textArea.rows = desc.split('\n').length + 2
           textArea.cols = 80
           textArea.value = desc
 
