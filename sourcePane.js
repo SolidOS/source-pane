@@ -230,7 +230,7 @@ module.exports = {
           const desc = response.responseText
           if (!desc) { // Defensive https://github.com/linkeddata/rdflib.js/issues/506
             const msg = 'source pane: No text in response object!!'
-            statusRow.appendChild(UI.widgets.errorMessageBlock(dom, ç))
+            statusRow.appendChild(UI.widgets.errorMessageBlock(dom, msg))
             return // Never mis-represent the contents of the file.
           }
           textArea.rows = desc.split('\n').length + 2
