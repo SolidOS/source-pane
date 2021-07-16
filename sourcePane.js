@@ -20,6 +20,7 @@ module.exports = {
     for (const t in typeURIs) {
       if (t.startsWith(prefix)) return 'Source'
       if (t.includes('xml')) return 'XML Source'
+      if (t.includes('json')) return 'JSON Source' // Like eg application/ld+json
     }
     return null
   },
