@@ -42,10 +42,10 @@ module.exports = {
     const contentType = mime.lookup(newInstance.uri)
     if (
       !contentType ||
-      !(contentType.startsWith('text') || contentType.includes('xml'))
+      !(contentType.startsWith('text') || contentType.includes('xml') || contentType.includes('json'))
     ) {
       const msg =
-        'A new text file has to have an file extension like .txt .ttl etc.'
+        'A new text file has to have an file extension like .txt .ttl .json etc.'
       alert(msg)
       throw new Error(msg)
     }
@@ -53,7 +53,7 @@ module.exports = {
     return new Promise(function (resolve, reject) {
       kb.fetcher
         .webOperation('PUT', newInstance.uri, {
-          data: '\n',
+          data: contentType.includes('json') ? '{}\n' : '\n',
           contentType: contentType
         })
         .then(
@@ -138,6 +138,7 @@ module.exports = {
       'application/xhtml+xml': true, // For RDFa?
       //        'text/html': true,
       //        'application/sparql-update': true,
+      'application/json': true,
       'application/ld+json': true
       //        'application/nquads' : true,
       //        'application/n-quads' : true
@@ -167,7 +168,7 @@ module.exports = {
       if (!parseable[contentType]) return true // don't check things we don't understand
       try {
         statusRow.innerHTML = ''
-        $rdf.parse(data, kb, base, contentType)
+        contentType === 'application/json' ? JSON.parse(data) : $rdf.parse(data, kb, base, contentType)
       } catch (e) {
         statusRow.appendChild(UI.widgets.errorMessageBlock(dom, e))
         for (let cause = e; (cause = cause.cause); cause) {
