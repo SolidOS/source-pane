@@ -21,7 +21,7 @@ module.exports = {
       if (t.startsWith(prefix)) return 'Source'
       if (t.includes('xml')) return 'XML Source'
       if (t.includes('json')) return 'JSON Source' // Like eg application/ld+json
-      if (t.includes('javascript')) return 'Javascript Source';
+      if (t.includes('javascript')) return 'Javascript Source'
     }
     return null
   },
@@ -43,7 +43,7 @@ module.exports = {
     const contentType = mime.lookup(newInstance.uri)
     if (
       !contentType ||
-      !(contentType.startsWith('text') || contentType.includes('xml') || contentType.includes('json') || contentType.includes('javascript')
+      !(contentType.startsWith('text') || contentType.includes('xml') || contentType.includes('json') || contentType.includes('javascript'))
     ) {
       const msg =
         'A new text file has to have an file extension like .txt .ttl .json etc.'
