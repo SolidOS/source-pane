@@ -1,6 +1,6 @@
 {
   "name": "source-pane",
-  "version": "2.2.13",
+  "version": "2.2.13-bbf45639",
   "description": "Solid-compatible Panes: Source editor",
   "main": "./sourcePane.js",
   "scripts": {
@@ -34,7 +34,7 @@
   },
   "homepage": "https://github.com/solid/source-pane",
   "dependencies": {
-    "solid-ui": "^2.4.11"
+    "solid-ui": "^2.4.15"
   },
   "devDependencies": {
     "eslint": "^7.32.0",
