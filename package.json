@@ -37,10 +37,9 @@
     "solid-ui": "^2.4.19"
   },
   "devDependencies": {
-    "eslint": "^7.32.0",
+    "eslint": "^8.11.0",
     "husky": "^7.0.4",
-    "lint-staged": "^11.2.6",
-    "standard": "^16.0.4"
+    "lint-staged": "^11.2.6"
   },
   "husky": {
     "hooks": {
