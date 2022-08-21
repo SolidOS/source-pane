@@ -51,10 +51,17 @@ module.exports = {
       throw new Error(msg)
     }
 
+    function contentForNew (contentType) {
+      let content = '\n'
+      if (contentType.includes('json')) content = '{}\n'
+      else if (contentType.includes('rdf+xml')) content = '<rdf:RDF\n xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">\n\n</rdf:RDF>'
+      return content
+    }
+
     return new Promise(function (resolve, reject) {
       kb.fetcher
         .webOperation('PUT', newInstance.uri, {
-          data: contentType.includes('json') ? '{}\n' : '\n',
+          data: contentForNew(contentType),
           contentType: contentType
         })
         .then(
