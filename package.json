@@ -34,7 +34,7 @@
   },
   "homepage": "https://github.com/solid/source-pane",
   "dependencies": {
-    "solid-ui": "^2.4.22"
+    "solid-ui": "2.4.22-f9e7cddc"
   },
   "devDependencies": {
     "eslint": "^8.13.0",
