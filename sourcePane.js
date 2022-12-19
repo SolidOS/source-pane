@@ -109,6 +109,17 @@ module.exports = {
       )
     }
 
+    function compressButton (dom) {
+      return UI.widgets.button(
+        dom,
+        undefined,
+        'Compress',
+        compressHandler,
+        { needsBorder: true }    
+      )
+    }
+
+    const myCompressButton = controls.appendChild(compressButton(dom)) // alain
     const cancelButton = controls.appendChild(UI.widgets.cancelButton(dom))
     const saveButton = controls.appendChild(UI.widgets.continueButton(dom))
     const myEditButton = controls.appendChild(editButton(dom))
@@ -120,6 +131,7 @@ module.exports = {
       textArea.style.color = '#888'
       cancelButton.style.visibility = 'collapse'
       saveButton.style.visibility = 'collapse'
+      myCompressButton.style.visibility = 'visible'
       textArea.setAttribute('readonly', 'true')
     }
     function setEditable () {
@@ -129,6 +141,7 @@ module.exports = {
       cancelButton.style.visibility = 'visible' // not logically needed but may be comforting
       saveButton.style.visibility = 'collapse'
       myEditButton.style.visibility = 'collapse'
+      myCompressButton.style.visibility = 'collapse' // do not allow compress while editing
       textArea.removeAttribute('readonly')
     }
     function setEdited (_event) {
@@ -137,6 +150,7 @@ module.exports = {
       cancelButton.style.visibility = 'visible'
       saveButton.style.visibility = 'visible'
       myEditButton.style.visibility = 'collapse'
+      myCompressButton.style.visibility = 'collapse'
       textArea.removeAttribute('readonly')
     }
     const parseable = {
@@ -222,6 +236,28 @@ module.exports = {
       return response.ok
     }
 
+    const compressable = {
+      'text/n3': true,
+      'text/turtle': true
+      // 'application/ld+json': true
+    }
+    async function compressHandler (_event) { // Alain to be simplified ? Attribute utility ?
+      // textArea.setAttribute('compress', textArea.compress === 'true' ? 'false' : 'true')
+      //if (textArea.readonly && textArea.compress && compressable(contentType)) {
+        if (compressable[contentType]) {  
+          try {
+            $rdf.parse(textArea.value, kb, subject.uri, contentType) // alain to be checked
+            // tried for jsonld serialize which is a PromiseS
+            const serialize = Promise.resolve($rdf.serialize(kb.sym(subject.uri), kb, subject.uri, contentType)) // alain to be checked 
+            // serialize.then(async result => { textArea.value = await result; /*return div*/ })
+            // return div
+            textArea.value = await serialize  
+          } catch (e) {
+            statusRow.appendChild(UI.widgets.errorMessageBlock(dom, e))
+          }
+      }
+    }
+
     function refresh (_event) {
       // Use default fetch headers (such as Accept)
       const options = fetcher.initFetchOptions(subject.uri, {})
@@ -292,6 +328,7 @@ module.exports = {
             readonly = allowed.indexOf('PUT') < 0 // In future more info re ACL allow?
           }
           textArea.readonly = readonly
+          textArea.setAttribute('compress', 'false')
         })
         .catch(err => {
           div.appendChild(
@@ -301,6 +338,7 @@ module.exports = {
     }
 
     textArea.addEventListener('keyup', setEdited)
+    myCompressButton.addEventListener('click', compressHandler)
     myEditButton.addEventListener('click', setEditable)
     cancelButton.addEventListener('click', refresh)
     saveButton.addEventListener('click', saveBack)
