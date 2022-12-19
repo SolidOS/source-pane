@@ -241,7 +241,7 @@ module.exports = {
       'text/turtle': true
       // 'application/ld+json': true
     }
-    async function compressHandler (_event) { // Alain to be simplified ? Attribute utility ?
+    function compressHandler (_event) { // Alain to be simplified ? Attribute utility ?
       // textArea.setAttribute('compress', textArea.compress === 'true' ? 'false' : 'true')
       //if (textArea.readonly && textArea.compress && compressable(contentType)) {
         if (compressable[contentType]) {  
@@ -249,9 +249,9 @@ module.exports = {
             $rdf.parse(textArea.value, kb, subject.uri, contentType) // alain to be checked
             // tried for jsonld serialize which is a PromiseS
             const serialize = Promise.resolve($rdf.serialize(kb.sym(subject.uri), kb, subject.uri, contentType)) // alain to be checked 
-            // serialize.then(async result => { textArea.value = await result; /*return div*/ })
+            serialize.then(result => { textArea.value = result; /*return div*/ })
             // return div
-            textArea.value = await serialize  
+            // textArea.value = await serialize  
           } catch (e) {
             statusRow.appendChild(UI.widgets.errorMessageBlock(dom, e))
           }
