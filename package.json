@@ -2,11 +2,11 @@
   "name": "source-pane",
   "version": "2.2.19",
   "description": "Solid-compatible Panes: Source editor",
-  "main": "./sourcePane.js",
+  "main": "src/sourcePane.js",
   "scripts": {
     "build": "echo nothing to build",
-    "lint": "eslint '*.js'",
-    "lint-fix": "eslint '*.js' --fix",
+    "lint": "eslint 'src/*.js'",
+    "lint-fix": "eslint 'src/*.js' --fix",
     "test": "npm run lint",
     "prepublishOnly": "npm test",
     "postpublish": "git push origin main --follow-tags"
@@ -38,9 +38,9 @@
     "solid-ui": "2.4.24"
   },
   "devDependencies": {
-    "eslint": "^8.27.0",
+    "eslint": "^8.30.0",
     "husky": "^8.0.2",
-    "lint-staged": "^13.0.3"
+    "lint-staged": "^13.1.0"
   },
   "husky": {
     "hooks": {
