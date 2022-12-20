@@ -34,6 +34,7 @@
   },
   "homepage": "https://github.com/solid/source-pane",
   "dependencies": {
+    "@testing-library/dom": "^8.19.0",
     "solid-ui": "2.4.24"
   },
   "devDependencies": {
