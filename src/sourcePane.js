@@ -120,6 +120,7 @@ module.exports = {
     }
 
     const myCompressButton = controls.appendChild(compressButton(dom)) // alain
+    // myCompressButton.style.width = '100px'
     const cancelButton = controls.appendChild(UI.widgets.cancelButton(dom))
     const saveButton = controls.appendChild(UI.widgets.continueButton(dom))
     const myEditButton = controls.appendChild(editButton(dom))
@@ -131,7 +132,7 @@ module.exports = {
       textArea.style.color = '#888'
       cancelButton.style.visibility = 'collapse'
       saveButton.style.visibility = 'collapse'
-      myCompressButton.style.visibility = 'visible'
+      myCompressButton['style'] = "visibility: visible; width: 100px; padding: 5px"
       textArea.setAttribute('readonly', 'true')
     }
     function setEditable () {
@@ -241,13 +242,12 @@ module.exports = {
       'text/turtle': true
       // 'application/ld+json': true
     }
-    function compressHandler (_event) { // Alain to be simplified ? Attribute utility ?
-      // textArea.setAttribute('compress', textArea.compress === 'true' ? 'false' : 'true')
+    function compressHandler (_event) {
       //if (textArea.readonly && textArea.compress && compressable(contentType)) {
         if (compressable[contentType]) {  
           try {
-            $rdf.parse(textArea.value, kb, subject.uri, contentType) // alain to be checked
-            // tried for jsonld serialize which is a PromiseS
+            $rdf.parse(textArea.value, kb, subject.uri, contentType)
+            // for jsonld serialize which is a Promise. New rdflib
             const serialize = Promise.resolve($rdf.serialize(kb.sym(subject.uri), kb, subject.uri, contentType)) // alain to be checked 
             serialize.then(result => { textArea.value = result; /*return div*/ })
             // return div
@@ -328,7 +328,6 @@ module.exports = {
             readonly = allowed.indexOf('PUT') < 0 // In future more info re ACL allow?
           }
           textArea.readonly = readonly
-          textArea.setAttribute('compress', 'false')
         })
         .catch(err => {
           div.appendChild(

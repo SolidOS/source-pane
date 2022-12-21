@@ -1,11 +1,15 @@
-import { DataBrowserContext, PaneRegistry } from "pane-registry";
-import { sym } from "rdflib";
-import { SolidLogic, store } from "solid-logic";
+// import { DataBrowserContext, PaneRegistry } from "pane-registry";
+const { DataBrowserContext, PaneRegistry } = require('pane-registry')
+// import { sym } from "rdflib";
+const { sym } = require('rdflib')
+// import { SolidLogic, store } from "solid-logic";
+const { SolidLogic, store } = require('solid-logic')
 
-export const subject = sym("https://janedoe.example/profile/card#me");
-export const doc = subject.doc();
+const subject = sym("https://janedoe.example/test.ttl");
+exports.subject = subject
+exports.doc = subject.doc();
 
-export const context = {
+exports.context = {
     dom: document,
     getOutliner: () => null,
     session: {

@@ -18,5 +18,6 @@
       "argsIgnorePattern": "^_",
       "varsIgnorePattern": "^_"
     }]
-  }
+  },
+  "ignorePatterns": ["src/**/*.test.js"]
 }
