@@ -6,22 +6,22 @@ const { parse } = require('rdflib')
 const { solidLogicSingleton } = require('solid-logic')
 
 describe("source-pane", () => {
-  describe("test button compress", () => {
+  describe("test button compact", () => {
     let result;
     beforeAll(() => {
       result = pane.render(subject, context);
     });
 
     it('button exist and is visible', async () => {
-      const button = await findByText(result, 'COMPRESS')
+      const button = await findByText(result, 'COMPACT')
       expect(button).not.toBeNull()
       expect(button.style.visibility).toEqual('visible')
     })
 
-    it('click "edit", button compress is not visible', async () => {
+    it('click "edit", button compact is not visible', async () => {
       const img = await getByTitle(result, 'Edit')
       fireEvent.click(img)
-      const button = await findByText(result, 'COMPRESS')
+      const button = await findByText(result, 'COMPACT')
       expect(button).not.toBeNull()
       expect(button.style.visibility).not.toEqual('visible')
     })

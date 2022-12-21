@@ -109,18 +109,18 @@ module.exports = {
       )
     }
 
-    function compressButton (dom) {
+    function compactButton (dom) {
       return UI.widgets.button(
         dom,
         undefined,
-        'Compress',
-        compressHandler,
+        'Compact',
+        compactHandler,
         { needsBorder: true }    
       )
     }
 
-    const myCompressButton = controls.appendChild(compressButton(dom)) // alain
-    // myCompressButton.style.width = '100px'
+    const myCompactButton = controls.appendChild(compactButton(dom)) // alain
+    // myCompactButton.style.width = '100px'
     const cancelButton = controls.appendChild(UI.widgets.cancelButton(dom))
     const saveButton = controls.appendChild(UI.widgets.continueButton(dom))
     const myEditButton = controls.appendChild(editButton(dom))
@@ -132,7 +132,7 @@ module.exports = {
       textArea.style.color = '#888'
       cancelButton.style.visibility = 'collapse'
       saveButton.style.visibility = 'collapse'
-      myCompressButton['style'] = "visibility: visible; width: 100px; padding: 5px"
+      myCompactButton['style'] = "visibility: visible; width: 100px; padding: 5px"
       textArea.setAttribute('readonly', 'true')
     }
     function setEditable () {
@@ -142,7 +142,7 @@ module.exports = {
       cancelButton.style.visibility = 'visible' // not logically needed but may be comforting
       saveButton.style.visibility = 'collapse'
       myEditButton.style.visibility = 'collapse'
-      myCompressButton.style.visibility = 'collapse' // do not allow compress while editing
+      myCompactButton.style.visibility = 'collapse' // do not allow compact while editing
       textArea.removeAttribute('readonly')
     }
     function setEdited (_event) {
@@ -151,7 +151,7 @@ module.exports = {
       cancelButton.style.visibility = 'visible'
       saveButton.style.visibility = 'visible'
       myEditButton.style.visibility = 'collapse'
-      myCompressButton.style.visibility = 'collapse'
+      myCompactButton.style.visibility = 'collapse'
       textArea.removeAttribute('readonly')
     }
     const parseable = {
@@ -237,14 +237,14 @@ module.exports = {
       return response.ok
     }
 
-    const compressable = {
+    const compactable = {
       'text/n3': true,
       'text/turtle': true
       // 'application/ld+json': true
     }
-    function compressHandler (_event) {
-      //if (textArea.readonly && textArea.compress && compressable(contentType)) {
-        if (compressable[contentType]) {  
+    function compactHandler (_event) {
+      //if (textArea.readonly && textArea.compact && compactable(contentType)) {
+        if (compactable[contentType]) {  
           try {
             $rdf.parse(textArea.value, kb, subject.uri, contentType)
             // for jsonld serialize which is a Promise. New rdflib
@@ -337,7 +337,7 @@ module.exports = {
     }
 
     textArea.addEventListener('keyup', setEdited)
-    myCompressButton.addEventListener('click', compressHandler)
+    myCompactButton.addEventListener('click', compactHandler)
     myEditButton.addEventListener('click', setEditable)
     cancelButton.addEventListener('click', refresh)
     saveButton.addEventListener('click', saveBack)
