@@ -120,7 +120,6 @@ module.exports = {
     }
 
     const myCompactButton = controls.appendChild(compactButton(dom)) // alain
-    // myCompactButton.style.width = '100px'
     const cancelButton = controls.appendChild(UI.widgets.cancelButton(dom))
     const saveButton = controls.appendChild(UI.widgets.continueButton(dom))
     const myEditButton = controls.appendChild(editButton(dom))
@@ -128,12 +127,13 @@ module.exports = {
     function setUnedited () {
       if (broken) return
       editing = false
-      myEditButton.style.visibility = 'visible'
+      myEditButton.style.visibility =  subject.uri.endsWith('/') ? 'collapse' : 'visible'
       textArea.style.color = '#888'
-      cancelButton.style.visibility = 'collapse'
+      cancelButton.style.visibility = subject.uri.endsWith('/') ? 'visible' : 'collapse'
       saveButton.style.visibility = 'collapse'
-      myCompactButton['style'] = "visibility: visible; width: 100px; padding: 5px"
-      textArea.setAttribute('readonly', 'true')
+      myCompactButton['style'] = "visibility: visible; width: 100px; padding: 10.2px; transform: translate(0, -30%)"
+      if (!compactable[contentType]) {  myCompactButton.style.visibility = "collapse" }
+        textArea.setAttribute('readonly', 'true')
     }
     function setEditable () {
       if (broken) return
@@ -283,7 +283,6 @@ module.exports = {
           textArea.cols = 80
           textArea.value = desc
 
-          setUnedited()
           if (response.headers && response.headers.get('content-type')) {
             contentType = response.headers.get('content-type') // Should work but headers may be empty
             allowed = response.headers.get('allow')
@@ -319,6 +318,7 @@ module.exports = {
             )
             return
           }
+          setUnedited()
           console.log('       source content-type ' + contentType)
           // let allowed = response.headers['allow']
           if (!allowed) {

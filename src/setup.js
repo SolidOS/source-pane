@@ -5,10 +5,6 @@ const { sym } = require('rdflib')
 // import { SolidLogic, store } from "solid-logic";
 const { SolidLogic, store } = require('solid-logic')
 
-const subject = sym("https://janedoe.example/test.ttl");
-exports.subject = subject
-exports.doc = subject.doc();
-
 exports.context = {
     dom: document,
     getOutliner: () => null,
