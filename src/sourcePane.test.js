@@ -28,16 +28,22 @@ describe("source-pane", () => {
         expect(compact.style.visibility).toEqual('visible')
       })
 
+      it.skip('click "compact", button cancel is visible', async () => {
+        const compact = await findByText(result, 'COMPACT')
+        fireEvent.click(compact)
+        const cancel = await getByTitle(result, 'Cancel')
+        expect(cancel.style.visibility).toEqual('visible')
+      })
+
       it('click "edit", button compact is not visible', async () => {
         const edit = await getByTitle(result, 'Edit')
         fireEvent.click(edit)
         const compact = await findByText(result, 'COMPACT')
-        // expect(button).not.toBeNull()
         expect(compact.style.visibility).not.toEqual('visible')
       })
 
       it('check content should fail', async () => {
-        waitFor(() => { expect(result).toContainHTML('<> a "test1".') })
+        waitFor(() => { expect(result).toContainHTML('<> a "1111".') })
       })
     })
 
@@ -62,7 +68,7 @@ describe("source-pane", () => {
         expect(compact.style.visibility).not.toEqual('visible')
       })
   
-      it('check content should fail', async () => {
+      it.skip('check content succeed but should fail', async () => {
         waitFor(() => { expect(result).toContainHTML('<> a "test1".') })
       })
     })

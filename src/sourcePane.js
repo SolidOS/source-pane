@@ -243,15 +243,13 @@ module.exports = {
       // 'application/ld+json': true
     }
     function compactHandler (_event) {
-      //if (textArea.readonly && textArea.compact && compactable(contentType)) {
         if (compactable[contentType]) {  
           try {
             $rdf.parse(textArea.value, kb, subject.uri, contentType)
             // for jsonld serialize which is a Promise. New rdflib
-            const serialize = Promise.resolve($rdf.serialize(kb.sym(subject.uri), kb, subject.uri, contentType)) // alain to be checked 
-            serialize.then(result => { textArea.value = result; /*return div*/ })
-            // return div
-            // textArea.value = await serialize  
+            const serialized = Promise.resolve($rdf.serialize(kb.sym(subject.uri), kb, subject.uri, contentType))
+            serialized.then(result => { textArea.value = result; /*return div*/ })
+            cancelButton.style.visibility = 'visible'
           } catch (e) {
             statusRow.appendChild(UI.widgets.errorMessageBlock(dom, e))
           }
