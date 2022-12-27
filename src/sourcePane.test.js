@@ -42,7 +42,7 @@ describe("source-pane", () => {
         expect(compact.style.visibility).not.toEqual('visible')
       })
 
-      it('check content should fail', async () => {
+      it.skip('check content succeed but should fail', async () => {
         waitFor(() => { expect(result).toContainHTML('<> a "1111".') })
       })
     })
@@ -69,7 +69,7 @@ describe("source-pane", () => {
       })
   
       it.skip('check content succeed but should fail', async () => {
-        waitFor(() => { expect(result).toContainHTML('<> a "test1".') })
+        waitFor(() => { expect(result).toContainHTML('<> a "1111".') })
       })
     })
 
