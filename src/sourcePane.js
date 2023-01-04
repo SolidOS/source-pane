@@ -239,8 +239,8 @@ module.exports = {
 
     const compactable = {
       'text/n3': true,
-      'text/turtle': true
-      // 'application/ld+json': true
+      'text/turtle': true,
+      'application/ld+json': true
     }
     function compactHandler (_event) {
         if (compactable[contentType]) {  
