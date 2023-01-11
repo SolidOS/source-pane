@@ -172,6 +172,7 @@ module.exports = {
       }
     }
 
+    // parse textArea syntax
     function checkSyntax (data, contentType, base) {
       if (!parseable[contentType]) return true // don't check things we don't understand
       try {
@@ -189,7 +190,7 @@ module.exports = {
       return true
     }
 
-    function saveBack (_event) {
+    async function saveBack (_event) {
       const data = textArea.value
       if (!checkSyntax(data, contentType, subject.uri)) {
         setEdited() // failed to save -> different from web
@@ -198,18 +199,22 @@ module.exports = {
       }
       const options = { data, contentType }
       if (eTag) options.headers = { 'if-match': eTag } // avoid overwriting changed files -> status 412
-      fetcher
-        .webOperation('PUT', subject.uri, options)
-        .then(function (response) {
-          if (!happy(response, 'PUT')) return
-          /// @@ show edited: make save button disabled util edited again.
-          setEditable()
-        })
-        .catch(function (err) {
-          div.appendChild(
-            UI.widgets.errorMessageBlock(dom, 'Error saving back: ' + err)
-          )
-        })
+      try {
+        const response = await fetcher.webOperation('PUT', subject.uri, options)
+        if (!happy(response, 'PUT')) return
+        /// @@ show edited: make save button disabled until edited again.
+        try {
+          const response = await fetcher.webOperation('HEAD', subject.uri, defaultFetchHeaders())
+          if (!happy(response, 'HEAD')) return
+          getResponseHeaders(response) // get new eTag
+          setEdited()
+        } catch (err) {
+          throw err
+        }
+      } catch (err) {
+        div.appendChild(
+          UI.widgets.errorMessageBlock(dom, 'Error saving back: ' + err))
+      }
     }
 
     function happy (response, method) {
@@ -222,8 +227,8 @@ module.exports = {
       return response.ok
     }
 
-    function refresh (_event) {
       // Use default fetch headers (such as Accept)
+      function defaultFetchHeaders () {
       const options = fetcher.initFetchOptions(subject.uri, {})
       const { headers } = options
       options.headers = new Headers()
@@ -232,6 +237,38 @@ module.exports = {
           options.headers.set(header, headers[header])
         }
       }
+      return options
+    }
+
+    // get response headers
+    function getResponseHeaders (response) {
+      if (response.headers && response.headers.get('content-type')) {
+        contentType = response.headers.get('content-type') // Should work but headers may be empty
+        allowed = response.headers.get('allow')
+        eTag = response.headers.get('etag')
+      } else {
+        const reqs = kb.each(
+          null,
+          kb.sym('http://www.w3.org/2007/ont/link#requestedURI'),
+          subject.uri
+        )
+        reqs.forEach(req => {
+          const rrr = kb.any(
+            req,
+            kb.sym('http://www.w3.org/2007/ont/link#response')
+          )
+          if (rrr && rrr.termType === 'NamedNode') {
+            contentType = kb.anyValue(rrr, UI.ns.httph('content-type'))
+            allowed = kb.anyValue(rrr, UI.ns.httph('allow'))
+            eTag = kb.anyValue(rrr, UI.ns.httph('etag'))
+            if (!eTag) console.log('sourcePane: No eTag on GET')
+          }
+        })
+      }
+    }
+
+    function refresh (_event) {
+      const options = defaultFetchHeaders()
 
       fetcher
         .webOperation('GET', subject.uri, options)
@@ -248,29 +285,7 @@ module.exports = {
           textArea.value = desc
 
           setUnedited()
-          if (response.headers && response.headers.get('content-type')) {
-            contentType = response.headers.get('content-type') // Should work but headers may be empty
-            allowed = response.headers.get('allow')
-            eTag = response.headers.get('etag')
-          } else {
-            const reqs = kb.each(
-              null,
-              kb.sym('http://www.w3.org/2007/ont/link#requestedURI'),
-              subject.uri
-            )
-            reqs.forEach(req => {
-              const rrr = kb.any(
-                req,
-                kb.sym('http://www.w3.org/2007/ont/link#response')
-              )
-              if (rrr && rrr.termType === 'NamedNode') {
-                contentType = kb.anyValue(rrr, UI.ns.httph('content-type'))
-                allowed = kb.anyValue(rrr, UI.ns.httph('allow'))
-                eTag = kb.anyValue(rrr, UI.ns.httph('etag'))
-                if (!eTag) console.log('sourcePane: No eTag on GET')
-              }
-            })
-          }
+          getResponseHeaders(response)
 
           if (!contentType) {
             readonly = true
