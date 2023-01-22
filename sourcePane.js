@@ -178,7 +178,6 @@ module.exports = {
     function HTMLDataIsland (data) {
       let dataIslandContentType = ''
       let dataIsland = ''
-      let pos = 0
       const scripts = data.split('</script')
       if (scripts && scripts.length) {
         for (let script of scripts) {
@@ -186,7 +185,7 @@ module.exports = {
           const RDFType = ['text/turtle', 'text/n3', 'application/ld+json', 'application/rdf+xml']
           const contentType = RDFType.find(type => script.includes(`type="${type}"`))
           if (contentType) {
-            dataIsland = script.replace(/^<script(.*?)>/gms, '').replace(/<\/script>$/gms, '')
+            dataIsland = script.replace(/^<script(.*?)>/gm, '').replace(/<\/script>$/gm, '')
             dataIslandContentType = contentType
             break
           }
