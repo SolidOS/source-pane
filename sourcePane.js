@@ -144,7 +144,7 @@ module.exports = {
       'text/turtle': true,
       'application/rdf+xml': true,
       'application/xhtml+xml': true, // For RDFa?
-      //        'text/html': true,
+      'text/html': true, // For data island
       //        'application/sparql-update': true,
       'application/json': true,
       'application/ld+json': true
@@ -157,8 +157,11 @@ module.exports = {
      * @param {Integer} caretPos - the poisition starting at zero
      * @credit  https://stackoverflow.com/questions/512528/set-keyboard-caret-position-in-html-textbox
      */
-    function setCaretPosition (elem, caretPos) {
+    function setCaretPosition (elem, cause) {
       if (elem != null) {
+        if (cause.characterInFile === -1 && cause.lineNo) cause.lineNo += 1
+        const pos = cause.lineNo ? elem.value.split('\n', cause.lineNo).join('\n').length : 0
+        let caretPos = pos + cause.characterInFile
         if (elem.createTextRange) {
           const range = elem.createTextRange()
           range.move('character', caretPos)
@@ -172,8 +175,31 @@ module.exports = {
       }
     }
 
+    function HTMLDataIsland (data) {
+      let dataIslandContentType = ''
+      let dataIsland = ''
+      const scripts = data.split('</script')
+      if (scripts && scripts.length) {
+        for (let script of scripts) {
+          script = '<script' + script.split('<script')[1] + '</script>'
+          const RDFType = ['text/turtle', 'text/n3', 'application/ld+json', 'application/rdf+xml']
+          const contentType = RDFType.find(type => script.includes(`type="${type}"`))
+          if (contentType) {
+            dataIsland = script.replace(/^<script(.*?)>/gm, '').replace(/<\/script>$/gm, '')
+            dataIslandContentType = contentType
+            break
+          }
+        }
+      }
+      return [dataIsland, dataIslandContentType]
+    }
+
     function checkSyntax (data, contentType, base) {
       if (!parseable[contentType]) return true // don't check things we don't understand
+      if (contentType = 'text/html') {
+        [data, contentType, pos] = HTMLDataIsland(data)
+        if (!contentType) return true
+      }
       try {
         statusRow.innerHTML = ''
         contentType === 'application/json' ? JSON.parse(data) : $rdf.parse(data, kb, base, contentType)
@@ -181,7 +207,7 @@ module.exports = {
         statusRow.appendChild(UI.widgets.errorMessageBlock(dom, e))
         for (let cause = e; (cause = cause.cause); cause) {
           if (cause.characterInFile) {
-            setCaretPosition(textArea, e.characterInFile)
+            setCaretPosition(textArea, cause)
           }
         }
         return false
