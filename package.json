@@ -1,6 +1,6 @@
 {
   "name": "source-pane",
-  "version": "2.2.17",
+  "version": "2.2.19",
   "description": "Solid-compatible Panes: Source editor",
   "main": "./sourcePane.js",
   "scripts": {
@@ -34,13 +34,12 @@
   },
   "homepage": "https://github.com/solid/source-pane",
   "dependencies": {
-    "rdflib": "^2.2.19",
-    "solid-ui": "^2.4.22"
+    "solid-ui": "2.4.24"
   },
   "devDependencies": {
-    "eslint": "^8.13.0",
-    "husky": "^7.0.4",
-    "lint-staged": "^12.3.7"
+    "eslint": "^8.32.0",
+    "husky": "^8.0.3",
+    "lint-staged": "^13.1.0"
   },
   "husky": {
     "hooks": {
