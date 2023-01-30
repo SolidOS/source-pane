@@ -3,8 +3,8 @@
  **  This pane allows the original source of a resource to be edited by hand
  **
  */
-/* global alert, $rdf */
 
+const $rdf = require('rdflib')
 const UI = require('solid-ui')
 const mime = require('mime-types')
 
@@ -159,7 +159,7 @@ module.exports = {
       'text/turtle': true,
       'application/rdf+xml': true,
       'application/xhtml+xml': true, // For RDFa?
-      //        'text/html': true,
+      'text/html': true, // For data island
       //        'application/sparql-update': true,
       'application/json': true,
       'application/ld+json': true
@@ -172,8 +172,11 @@ module.exports = {
      * @param {Integer} caretPos - the poisition starting at zero
      * @credit  https://stackoverflow.com/questions/512528/set-keyboard-caret-position-in-html-textbox
      */
-    function setCaretPosition (elem, caretPos) {
+    function setCaretPosition (elem, cause) {
       if (elem != null) {
+        if (cause.characterInFile === -1 && cause.lineNo) cause.lineNo += 1
+        const pos = cause.lineNo ? elem.value.split('\n', cause.lineNo).join('\n').length : 0
+        let caretPos = pos + cause.characterInFile
         if (elem.createTextRange) {
           const range = elem.createTextRange()
           range.move('character', caretPos)
@@ -187,8 +190,31 @@ module.exports = {
       }
     }
 
+    function HTMLDataIsland (data) {
+      let dataIslandContentType = ''
+      let dataIsland = ''
+      const scripts = data.split('</script')
+      if (scripts && scripts.length) {
+        for (let script of scripts) {
+          script = '<script' + script.split('<script')[1] + '</script>'
+          const RDFType = ['text/turtle', 'text/n3', 'application/ld+json', 'application/rdf+xml']
+          const contentType = RDFType.find(type => script.includes(`type="${type}"`))
+          if (contentType) {
+            dataIsland = script.replace(/^<script(.*?)>/gm, '').replace(/<\/script>$/gm, '')
+            dataIslandContentType = contentType
+            break
+          }
+        }
+      }
+      return [dataIsland, dataIslandContentType]
+    }
+
     function checkSyntax (data, contentType, base) {
       if (!parseable[contentType]) return true // don't check things we don't understand
+      if (contentType = 'text/html') {
+        [data, contentType, pos] = HTMLDataIsland(data)
+        if (!contentType) return true
+      }
       try {
         statusRow.innerHTML = ''
         contentType === 'application/json' ? JSON.parse(data) : $rdf.parse(data, kb, base, contentType)
@@ -196,7 +222,7 @@ module.exports = {
         statusRow.appendChild(UI.widgets.errorMessageBlock(dom, e))
         for (let cause = e; (cause = cause.cause); cause) {
           if (cause.characterInFile) {
-            setCaretPosition(textArea, e.characterInFile)
+            setCaretPosition(textArea, cause)
           }
         }
         return false
@@ -204,7 +230,7 @@ module.exports = {
       return true
     }
 
-    function saveBack (_event) {
+    async function saveBack (_event) {
       const data = textArea.value
       if (!checkSyntax(data, contentType, subject.uri)) {
         setEdited() // failed to save -> different from web
@@ -213,18 +239,22 @@ module.exports = {
       }
       const options = { data, contentType }
       if (eTag) options.headers = { 'if-match': eTag } // avoid overwriting changed files -> status 412
-      fetcher
-        .webOperation('PUT', subject.uri, options)
-        .then(function (response) {
-          if (!happy(response, 'PUT')) return
-          /// @@ show edited: make save button disabled util edited again.
-          setEditable()
-        })
-        .catch(function (err) {
-          div.appendChild(
-            UI.widgets.errorMessageBlock(dom, 'Error saving back: ' + err)
-          )
-        })
+      try {
+        const response = await fetcher.webOperation('PUT', subject.uri, options)
+        if (!happy(response, 'PUT')) return
+        /// @@ show edited: make save button disabled until edited again.
+        try {
+          const response = await fetcher.webOperation('HEAD', subject.uri, defaultFetchHeaders())
+          if (!happy(response, 'HEAD')) return
+          getResponseHeaders(response) // get new eTag
+          setEdited()
+        } catch (err) {
+          throw err
+        }
+      } catch (err) {
+        div.appendChild(
+          UI.widgets.errorMessageBlock(dom, 'Error saving back: ' + err))
+      }
     }
 
     function happy (response, method) {
@@ -258,6 +288,7 @@ module.exports = {
 
     function refresh (_event) {
       // Use default fetch headers (such as Accept)
+      function defaultFetchHeaders () {
       const options = fetcher.initFetchOptions(subject.uri, {})
       const { headers } = options
       options.headers = new Headers()
@@ -266,6 +297,38 @@ module.exports = {
           options.headers.set(header, headers[header])
         }
       }
+      return options
+    }
+
+    // get response headers
+    function getResponseHeaders (response) {
+      if (response.headers && response.headers.get('content-type')) {
+        contentType = response.headers.get('content-type') // Should work but headers may be empty
+        allowed = response.headers.get('allow')
+        eTag = response.headers.get('etag')
+      } else {
+        const reqs = kb.each(
+          null,
+          kb.sym('http://www.w3.org/2007/ont/link#requestedURI'),
+          subject.uri
+        )
+        reqs.forEach(req => {
+          const rrr = kb.any(
+            req,
+            kb.sym('http://www.w3.org/2007/ont/link#response')
+          )
+          if (rrr && rrr.termType === 'NamedNode') {
+            contentType = kb.anyValue(rrr, UI.ns.httph('content-type'))
+            allowed = kb.anyValue(rrr, UI.ns.httph('allow'))
+            eTag = kb.anyValue(rrr, UI.ns.httph('etag'))
+            if (!eTag) console.log('sourcePane: No eTag on GET')
+          }
+        })
+      }
+    }
+
+    function refresh (_event) {
+      const options = defaultFetchHeaders()
 
       fetcher
         .webOperation('GET', subject.uri, options)
