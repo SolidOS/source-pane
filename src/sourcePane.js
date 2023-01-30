@@ -132,7 +132,7 @@ module.exports = {
       cancelButton.style.visibility = subject.uri.endsWith('/') ? 'visible' : 'collapse'
       saveButton.style.visibility = 'collapse'
       myCompactButton['style'] = "visibility: visible; width: 100px; padding: 10.2px; transform: translate(0, -30%)"
-      if (!compactable[contentType]) {  myCompactButton.style.visibility = "collapse" }
+      if (!compactable[contentType.split(';')[0]]) {  myCompactButton.style.visibility = "collapse" }
         textArea.setAttribute('readonly', 'true')
     }
     function setEditable () {
@@ -303,7 +303,7 @@ module.exports = {
     // get response headers
     function getResponseHeaders (response) {
       if (response.headers && response.headers.get('content-type')) {
-        contentType = response.headers.get('content-type') // Should work but headers may be empty
+        contentType = response.headers.get('content-type').split(';')[0] // Should work but headers may be empty
         allowed = response.headers.get('allow')
         eTag = response.headers.get('etag')
       } else {
@@ -344,30 +344,7 @@ module.exports = {
           textArea.cols = 80
           textArea.value = desc
 
-          if (response.headers && response.headers.get('content-type')) {
-            contentType = response.headers.get('content-type') // Should work but headers may be empty
-            allowed = response.headers.get('allow')
-            eTag = response.headers.get('etag')
-          } else {
-            const reqs = kb.each(
-              null,
-              kb.sym('http://www.w3.org/2007/ont/link#requestedURI'),
-              subject.uri
-            )
-            reqs.forEach(req => {
-              const rrr = kb.any(
-                req,
-                kb.sym('http://www.w3.org/2007/ont/link#response')
-              )
-              if (rrr && rrr.termType === 'NamedNode') {
-                contentType = kb.anyValue(rrr, UI.ns.httph('content-type'))
-                allowed = kb.anyValue(rrr, UI.ns.httph('allow'))
-                eTag = kb.anyValue(rrr, UI.ns.httph('etag'))
-                if (!eTag) console.log('sourcePane: No eTag on GET')
-              }
-            })
-          }
-
+          getResponseHeaders (response)
           if (!contentType) {
             readonly = true
             broken = true
@@ -380,7 +357,7 @@ module.exports = {
             return
           }
           setUnedited()
-          console.log('       source content-type ' + contentType)
+          // console.log('       source content-type ' + contentType)
           // let allowed = response.headers['allow']
           if (!allowed) {
             console.log('@@@@@@@@@@ No Allow: header from this server')
