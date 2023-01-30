@@ -119,7 +119,7 @@ module.exports = {
       )
     }
 
-    const myCompactButton = controls.appendChild(compactButton(dom)) // alain
+    const myCompactButton = controls.appendChild(compactButton(dom))
     const cancelButton = controls.appendChild(UI.widgets.cancelButton(dom))
     const saveButton = controls.appendChild(UI.widgets.continueButton(dom))
     const myEditButton = controls.appendChild(editButton(dom))
@@ -247,7 +247,7 @@ module.exports = {
           const response = await fetcher.webOperation('HEAD', subject.uri, defaultFetchHeaders())
           if (!happy(response, 'HEAD')) return
           getResponseHeaders(response) // get new eTag
-          setEdited()
+          setUnedited() // used to be setEdited()
         } catch (err) {
           throw err
         }
