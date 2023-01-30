@@ -109,6 +109,17 @@ module.exports = {
       )
     }
 
+    function compactButton (dom) {
+      return UI.widgets.button(
+        dom,
+        undefined,
+        'Compact',
+        compactHandler,
+        { needsBorder: true }    
+      )
+    }
+
+    const myCompactButton = controls.appendChild(compactButton(dom))
     const cancelButton = controls.appendChild(UI.widgets.cancelButton(dom))
     const saveButton = controls.appendChild(UI.widgets.continueButton(dom))
     const myEditButton = controls.appendChild(editButton(dom))
@@ -116,11 +127,13 @@ module.exports = {
     function setUnedited () {
       if (broken) return
       editing = false
-      myEditButton.style.visibility = 'visible'
+      myEditButton.style.visibility =  subject.uri.endsWith('/') ? 'collapse' : 'visible'
       textArea.style.color = '#888'
-      cancelButton.style.visibility = 'collapse'
+      cancelButton.style.visibility = subject.uri.endsWith('/') ? 'visible' : 'collapse'
       saveButton.style.visibility = 'collapse'
-      textArea.setAttribute('readonly', 'true')
+      myCompactButton['style'] = "visibility: visible; width: 100px; padding: 10.2px; transform: translate(0, -30%)"
+      if (!compactable[contentType.split(';')[0]]) {  myCompactButton.style.visibility = "collapse" }
+        textArea.setAttribute('readonly', 'true')
     }
     function setEditable () {
       if (broken) return
@@ -129,6 +142,7 @@ module.exports = {
       cancelButton.style.visibility = 'visible' // not logically needed but may be comforting
       saveButton.style.visibility = 'collapse'
       myEditButton.style.visibility = 'collapse'
+      myCompactButton.style.visibility = 'collapse' // do not allow compact while editing
       textArea.removeAttribute('readonly')
     }
     function setEdited (_event) {
@@ -137,6 +151,7 @@ module.exports = {
       cancelButton.style.visibility = 'visible'
       saveButton.style.visibility = 'visible'
       myEditButton.style.visibility = 'collapse'
+      myCompactButton.style.visibility = 'collapse'
       textArea.removeAttribute('readonly')
     }
     const parseable = {
@@ -232,7 +247,7 @@ module.exports = {
           const response = await fetcher.webOperation('HEAD', subject.uri, defaultFetchHeaders())
           if (!happy(response, 'HEAD')) return
           getResponseHeaders(response) // get new eTag
-          setEdited()
+          setUnedited() // used to be setEdited()
         } catch (err) {
           throw err
         }
@@ -252,6 +267,26 @@ module.exports = {
       return response.ok
     }
 
+    const compactable = {
+      'text/n3': true,
+      'text/turtle': true,
+      'application/ld+json': true
+    }
+    function compactHandler (_event) {
+        if (compactable[contentType]) {  
+          try {
+            $rdf.parse(textArea.value, kb, subject.uri, contentType)
+            // for jsonld serialize which is a Promise. New rdflib
+            const serialized = Promise.resolve($rdf.serialize(kb.sym(subject.uri), kb, subject.uri, contentType))
+            serialized.then(result => { textArea.value = result; /*return div*/ })
+            cancelButton.style.visibility = 'visible'
+          } catch (e) {
+            statusRow.appendChild(UI.widgets.errorMessageBlock(dom, e))
+          }
+      }
+    }
+
+    // function refresh (_event) {
       // Use default fetch headers (such as Accept)
       function defaultFetchHeaders () {
       const options = fetcher.initFetchOptions(subject.uri, {})
@@ -268,7 +303,7 @@ module.exports = {
     // get response headers
     function getResponseHeaders (response) {
       if (response.headers && response.headers.get('content-type')) {
-        contentType = response.headers.get('content-type') // Should work but headers may be empty
+        contentType = response.headers.get('content-type').split(';')[0] // Should work but headers may be empty
         allowed = response.headers.get('allow')
         eTag = response.headers.get('etag')
       } else {
@@ -309,9 +344,7 @@ module.exports = {
           textArea.cols = 80
           textArea.value = desc
 
-          setUnedited()
-          getResponseHeaders(response)
-
+          getResponseHeaders (response)
           if (!contentType) {
             readonly = true
             broken = true
@@ -323,7 +356,8 @@ module.exports = {
             )
             return
           }
-          console.log('       source content-type ' + contentType)
+          setUnedited()
+          // console.log('       source content-type ' + contentType)
           // let allowed = response.headers['allow']
           if (!allowed) {
             console.log('@@@@@@@@@@ No Allow: header from this server')
@@ -341,6 +375,7 @@ module.exports = {
     }
 
     textArea.addEventListener('keyup', setEdited)
+    myCompactButton.addEventListener('click', compactHandler)
     myEditButton.addEventListener('click', setEditable)
     cancelButton.addEventListener('click', refresh)
     saveButton.addEventListener('click', saveBack)
