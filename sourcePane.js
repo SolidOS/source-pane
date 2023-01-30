@@ -3,8 +3,8 @@
  **  This pane allows the original source of a resource to be edited by hand
  **
  */
-/* global alert, $rdf */
 
+const $rdf = require('rdflib')
 const UI = require('solid-ui')
 const mime = require('mime-types')
 
