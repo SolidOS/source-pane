@@ -286,7 +286,7 @@ module.exports = {
       }
     }
 
-    function refresh (_event) {
+    // function refresh (_event) {
       // Use default fetch headers (such as Accept)
       function defaultFetchHeaders () {
       const options = fetcher.initFetchOptions(subject.uri, {})
