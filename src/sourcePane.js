@@ -127,13 +127,13 @@ module.exports = {
     function setUnedited () {
       if (broken) return
       editing = false
-      myEditButton.style.visibility =  subject.uri.endsWith('/') ? 'collapse' : 'visible'
+      myEditButton.style.visibility = subject.uri.endsWith('/') ? 'collapse' : 'visible'
       textArea.style.color = '#888'
-      cancelButton.style.visibility = subject.uri.endsWith('/') ? 'visible' : 'collapse'
+      cancelButton.style.visibility = subject.uri.endsWith('/') ? 'collapse' : 'visible'
       saveButton.style.visibility = 'collapse'
       myCompactButton['style'] = "visibility: visible; width: 100px; padding: 10.2px; transform: translate(0, -30%)"
-      if (!compactable[contentType.split(';')[0]]) {  myCompactButton.style.visibility = "collapse" }
-        textArea.setAttribute('readonly', 'true')
+      if (subject.uri.endsWith('/') || !compactable[contentType.split(';')[0]]) {  myCompactButton.style.visibility = "collapse" }
+      textArea.setAttribute('readonly', 'true')
     }
     function setEditable () {
       if (broken) return
@@ -211,13 +211,17 @@ module.exports = {
 
     function checkSyntax (data, contentType, base) {
       if (!parseable[contentType]) return true // don't check things we don't understand
-      if (contentType = 'text/html') {
+      if (contentType === 'text/html') {
         [data, contentType, pos] = HTMLDataIsland(data)
         if (!contentType) return true
       }
       try {
         statusRow.innerHTML = ''
-        contentType === 'application/json' ? JSON.parse(data) : $rdf.parse(data, kb, base, contentType)
+        if (contentType === 'application/json') JSON.parse(data)
+        else {
+          kb.removeDocument(base)
+          $rdf.parse(data, kb, base.uri, contentType)
+        }
       } catch (e) {
         statusRow.appendChild(UI.widgets.errorMessageBlock(dom, e))
         for (let cause = e; (cause = cause.cause); cause) {
@@ -232,7 +236,7 @@ module.exports = {
 
     async function saveBack (_event) {
       const data = textArea.value
-      if (!checkSyntax(data, contentType, subject.uri)) {
+      if (!checkSyntax(data, contentType, subject)) {
         setEdited() // failed to save -> different from web
         textArea.style.color = 'red'
         return
