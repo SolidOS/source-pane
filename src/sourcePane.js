@@ -129,10 +129,10 @@ module.exports = {
       editing = false
       myEditButton.style.visibility = subject.uri.endsWith('/') ? 'collapse' : 'visible'
       textArea.style.color = '#888'
-      cancelButton.style.visibility = subject.uri.endsWith('/') ? 'collapse' : 'visible'
+      cancelButton.style.visibility = 'visible'
       saveButton.style.visibility = 'collapse'
       myCompactButton['style'] = "visibility: visible; width: 100px; padding: 10.2px; transform: translate(0, -30%)"
-      if (subject.uri.endsWith('/') || !compactable[contentType.split(';')[0]]) {  myCompactButton.style.visibility = "collapse" }
+      if (!compactable[contentType.split(';')[0]]) {  myCompactButton.style.visibility = "collapse" }
       textArea.setAttribute('readonly', 'true')
     }
     function setEditable () {
@@ -221,6 +221,17 @@ module.exports = {
         else {
           kb.removeDocument(base)
           $rdf.parse(data, kb, base.uri, contentType)
+          // Check jsonld parsing error (rdflib do not return parsing errors)
+          if (contentType === 'application/ld+json') {
+            JSON.parse(data)
+            // why serialize allways return blank graph ?
+            console.log('data ' + data.includes('@id') + data)
+            let res = $rdf.serialize(kb.sym(base.uri), kb, base.uri, contentType)
+            console.log('serialize ' + res.includes('@id') + res)
+            /* if (data.includes('@id') && !res.includes('@id')) {
+                throw new Error('Invalid jsonld : predicate do not expand to an absolute IRI')
+            } */
+          }
         }
       } catch (e) {
         statusRow.appendChild(UI.widgets.errorMessageBlock(dom, e))
@@ -281,8 +292,11 @@ module.exports = {
           try {
             $rdf.parse(textArea.value, kb, subject.uri, contentType)
             // for jsonld serialize which is a Promise. New rdflib
-            const serialized = Promise.resolve($rdf.serialize(kb.sym(subject.uri), kb, subject.uri, contentType))
-            serialized.then(result => { textArea.value = result; /*return div*/ })
+            // const serialized = Promise.resolve($rdf.serialize(kb.sym(subject.uri), kb, subject.uri, contentType))
+            // serialized.then(result => { textArea.value = result; /*return div*/ })
+            const serialized = $rdf.serialize(kb.sym(subject.uri), kb, subject.uri, contentType)
+            textArea.value = serialized
+            return div
             cancelButton.style.visibility = 'visible'
           } catch (e) {
             statusRow.appendChild(UI.widgets.errorMessageBlock(dom, e))
