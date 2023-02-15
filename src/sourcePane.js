@@ -129,7 +129,7 @@ module.exports = {
       editing = false
       myEditButton.style.visibility = subject.uri.endsWith('/') ? 'collapse' : 'visible'
       textArea.style.color = '#888'
-      cancelButton.style.visibility = 'visible' // subject.uri.endsWith('/') ? 'visible' : 'collapse'
+      cancelButton.style.visibility = 'visible'
       saveButton.style.visibility = 'collapse'
       myCompactButton['style'] = "visibility: visible; width: 100px; padding: 10.2px; transform: translate(0, -30%)"
       if (!compactable[contentType.split(';')[0]]) {  myCompactButton.style.visibility = "collapse" }
@@ -224,7 +224,6 @@ module.exports = {
           // Check jsonld parsing error (rdflib do not return parsing errors)
           if (contentType === 'application/ld+json') {
             JSON.parse(data)
-            // kb.removeDocument(base)
             // why serialize allways return blank graph ?
             console.log('data ' + data.includes('@id') + data)
             let res = $rdf.serialize(kb.sym(base.uri), kb, base.uri, contentType)
