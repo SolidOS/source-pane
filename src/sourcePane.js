@@ -2,7 +2,7 @@
  **
  **  This pane allows the original source of a resource to be edited by hand
  **
- */
+*/
 
 const $rdf = require('rdflib')
 const UI = require('solid-ui')
@@ -127,7 +127,7 @@ module.exports = {
     function setUnedited () {
       if (broken) return
       editing = false
-      myEditButton.style.visibility = subject.uri.endsWith('/') ? 'collapse' : 'visible'
+      myEditButton.style.visibility =  subject.uri.endsWith('/') ? 'collapse' : 'visible'
       textArea.style.color = '#888'
       cancelButton.style.visibility = 'visible'
       saveButton.style.visibility = 'collapse'
@@ -168,10 +168,10 @@ module.exports = {
     }
 
     /** Set Caret position in a text box
-     * @param {Element} elem - the element to be tweaked
-     * @param {Integer} caretPos - the poisition starting at zero
-     * @credit  https://stackoverflow.com/questions/512528/set-keyboard-caret-position-in-html-textbox
-     */
+    * @param {Element} elem - the element to be tweaked
+    * @param {Integer} caretPos - the poisition starting at zero
+    * @credit  https://stackoverflow.com/questions/512528/set-keyboard-caret-position-in-html-textbox
+    */
     function setCaretPosition (elem, cause) {
       if (elem != null) {
         if (cause.characterInFile === -1 && cause.lineNo) cause.lineNo += 1
@@ -217,22 +217,28 @@ module.exports = {
       }
       try {
         statusRow.innerHTML = ''
-        if (contentType === 'application/json') JSON.parse(data)
+        if (contentType === 'application/json') return JSON.parse(data)
         else {
-          kb.removeDocument(base)
-          $rdf.parse(data, kb, base.uri, contentType)
-          // Check jsonld parsing error (rdflib do not return parsing errors)
+          fetcher.unload(subject)
+          // rdflib parse jsonld do not return parsing errors
           if (contentType === 'application/ld+json') {
             JSON.parse(data)
-            // why serialize allways return blank graph ?
-            console.log('data ' + data.includes('@id') + data)
-            let res = $rdf.serialize(kb.sym(base.uri), kb, base.uri, contentType)
-            console.log('serialize ' + res.includes('@id') + res)
-            /* if (data.includes('@id') && !res.includes('@id')) {
-                throw new Error('Invalid jsonld : predicate do not expand to an absolute IRI')
-            } */
+            $rdf.parse(data, kb, base.uri, contentType, (err, res) => {
+              if (err) throw err
+              let serialized = $rdf.serialize(base, res, base.uri, contentType)
+              if (data.includes('@id') && !serialized.includes('@id')) {
+                const e = new Error('Invalid jsonld : predicate do not expand to an absolute IRI')
+                statusRow.appendChild(UI.widgets.errorMessageBlock(dom, e))
+                // throw e
+                return false
+              }
+              return true
+            })
+          } else {
+            $rdf.parse(data, kb, base.uri, contentType)
           }
         }
+        return true
       } catch (e) {
         statusRow.appendChild(UI.widgets.errorMessageBlock(dom, e))
         for (let cause = e; (cause = cause.cause); cause) {
@@ -292,11 +298,8 @@ module.exports = {
           try {
             $rdf.parse(textArea.value, kb, subject.uri, contentType)
             // for jsonld serialize which is a Promise. New rdflib
-            // const serialized = Promise.resolve($rdf.serialize(kb.sym(subject.uri), kb, subject.uri, contentType))
-            // serialized.then(result => { textArea.value = result; /*return div*/ })
-            const serialized = $rdf.serialize(kb.sym(subject.uri), kb, subject.uri, contentType)
-            textArea.value = serialized
-            return div
+            const serialized = Promise.resolve($rdf.serialize(kb.sym(subject.uri), kb, subject.uri, contentType))
+            serialized.then(result => { textArea.value = result; /*return div*/ })
             cancelButton.style.visibility = 'visible'
           } catch (e) {
             statusRow.appendChild(UI.widgets.errorMessageBlock(dom, e))
