@@ -141,7 +141,7 @@ module.exports = {
       cancelButton.style.visibility = 'visible'
       saveButton.style.visibility = 'collapse'
       myCompactButton['style'] = "visibility: visible; width: 100px; padding: 10.2px; transform: translate(0, -30%)"
-      if (!compactable[contentType.split(';')[0]]) {  myCompactButton.style.visibility = "collapse" }
+      if (!compactable[contentType.split(';')]) {  myCompactButton.style.visibility = "collapse" }
       textArea.setAttribute('readonly', 'true')
     }
     function setEditable () {
