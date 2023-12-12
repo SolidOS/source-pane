@@ -90,6 +90,15 @@ module.exports = {
     // Set in refresh()
     let contentType, allowed, eTag // Note it when we read and use it when we save
 
+    // from humanReadablePane see source-pane issue#53
+    const cts = kb.fetcher.getHeader(subject.doc(), 'content-type')
+    contentType = cts ? cts[0] : null
+    if (contentType) {
+      console.log('sourcePane: c-t:' + contentType)
+    } else {
+      console.log('sourcePane: unknown content-type?')
+    }
+
     const div = dom.createElement('div')
     div.setAttribute('class', 'sourcePane')
     const table = div.appendChild(dom.createElement('table'))
@@ -324,7 +333,8 @@ module.exports = {
     // get response headers
     function getResponseHeaders (response) {
       if (response.headers && response.headers.get('content-type')) {
-        contentType = response.headers.get('content-type').split(';')[0] // Should work but headers may be empty
+        // do not work on CSS see source-pane issue#53
+        // contentType = response.headers.get('content-type').split(';')[0] // Should work but headers may be empty
         allowed = response.headers.get('allow')
         eTag = response.headers.get('etag')
       } else {
