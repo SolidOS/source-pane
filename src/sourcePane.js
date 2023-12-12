@@ -91,13 +91,13 @@ module.exports = {
     let contentType, allowed, eTag // Note it when we read and use it when we save
 
     // from humanReadablePane see source-pane issue#53
-    const cts = kb.fetcher.getHeader(subject.doc(), 'content-type')
+    /* const cts = kb.fetcher.getHeader(subject.doc(), 'content-type')
     contentType = cts ? cts[0] : null
     if (contentType) {
       console.log('sourcePane: c-t:' + contentType)
     } else {
       console.log('sourcePane: unknown content-type?')
-    }
+    } */
 
     const div = dom.createElement('div')
     div.setAttribute('class', 'sourcePane')
@@ -274,7 +274,7 @@ module.exports = {
         if (!happy(response, 'PUT')) return
         /// @@ show edited: make save button disabled until edited again.
         try {
-          const response = await fetcher.webOperation('HEAD', subject.uri, defaultFetchHeaders())
+          const response = await fetcher.webOperation('HEAD', subject.uri) // , defaultFetchHeaders())
           if (!happy(response, 'HEAD')) return
           getResponseHeaders(response) // get new eTag
           setUnedited() // used to be setEdited()
@@ -318,7 +318,7 @@ module.exports = {
 
     // function refresh (_event) {
       // Use default fetch headers (such as Accept)
-      function defaultFetchHeaders () {
+      /* function defaultFetchHeaders () {
       const options = fetcher.initFetchOptions(subject.uri, {})
       const { headers } = options
       options.headers = new Headers()
@@ -328,15 +328,18 @@ module.exports = {
         }
       }
       return options
-    }
+    } */
 
     // get response headers
     function getResponseHeaders (response) {
       if (response.headers && response.headers.get('content-type')) {
         // do not work on CSS see source-pane issue#53
-        // contentType = response.headers.get('content-type').split(';')[0] // Should work but headers may be empty
-        allowed = response.headers.get('allow')
+        contentType = response.headers.get('content-type').split(';')[0] // Should work but headers may be empty
+        console.log('alain contentType ' + contentType)
+        allowed = response.headers.get('allow')  //     const cts = kb.fetcher.getHeader(subject.doc(), 'content-type')
+        console.log('alain allow ' + allowed)
         eTag = response.headers.get('etag')
+        console.log('alain etag ' + eTag)
       } else {
         const reqs = kb.each(
           null,
@@ -359,13 +362,14 @@ module.exports = {
     }
 
     function refresh (_event) {
-      const options = defaultFetchHeaders()
+      // const options = defaultFetchHeaders()
 
       fetcher
-        .webOperation('GET', subject.uri, options)
+        .webOperation('GET', subject.uri) // , options)
         .then(function (response) {
           if (!happy(response, 'GET')) return
           const desc = response.responseText
+          console.log('desc ' + desc)
           if (desc === undefined) { // Defensive https://github.com/linkeddata/rdflib.js/issues/506
             const msg = 'source pane: No text in response object!!'
             statusRow.appendChild(UI.widgets.errorMessageBlock(dom, msg))
