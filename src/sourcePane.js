@@ -90,15 +90,6 @@ module.exports = {
     // Set in refresh()
     let contentType, allowed, eTag // Note it when we read and use it when we save
 
-    // from humanReadablePane see source-pane issue#53
-    /* const cts = kb.fetcher.getHeader(subject.doc(), 'content-type')
-    contentType = cts ? cts[0] : null
-    if (contentType) {
-      console.log('sourcePane: c-t:' + contentType)
-    } else {
-      console.log('sourcePane: unknown content-type?')
-    } */
-
     const div = dom.createElement('div')
     div.setAttribute('class', 'sourcePane')
     const table = div.appendChild(dom.createElement('table'))
@@ -333,13 +324,9 @@ module.exports = {
     // get response headers
     function getResponseHeaders (response) {
       if (response.headers && response.headers.get('content-type')) {
-        // do not work on CSS see source-pane issue#53
         contentType = response.headers.get('content-type').split(';')[0] // Should work but headers may be empty
-        console.log('alain contentType ' + contentType)
         allowed = response.headers.get('allow')  //     const cts = kb.fetcher.getHeader(subject.doc(), 'content-type')
-        console.log('alain allow ' + allowed)
         eTag = response.headers.get('etag')
-        console.log('alain etag ' + eTag)
       } else {
         const reqs = kb.each(
           null,
@@ -362,6 +349,7 @@ module.exports = {
     }
 
     function refresh (_event) {
+      // see https://github.com/linkeddata/rdflib.js/issues/629
       // const options = defaultFetchHeaders()
 
       fetcher
@@ -369,7 +357,6 @@ module.exports = {
         .then(function (response) {
           if (!happy(response, 'GET')) return
           const desc = response.responseText
-          console.log('desc ' + desc)
           if (desc === undefined) { // Defensive https://github.com/linkeddata/rdflib.js/issues/506
             const msg = 'source pane: No text in response object!!'
             statusRow.appendChild(UI.widgets.errorMessageBlock(dom, msg))
