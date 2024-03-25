@@ -132,7 +132,7 @@ module.exports = {
       cancelButton.style.visibility = 'visible'
       saveButton.style.visibility = 'collapse'
       myCompactButton['style'] = "visibility: visible; width: 100px; padding: 10.2px; transform: translate(0, -30%)"
-      if (!compactable[contentType.split(';')[0]]) {  myCompactButton.style.visibility = "collapse" }
+      if (!compactable[contentType.split(';')]) {  myCompactButton.style.visibility = "collapse" }
       textArea.setAttribute('readonly', 'true')
     }
     function setEditable () {
@@ -265,7 +265,7 @@ module.exports = {
         if (!happy(response, 'PUT')) return
         /// @@ show edited: make save button disabled until edited again.
         try {
-          const response = await fetcher.webOperation('HEAD', subject.uri, defaultFetchHeaders())
+          const response = await fetcher.webOperation('HEAD', subject.uri) // , defaultFetchHeaders())
           if (!happy(response, 'HEAD')) return
           getResponseHeaders(response) // get new eTag
           setUnedited() // used to be setEdited()
@@ -309,7 +309,7 @@ module.exports = {
 
     // function refresh (_event) {
       // Use default fetch headers (such as Accept)
-      function defaultFetchHeaders () {
+      /* function defaultFetchHeaders () {
       const options = fetcher.initFetchOptions(subject.uri, {})
       const { headers } = options
       options.headers = new Headers()
@@ -319,13 +319,13 @@ module.exports = {
         }
       }
       return options
-    }
+    } */
 
     // get response headers
     function getResponseHeaders (response) {
       if (response.headers && response.headers.get('content-type')) {
         contentType = response.headers.get('content-type').split(';')[0] // Should work but headers may be empty
-        allowed = response.headers.get('allow')
+        allowed = response.headers.get('allow')  //     const cts = kb.fetcher.getHeader(subject.doc(), 'content-type')
         eTag = response.headers.get('etag')
       } else {
         const reqs = kb.each(
@@ -349,10 +349,11 @@ module.exports = {
     }
 
     function refresh (_event) {
-      const options = defaultFetchHeaders()
+      // see https://github.com/linkeddata/rdflib.js/issues/629
+      // const options = defaultFetchHeaders()
 
       fetcher
-        .webOperation('GET', subject.uri, options)
+        .webOperation('GET', subject.uri) // , options)
         .then(function (response) {
           if (!happy(response, 'GET')) return
           const desc = response.responseText
