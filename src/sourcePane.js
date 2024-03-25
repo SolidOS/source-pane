@@ -219,7 +219,13 @@ module.exports = {
         statusRow.innerHTML = ''
         if (contentType === 'application/json') return JSON.parse(data)
         else {
-          fetcher.unload(subject)
+          try {
+            kb.removeDocument(subject)
+          } catch (err) {
+            if (!err.message.includes('Statement to be removed is not on store')) throw err
+            console.log(err)
+          }
+          delete fetcher.requested[subject.value]
           // rdflib parse jsonld do not return parsing errors
           if (contentType === 'application/ld+json') {
             JSON.parse(data)
