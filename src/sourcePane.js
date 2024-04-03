@@ -222,6 +222,7 @@ module.exports = {
           try {
             kb.removeDocument(subject)
           } catch (err) {
+            // this is a hack until issue is resolved in rdflib
             if (!err.message.includes('Statement to be removed is not on store')) throw err
             console.log(err)
           }
