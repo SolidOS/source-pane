@@ -44,7 +44,7 @@ jobs:
             !node_modules
           retention-days: 1
           
-dependabot:
+  dependabot:
     name: 'Dependabot'
     needs: build # After the E2E and build jobs, if one of them fails, it won't merge the PR.
     runs-on: ubuntu-latest
