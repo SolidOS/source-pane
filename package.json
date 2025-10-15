@@ -5,9 +5,9 @@
   "main": "src/sourcePane.js",
   "scripts": {
     "build": "echo nothing to build",
-    "lint": "eslint 'src/*.js'",
-    "lint-fix": "eslint 'src/*.js' --fix",
-    "test": "jest",
+    "lint": "eslint",
+    "test": "jest --no-coverage",
+    "test-coverage": "jest --coverage --collectCoverageFrom=src/**/*.[jt]s",
     "prepublishOnly": "npm run lint && npm run test",
     "postpublish": "git push origin main --follow-tags"
   },
