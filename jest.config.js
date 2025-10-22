@@ -7,6 +7,5 @@ module.exports = {
   },
   setupFilesAfterEnv: ["./test/helpers/jest.setup.js"],
   transformIgnorePatterns: ["/node_modules/(?!lit-html).+\\.js"],
-  testMatch: ['**/__tests__/**/*.ts?(x)', '**/?(*.)+(spec|test).ts?(x)'],
   roots: ['<rootDir>/src', '<rootDir>/test'],
 }

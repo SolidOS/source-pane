@@ -35,7 +35,7 @@
   "homepage": "https://github.com/solid/source-pane",
   "dependencies": {
     "lint-staged": "^16.2.0",
-    "solid-ui": "^2.6.1"
+    "solid-ui": "^2.6.1-4197a45"
   },
   "devDependencies": {
     "@babel/eslint-parser": "^7.28.0",
