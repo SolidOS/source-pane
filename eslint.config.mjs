@@ -1,4 +1,4 @@
-import globals from "globals"
+import globals from 'globals'
 
 export default [
     {
@@ -13,8 +13,8 @@ export default [
             globals: {
                 ...globals.browser,
                 ...globals.node,
-                Atomics: "readonly",
-                SharedArrayBuffer: "readonly",
+                Atomics: 'readonly',
+                SharedArrayBuffer: 'readonly',
             },
         },
 
