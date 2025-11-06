@@ -40,8 +40,8 @@
   },
   "homepage": "https://github.com/solid/source-pane",
   "peerDependencies": {
-    "solid-logic": "3.1.1",
-    "solid-ui": "^2.6.1"
+    "solid-logic": "3.1.1-536a3ae",
+    "solid-ui": "2.6.1-05fb7cc"
   },
   "devDependencies": {
     "@babel/eslint-parser": "^7.28.0",
