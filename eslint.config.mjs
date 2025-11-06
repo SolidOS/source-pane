@@ -6,7 +6,7 @@ export default [
             'node_modules/**',
             'coverage/**'
         ],
-    }, 
+    },
     {
         files: ['src/**/*.js'],
         languageOptions: {
