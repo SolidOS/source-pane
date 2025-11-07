@@ -40,8 +40,9 @@
   },
   "homepage": "https://github.com/solid/source-pane",
   "peerDependencies": {
-    "rdflib": "^2.2.37",
-    "solid-ui": "2.6.1-6458d4e"
+    "rdflib": "^2.3.0",
+    "solid-logic": "^3.1.1-3343cc7",
+    "solid-ui": "2.6.1-c6fc7fe"
   },
   "devDependencies": {
     "@babel/eslint-parser": "^7.28.0",
@@ -50,6 +51,6 @@
     "jest": "^30.0.5",
     "jest-environment-jsdom": "^30.0.5",
     "jest-fetch-mock": "^3.0.3",
-    "solid-logic": "^3.1.1-d167ace"
+    "solid-logic": "^3.1.1-3343cc7"
   }
 }
