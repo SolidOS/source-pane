@@ -1,8 +1,16 @@
 module.exports = {
+  collectCoverage: true,
+  coverageDirectory: 'coverage',
   testEnvironment: 'jsdom',
   testEnvironmentOptions: {
       customExportConditions: ['node']
   },
-  setupFilesAfterEnv: ["./jest.setup.js"],
+  setupFilesAfterEnv: ["./test/helpers/jest.setup.js"],
   transformIgnorePatterns: ["/node_modules/(?!lit-html).+\\.js"],
+  roots: ['<rootDir>/src', '<rootDir>/test'],
+  moduleNameMapper: {
+    '^window$': '<rootDir>/test/mocks/window.js',
+    '^SolidLogic$': 'solid-logic',
+    '^\\$rdf$': 'rdflib'
+  },
 }
