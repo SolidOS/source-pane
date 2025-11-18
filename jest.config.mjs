@@ -1,4 +1,4 @@
-module.exports = {
+export default {
   collectCoverage: true,
   coverageDirectory: 'coverage',
   testEnvironment: 'jsdom',
@@ -9,7 +9,6 @@ module.exports = {
   transformIgnorePatterns: ["/node_modules/(?!lit-html).+\\.js"],
   roots: ['<rootDir>/src', '<rootDir>/test'],
   moduleNameMapper: {
-    '^window$': '<rootDir>/test/mocks/window.js',
     '^SolidLogic$': 'solid-logic',
     '^\\$rdf$': 'rdflib'
   },
