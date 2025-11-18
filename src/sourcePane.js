@@ -131,8 +131,8 @@ module.exports = {
       textArea.style.color = '#888'
       cancelButton.style.visibility = 'visible'
       saveButton.style.visibility = 'collapse'
-      myCompactButton['style'] = "visibility: visible; width: 100px; padding: 10.2px; transform: translate(0, -30%)"
-      if (!compactable[contentType.split(';')]) {  myCompactButton.style.visibility = "collapse" }
+      myCompactButton['style'] = 'visibility: visible; width: 100px; padding: 10.2px; transform: translate(0, -30%)'
+      if (!compactable[contentType.split(';')]) {  myCompactButton.style.visibility = 'collapse' }
       textArea.setAttribute('readonly', 'true')
     }
     function setEditable () {
@@ -176,7 +176,7 @@ module.exports = {
       if (elem != null) {
         if (cause.characterInFile === -1 && cause.lineNo) cause.lineNo += 1
         const pos = cause.lineNo ? elem.value.split('\n', cause.lineNo).join('\n').length : 0
-        let caretPos = pos + cause.characterInFile
+        const caretPos = pos + cause.characterInFile
         if (elem.createTextRange) {
           const range = elem.createTextRange()
           range.move('character', caretPos)
@@ -193,6 +193,7 @@ module.exports = {
     function HTMLDataIsland (data) {
       let dataIslandContentType = ''
       let dataIsland = ''
+      const pos = 0 
       const scripts = data.split('</script')
       if (scripts && scripts.length) {
         for (let script of scripts) {
@@ -206,11 +207,12 @@ module.exports = {
           }
         }
       }
-      return [dataIsland, dataIslandContentType]
+      return [dataIsland, dataIslandContentType, pos]
     }
 
     function checkSyntax (data, contentType, base) {
       if (!parseable[contentType]) return true // don't check things we don't understand
+      let pos
       if (contentType === 'text/html') {
         [data, contentType, pos] = HTMLDataIsland(data)
         if (!contentType) return true
@@ -232,7 +234,7 @@ module.exports = {
             JSON.parse(data)
             $rdf.parse(data, kb, base.uri, contentType, (err, res) => {
               if (err) throw err
-              let serialized = $rdf.serialize(base, res, base.uri, contentType)
+              const serialized = $rdf.serialize(base, res, base.uri, contentType)
               if (data.includes('@id') && !serialized.includes('@id')) {
                 const e = new Error('Invalid jsonld : predicate do not expand to an absolute IRI')
                 statusRow.appendChild(UI.widgets.errorMessageBlock(dom, e))
@@ -306,7 +308,7 @@ module.exports = {
             $rdf.parse(textArea.value, kb, subject.uri, contentType)
             // for jsonld serialize which is a Promise. New rdflib
             const serialized = Promise.resolve($rdf.serialize(kb.sym(subject.uri), kb, subject.uri, contentType))
-            serialized.then(result => { textArea.value = result; /*return div*/ })
+            serialized.then(result => { textArea.value = result /*return div*/ })
             cancelButton.style.visibility = 'visible'
           } catch (e) {
             statusRow.appendChild(UI.widgets.errorMessageBlock(dom, e))

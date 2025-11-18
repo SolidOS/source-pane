@@ -1,4 +1,4 @@
-const { context, doc, subject } = require('./setup')
+const { context, doc, subject } = require('./helpers/setup')
 const pane = require('../src/sourcePane')
 const { findByText, fireEvent, getByTitle, waitFor } = require('@testing-library/dom')
 const fetchMock = require('jest-fetch-mock')
