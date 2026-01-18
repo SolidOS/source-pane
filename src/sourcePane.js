@@ -82,8 +82,8 @@ module.exports = {
     const dom = context.dom
     const kb = context.session.store
     const fetcher = kb.fetcher
-    const editStyle =
-      'font-family: monospace; font-size: 100%; min-width:60em; margin: 1em 0.2em 1em 0.2em; padding: 1em; border: 0.1em solid #888; border-radius: 0.5em;'
+    const editStyle = UI.style.sourcePaneStyle ||
+      'font-family: monospace; font-size: 100%; min-width:60em; margin: 1em 0.2em 1em 0.2em; padding: var(--sui-space-lg, 1em); border: 0.1em solid var(--sui-border-color, #888); border-radius: var(--sui-border-radius, 0.5em);'
     let readonly = true
     let editing = false
     let broken = false
@@ -176,7 +176,7 @@ module.exports = {
       if (elem != null) {
         if (cause.characterInFile === -1 && cause.lineNo) cause.lineNo += 1
         const pos = cause.lineNo ? elem.value.split('\n', cause.lineNo).join('\n').length : 0
-        let caretPos = pos + cause.characterInFile
+        const caretPos = pos + cause.characterInFile
         if (elem.createTextRange) {
           const range = elem.createTextRange()
           range.move('character', caretPos)
@@ -234,7 +234,7 @@ module.exports = {
             JSON.parse(data)
             $rdf.parse(data, kb, base.uri, contentType, (err, res) => {
               if (err) throw err
-              let serialized = $rdf.serialize(base, res, base.uri, contentType)
+              const serialized = $rdf.serialize(base, res, base.uri, contentType)
               if (data.includes('@id') && !serialized.includes('@id')) {
                 const e = new Error('Invalid jsonld : predicate do not expand to an absolute IRI')
                 statusRow.appendChild(UI.widgets.errorMessageBlock(dom, e))

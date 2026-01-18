@@ -1,4 +1,4 @@
-module.exports = {
+export default {
   collectCoverage: true,
   coverageDirectory: 'coverage',
   testEnvironment: 'jsdom',
@@ -8,4 +8,8 @@ module.exports = {
   setupFilesAfterEnv: ["./test/helpers/jest.setup.js"],
   transformIgnorePatterns: ["/node_modules/(?!lit-html).+\\.js"],
   roots: ['<rootDir>/src', '<rootDir>/test'],
+  moduleNameMapper: {
+    '^SolidLogic$': 'solid-logic',
+    '^\\$rdf$': 'rdflib'
+  },
 }
