@@ -193,7 +193,7 @@ module.exports = {
     function HTMLDataIsland (data) {
       let dataIslandContentType = ''
       let dataIsland = ''
-      let pos = 0 
+      const pos = 0 
       const scripts = data.split('</script')
       if (scripts && scripts.length) {
         for (let script of scripts) {
