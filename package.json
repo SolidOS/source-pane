@@ -34,8 +34,7 @@
   },
   "homepage": "https://github.com/solid/source-pane",
   "dependencies": {
-    "lint-staged": "^16.2.0",
-    "solid-ui": "^2.6.1-4197a45"
+    "solid-ui": "^3.0.1-11be53b"
   },
   "devDependencies": {
     "@babel/eslint-parser": "^7.28.0",
@@ -44,7 +43,8 @@
     "husky": "^9.1.7",
     "jest": "^30.0.5",
     "jest-environment-jsdom": "^30.0.5",
-    "jest-fetch-mock": "^3.0.3"
+    "jest-fetch-mock": "^3.0.3",
+    "lint-staged": "^16.2.6"
   },
   "husky": {
     "hooks": {
