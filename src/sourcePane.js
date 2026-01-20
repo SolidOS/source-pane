@@ -82,8 +82,8 @@ module.exports = {
     const dom = context.dom
     const kb = context.session.store
     const fetcher = kb.fetcher
-    const editStyle =
-      'font-family: monospace; font-size: 100%; min-width:60em; margin: 1em 0.2em 1em 0.2em; padding: 1em; border: 0.1em solid #888; border-radius: 0.5em;'
+    const editStyle = UI.style.sourcePaneStyle ||
+      'font-family: monospace; font-size: 100%; min-width:60em; margin: 1em 0.2em 1em 0.2em; padding: var(--sui-space-lg, 1em); border: 0.1em solid var(--sui-border-color, #888); border-radius: var(--sui-border-radius, 0.5em);'
     let readonly = true
     let editing = false
     let broken = false

@@ -43,7 +43,7 @@
   "peerDependencies": {
     "rdflib": "^2.3.0",
     "solid-logic": "^4.0.0",
-    "solid-ui": "^3.0.0"
+    "solid-ui": "^3.0.1-11be53b"
   },
   "devDependencies": {
     "@babel/eslint-parser": "^7.28.0",
@@ -52,7 +52,8 @@
     "jest": "^30.2.0",
     "jest-environment-jsdom": "^30.0.5",
     "jest-fetch-mock": "^3.0.3",
+    "pane-registry": "^3.0.0",
     "solid-logic": "^4.0.0",
-    "solid-ui": "^3.0.0"
+    "solid-ui": "^3.0.1-11be53b"
   }
 }
