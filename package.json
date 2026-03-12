@@ -2,14 +2,20 @@
   "name": "source-pane",
   "version": "3.0.1",
   "description": "Solid-compatible Panes: Source editor",
-  "main": "src/sourcePane.js",
+  "main": "lib/source-pane.js",
+  "types": "lib/index.d.ts",
+  "sideEffects": [
+    "**/*.css"
+  ],
   "files": [
-    "/src",
+    "/lib",
     "README.md",
     "LICENSE"
   ],
   "scripts": {
-    "build": "echo nothing to build",
+    "clean": "rm -rf lib",
+    "build": "npm run clean && npm run build-dist",
+    "build-dist": "webpack --progress",
     "lint": "eslint",
     "lint-fix": "eslint --fix",
     "test": "jest --no-coverage",
