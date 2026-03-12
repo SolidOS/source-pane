@@ -31,10 +31,10 @@ const normalConfig = {
   mode: 'production',
   output: {
     path: path.resolve(process.cwd(), 'lib'),
-    filename: 'issue-pane.js',
+    filename: 'source-pane.js',
     library: {
       type: 'umd',
-      name: 'IssuePane',
+      name: 'SourcePane',
       export: 'default',
     },
     globalObject: 'this',
@@ -61,10 +61,10 @@ const minConfig = {
   mode: 'production',
   output: {
     path: path.resolve(process.cwd(), 'lib'),
-    filename: 'issue-pane.min.js',
+    filename: 'source-pane.min.js',
     library: {
       type: 'umd',
-      name: 'IssuePane',
+      name: 'SourcePane',
       export: 'default',
     },
     globalObject: 'this',
