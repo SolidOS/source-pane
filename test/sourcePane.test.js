@@ -1,5 +1,5 @@
 const { context, doc, subject } = require('./helpers/setup')
-const pane = require('../src/sourcePane')
+const pane = require('../src/index')
 const { findByText, fireEvent, getByTitle, waitFor } = require('@testing-library/dom')
 const fetchMock = require('jest-fetch-mock')
 const { parse, sym } = require('rdflib')
