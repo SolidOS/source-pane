@@ -1,0 +1,77 @@
+.sourcePane {
+  width: 100%;
+}
+
+.sourcePaneControls {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 0.4rem;
+  flex-wrap: nowrap;
+  width: 100%;
+  padding-right: 1.6em;
+  text-align: right;
+}
+
+.sourcePaneControls > * {
+  flex: 0 0 auto;
+}
+
+.sourcePaneTable {
+  width: 100%;
+}
+
+.sourcePaneControlsCell {
+  width: 100%;
+  text-align: right;
+  padding: 0 0.2em var(--spacing-md, 1em) 0;
+}
+
+.sourcePaneMainCell,
+.sourcePaneStatusRow {
+  width: 100%;
+}
+.sourcePaneTextArea {
+  font-family: monospace;
+  font-size: 100%;
+  min-width: 60em;
+  margin: var(--spacing-md, 1em) 0.2em;
+  padding: var(--spacing-md, 1em);
+  border: 0.1em solid #888;
+  border-radius: var(--border-radius-base, 0.5em);
+}
+
+.sourcePaneTextAreaUnedited {
+  color: #888;
+}
+
+.sourcePaneTextAreaEditing {
+  color: black;
+}
+
+.sourcePaneTextAreaEdited {
+  color: green;
+}
+
+.sourcePaneTextAreaError {
+  color: red;
+}
+
+.sourcePaneCompactButton {
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 7.5rem;
+  padding: 0.55rem 0.9rem;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.sourcePaneControlVisible {
+  visibility: visible;
+}
+
+.sourcePaneControlHidden {
+  visibility: collapse;
+}
