@@ -72,14 +72,6 @@ const minConfig = {
   },
   plugins: [
     ...(common.plugins || []),
-    new CopyPlugin({
-      patterns: [
-        {
-          from: path.resolve('src/styles'),
-          to: path.resolve('lib/styles'),
-        },
-      ],
-    }),
   ],
   optimization: {
     minimize: true,
