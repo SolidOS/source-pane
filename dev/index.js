@@ -1,5 +1,5 @@
 import * as logic from 'solid-logic'
-import pane from '../src/index'
+import pane from '../src/sourcePane'
 import './dev-global.css'
 import * as $rdf from 'rdflib'
 import * as UI from 'solid-ui'
@@ -33,24 +33,21 @@ finishLogin()
 
 // const targetURIToShow = "https://timbl.com/timbl/Automation/mother/tracker.n3#mother"
 // const targetURIToShow = 'https://sstratsianis.solidcommunity.net/TestingTracker/index.ttl#this'
-const targetURIToShow = 'https://testingsolidos.solidcommunity.net/profile/card'
+const targetURIToShow = 'https://testingsolidos.solidcommunity.net/profile/card#me'
 
-logic.store.fetcher.load(targetURIToShow).then(() => {
-  try {
-    const context = {
-      dom: document,
-      session: {
-        store: logic.store
-      },
-      getOutliner: () => null
-    }
-    const app = pane.render($rdf.sym(targetURIToShow), context)
-    document.getElementById('app').replaceWith(app)
-  } catch (err) {
-    console.error('Error rendering pane:', err)
-    document.getElementById('app').innerHTML = `<p style="color:red;">Error: ${err.message}</p>`
-  }
-}).catch(err => {
-  console.error('Error loading resource:', err)
-  document.getElementById('app').innerHTML = `<p style="color:red;">Failed to load: ${err.message}</p>`
-})
+const context = {
+  dom: document,
+  session: {
+    store: logic.store
+  },
+  getOutliner: () => null
+}
+
+try {
+  const app = pane.render($rdf.sym(targetURIToShow), context)
+  document.getElementById('app').replaceWith(app)
+} catch (err) {
+  console.error('Error rendering pane:', err)
+  document.getElementById('app').innerHTML = `<p style="color:red;">Error: ${err.message}</p>`
+}
+

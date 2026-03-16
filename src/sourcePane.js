@@ -4,11 +4,11 @@
  **
 */
 
-const $rdf = require('rdflib')
-const UI = require('solid-ui')
-const mime = require('mime-types')
+import * as $rdf from 'rdflib'
+import * as UI from 'solid-ui'
+import * as mime from 'mime-types'
 
-module.exports = {
+const pane = {
   icon: UI.icons.iconBase + 'noun_109873.svg', // noun_109873_51A7F9.svg
 
   name: 'source',
@@ -415,5 +415,7 @@ module.exports = {
     return div
   }
 }
+
+export default pane
 
 // ENDS
