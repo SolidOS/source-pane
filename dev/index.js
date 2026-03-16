@@ -1,5 +1,5 @@
 import * as logic from 'solid-logic'
-import pane from '../src/index'
+import pane from '../src/sourcePane'
 import './dev-global.css'
 import * as $rdf from 'rdflib'
 import * as UI from 'solid-ui'
