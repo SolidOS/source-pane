@@ -1,5 +1,5 @@
 const { context, doc, subject } = require('./helpers/setup')
-const paneModule = require('../src/index')
+const paneModule = require('../src/sourcePane')
 const pane = paneModule.default || paneModule
 const { findByText, fireEvent, getByTitle, waitFor } = require('@testing-library/dom')
 const fetchMock = require('jest-fetch-mock')
