@@ -48,7 +48,7 @@
   align-items: center;
   justify-content: center;
   min-width: 7.5rem;
-  padding: 0.55rem 0.9rem;
+  padding: var(--spacing-xs, 0.55rem) var(--spacing-md, 0.9rem);
   line-height: 1.2;
   white-space: nowrap;
 }
