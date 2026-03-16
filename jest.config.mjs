@@ -7,8 +7,8 @@ export default {
   roots: ['<rootDir>/src', '<rootDir>/test'],
   moduleNameMapper: {
     '^SolidLogic$': 'solid-logic',
-    '^\$rdf$': '<rootDir>/test/helpers/rdfMock.js',
+    '^\\$rdf$': '<rootDir>/test/helpers/rdfMock.js',
     '^solid-ui$': '<rootDir>/test/helpers/solidUiMock.js',
-    '\\.(css|less|scss|sass)$': '<rootDir>/test/helpers/styleMock.js'
+'\\.(css|less|scss|sass)$': '<rootDir>/test/helpers/styleMock.js'
   },
 }
