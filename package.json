@@ -12,9 +12,7 @@
     "LICENSE"
   ],
   "scripts": {
-    "clean": "rm -rf lib",
-    "build": "npm run clean && npm run build-dist",
-    "build-dist": "webpack --progress",
+    "build": "echo nothing to build",
     "lint": "eslint",
     "lint-fix": "eslint --fix",
     "test": "jest --no-coverage",
