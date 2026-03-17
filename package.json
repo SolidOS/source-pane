@@ -3,9 +3,6 @@
   "version": "3.0.1",
   "description": "Solid-compatible Panes: Source editor",
   "main": "src/sourcePane.js",
-  "sideEffects": [
-    "**/*.css"
-  ],
   "files": [
     "/src",
     "README.md",
