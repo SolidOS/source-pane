@@ -46,11 +46,6 @@
     "url": "https://github.com/SolidOS/source-pane/issues"
   },
   "homepage": "https://github.com/SolidOS/source-pane",
-  "packageManager": "npm@11.12.0",
-  "engines": {
-    "node": ">=20",
-    "npm": ">=11"
-  },
   "peerDependencies": {
     "rdflib": "^2.3.5",
     "solid-logic": "^4.0.2",
