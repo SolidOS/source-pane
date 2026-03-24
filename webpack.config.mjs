@@ -13,9 +13,24 @@ const common = {
     rules: moduleRules,
   },
   externals: {
-    'solid-ui': 'UI',
-    'solid-logic': 'SolidLogic',
-    rdflib: '$rdf',
+    'solid-ui': {
+      commonjs: 'solid-ui',
+      commonjs2: 'solid-ui',
+      amd: 'solid-ui',
+      root: 'UI',
+    },
+    'solid-logic': {
+      commonjs: 'solid-logic',
+      commonjs2: 'solid-logic',
+      amd: 'solid-logic',
+      root: 'SolidLogic',
+    },
+    rdflib: {
+      commonjs: 'rdflib',
+      commonjs2: 'rdflib',
+      amd: 'rdflib',
+      root: '$rdf',
+    },
   },
   resolve: {
     extensions: ['.js', '.ts'],
