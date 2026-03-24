@@ -4,10 +4,12 @@ const pane = paneModule.default || paneModule
 const { findByText, fireEvent, getByTitle, waitFor } = require('@testing-library/dom')
 const fetchMock = require('jest-fetch-mock')
 const { parse, sym } = require('rdflib')
+const { solidLogicSingleton } = require('solid-logic')
 
 describe("source-pane", () => {
   describe("test button compact", () => {
     let result
+
     describe("text/turtle file", () => {
       beforeAll(() => {
         const subject = sym("https://janedoe.example/test.ttl")

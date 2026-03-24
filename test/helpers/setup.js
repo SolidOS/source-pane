@@ -1,11 +1,9 @@
 // import { DataBrowserContext, PaneRegistry } from "pane-registry";
 const { DataBrowserContext, PaneRegistry } = require('pane-registry')
 // import { sym } from "rdflib";
-const $rdf = require('rdflib')
-
-const store = $rdf.graph()
-const fetcher = new $rdf.Fetcher(store, { fetch: global.fetch })
-store.fetcher = fetcher
+const { sym } = require('rdflib')
+// import { SolidLogic, store } from "solid-logic";
+const { SolidLogic, store } = require('solid-logic')
 
 exports.context = {
     dom: document,
@@ -24,6 +22,6 @@ exports.context = {
             }
         } /*as PaneRegistry*/,
         store,
-        logic: {},
+        logic: {} /*as SolidLogic*/,
     },
 } /*as unknown as DataBrowserContext;*/
