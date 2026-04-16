@@ -2,6 +2,9 @@
   "name": "source-pane",
   "version": "3.0.2",
   "description": "Solid-compatible Panes: Source editor",
+  "sideEffects": [
+    "*.css"
+  ],
   "main": "src/sourcePane.js",
   "files": [
     "/src",

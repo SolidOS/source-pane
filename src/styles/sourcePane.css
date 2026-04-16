@@ -1,5 +1,6 @@
 .sourcePane {
   width: 100%;
+  max-width: 100%;
 }
 
 .sourcePaneControls {
@@ -7,18 +8,19 @@
   justify-content: flex-end;
   align-items: center;
   gap: 0.4rem;
-  flex-wrap: nowrap;
+  flex-wrap: wrap;
   width: 100%;
   padding-right: 1.6em;
   text-align: right;
 }
 /* generative ai */
 .sourcePaneControls > * {
-  flex: 0 0 auto;
+  flex: 0 1 auto;
 }
 
 .sourcePaneTable {
   width: 100%;
+  table-layout: fixed;
 }
 
 .sourcePaneControlsCell {
@@ -33,13 +35,17 @@
 }
 
 .sourcePaneTextArea {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
   font-family: monospace;
   font-size: 100%;
-  min-width: 60em;
   margin: var(--spacing-md, 1em) 0.2em;
   padding: var(--spacing-md, 1em);
   border: 0.1em solid #888;
   border-radius: var(--border-radius-base, 0.5em);
+  resize: vertical;
 }
 
 .sourcePaneCompactButton {
@@ -47,10 +53,32 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 7.5rem;
+  min-width: 6rem;
   padding: var(--spacing-xs, 0.55rem) var(--spacing-md, 0.9rem);
   line-height: 1.2;
   white-space: nowrap;
+}
+
+@media (max-width: 900px) {
+  .sourcePaneControls {
+    padding-right: 0.2em;
+  }
+
+  .sourcePaneTextArea {
+    margin: var(--spacing-sm, 0.75em) 0.1em;
+    padding: var(--spacing-sm, 0.75em);
+  }
+}
+
+@media (max-width: 600px) {
+  .sourcePaneControls {
+    justify-content: flex-start;
+    gap: 0.3rem;
+  }
+
+  .sourcePaneCompactButton {
+    min-width: 0;
+  }
 }
 
 /* generative ai */

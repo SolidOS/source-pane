@@ -7,6 +7,7 @@
 import * as $rdf from 'rdflib'
 import * as UI from 'solid-ui'
 import * as mime from 'mime-types'
+import './styles/sourcePane.css'
 
 const pane = {
   icon: UI.icons.iconBase + 'noun_109873.svg', // noun_109873_51A7F9.svg
@@ -82,8 +83,6 @@ const pane = {
     const dom = context.dom
     const kb = context.session.store
     const fetcher = kb.fetcher
-    const editStyle =
-      'font-family: monospace; font-size: 100%; min-width:60em; margin: 1em 0.2em 1em 0.2em; padding: 1em; border: 0.1em solid #888; border-radius: 0.5em;'
     let readonly = true
     let editing = false
     let broken = false
@@ -93,13 +92,16 @@ const pane = {
     const div = dom.createElement('div')
     div.setAttribute('class', 'sourcePane')
     const table = div.appendChild(dom.createElement('table'))
+    table.setAttribute('class', 'sourcePaneTable')
     const main = table.appendChild(dom.createElement('tr'))
+    main.setAttribute('class', 'sourcePaneMainCell')
     const statusRow = table.appendChild(dom.createElement('tr'))
+    statusRow.setAttribute('class', 'sourcePaneStatusRow')
     const controls = table.appendChild(dom.createElement('tr'))
-    controls.setAttribute('style', 'text-align: right;')
+    controls.setAttribute('class', 'sourcePaneControls sourcePaneControlsCell')
 
     const textArea = main.appendChild(dom.createElement('textarea'))
-    textArea.setAttribute('style', editStyle)
+    textArea.setAttribute('class', 'sourcePaneTextArea')
 
     function editButton (dom) {
       return UI.widgets.button(
@@ -120,6 +122,7 @@ const pane = {
     }
 
     const myCompactButton = controls.appendChild(compactButton(dom))
+    myCompactButton.classList.add('sourcePaneCompactButton')
     const cancelButton = controls.appendChild(UI.widgets.cancelButton(dom))
     const saveButton = controls.appendChild(UI.widgets.continueButton(dom))
 
@@ -144,31 +147,30 @@ const pane = {
     function setUnedited () {
       if (broken) return
       editing = false
-      myEditButton.style.visibility =  subject.uri.endsWith('/') ? 'collapse' : 'visible'
-      textArea.style.color = '#888'
-      cancelButton.style.visibility = 'visible'
-      saveButton.style.visibility = 'collapse'
-      myCompactButton['style'] = 'visibility: visible; width: 100px; padding: 10.2px; transform: translate(0, -30%)'
-      if (!compactable[contentType.split(';')]) {  myCompactButton.style.visibility = 'collapse' }
+      setControlVisible(myEditButton, !readonly && !subject.uri.endsWith('/'))
+      setControlVisible(cancelButton, true)
+      setControlVisible(saveButton, false)
+      setControlVisible(myCompactButton, !!(contentType && compactable[contentType.split(';')[0]]))
+      setTextState('sourcePaneTextAreaUnedited')
       textArea.setAttribute('readonly', 'true')
     }
     function setEditable () {
       if (broken) return
       editing = true
-      textArea.style.color = 'black'
-      cancelButton.style.visibility = 'visible' // not logically needed but may be comforting
-      saveButton.style.visibility = 'collapse'
-      myEditButton.style.visibility = 'collapse'
-      myCompactButton.style.visibility = 'collapse' // do not allow compact while editing
+      setControlVisible(cancelButton, true) // not logically needed but may be comforting
+      setControlVisible(saveButton, false)
+      setControlVisible(myEditButton, false)
+      setControlVisible(myCompactButton, false) // do not allow compact while editing
+      setTextState('sourcePaneTextAreaEditing')
       textArea.removeAttribute('readonly')
     }
     function setEdited (_event) {
       if (broken || !editing) return
-      textArea.style.color = 'green'
-      cancelButton.style.visibility = 'visible'
-      saveButton.style.visibility = 'visible'
-      myEditButton.style.visibility = 'collapse'
-      myCompactButton.style.visibility = 'collapse'
+      setControlVisible(cancelButton, true)
+      setControlVisible(saveButton, true)
+      setControlVisible(myEditButton, false)
+      setControlVisible(myCompactButton, false)
+      setTextState('sourcePaneTextAreaEdited')
       textArea.removeAttribute('readonly')
     }
     // end of generative ai refactor
@@ -283,7 +285,7 @@ const pane = {
       const data = textArea.value
       if (!checkSyntax(data, contentType, subject)) {
         setEdited() // failed to save -> different from web
-        textArea.style.color = 'red'
+        setTextState('sourcePaneTextAreaError')
         return
       }
       const options = { data, contentType }
@@ -328,7 +330,7 @@ const pane = {
             // for jsonld serialize which is a Promise. New rdflib
             const serialized = Promise.resolve($rdf.serialize(kb.sym(subject.uri), kb, subject.uri, contentType))
             serialized.then(result => { textArea.value = result /*return div*/ })
-            cancelButton.style.visibility = 'visible'
+            setControlVisible(cancelButton, true)
           } catch (e) {
             statusRow.appendChild(UI.widgets.errorMessageBlock(dom, e))
           }
@@ -391,7 +393,6 @@ const pane = {
             return // Never mis-represent the contents of the file.
           }
           textArea.rows = desc.split('\n').length + 2
-          textArea.cols = 80
           textArea.value = desc
 
           getResponseHeaders (response)
@@ -406,7 +407,6 @@ const pane = {
             )
             return
           }
-          setUnedited()
           // console.log('       source content-type ' + contentType)
           // let allowed = response.headers['allow']
           if (!allowed) {
@@ -415,7 +415,7 @@ const pane = {
           } else {
             readonly = allowed.indexOf('PUT') < 0 // In future more info re ACL allow?
           }
-          textArea.readonly = readonly
+          setUnedited()
         })
         .catch(err => {
           div.appendChild(
