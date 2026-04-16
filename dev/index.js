@@ -48,6 +48,11 @@ try {
   document.getElementById('app').replaceWith(app)
 } catch (err) {
   console.error('Error rendering pane:', err)
-  document.getElementById('app').innerHTML = `<p style="color:red;">Error: ${err.message}</p>`
+  const appElement = document.getElementById('app')
+  const errorParagraph = document.createElement('p')
+  errorParagraph.style.color = 'red'
+  errorParagraph.textContent = `Error: ${err.message}`
+  appElement.textContent = ''
+  appElement.appendChild(errorParagraph)
 }
 

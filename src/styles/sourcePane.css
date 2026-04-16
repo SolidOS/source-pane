@@ -99,9 +99,9 @@
 }
 
 .sourcePaneControlVisible {
-  visibility: visible;
+  display: block;
 }
 
 .sourcePaneControlHidden {
-  visibility: collapse;
+  display: none;
 }
