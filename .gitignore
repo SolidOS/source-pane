@@ -5,6 +5,9 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
+# Webpack files
+lib
+
 # Runtime data
 pids
 *.pid
