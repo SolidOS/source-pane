@@ -1,3 +1,4 @@
+import path from 'path'
 import HtmlWebpackPlugin from 'html-webpack-plugin'
 import NodePolyfillPlugin from 'node-polyfill-webpack-plugin'
 import { moduleRules } from './webpack.module.rules.mjs'
@@ -6,6 +7,11 @@ export default [
   {
     mode: 'development',
     entry: ['./dev/index.js'],
+    output: {
+      path: path.resolve(process.cwd(), 'lib'),
+      filename: 'main.js',
+      clean: false,
+    },
     plugins: [
       new HtmlWebpackPlugin({ template: './dev/index.html' }),
       new NodePolyfillPlugin()
@@ -26,7 +32,11 @@ export default [
     },
 
     devServer: {
-      static: ['./dev', './test']
+      static: ['./dev', './test'],
+      port: 9002,
+      devMiddleware: {
+        writeToDisk: false,
+      },
     },
     devtool: 'source-map',
   },
