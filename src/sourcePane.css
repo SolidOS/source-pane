@@ -1,6 +1,9 @@
 .sourcePane {
-  width: 100%;
-  max-width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 23px;
+  padding-bottom: 29px;
 }
 
 .sourcePaneControls {
@@ -10,27 +13,17 @@
   gap: 0.4rem;
   flex-wrap: wrap;
   width: 100%;
-  padding-right: 1.6em;
   text-align: right;
+  padding: 0 0.2em var(--spacing-md, 1em) 0;
 }
 /* generative ai */
 .sourcePaneControls > * {
   flex: 0 1 auto;
 }
 
-.sourcePaneTable {
-  width: 100%;
-  table-layout: fixed;
-}
-
-.sourcePaneControlsCell {
-  width: 100%;
-  text-align: right;
-  padding: 0 0.2em var(--spacing-md, 1em) 0;
-}
-
-.sourcePaneMainCell,
-.sourcePaneStatusRow {
+.sourcePaneHeader,
+.sourcePaneMain,
+.sourcePaneStatus {
   width: 100%;
 }
 

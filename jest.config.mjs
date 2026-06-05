@@ -6,7 +6,7 @@ export default {
       customExportConditions: ['node']
   },
   setupFilesAfterEnv: ["./test/helpers/jest.setup.js"],
-  transformIgnorePatterns: ["/node_modules/(?!lit-html).+\\.js"],
+  transformIgnorePatterns: ["/node_modules/(?!(@lit|@lit-labs|lit|lit-html|lit-element)/).+\\.js$"],
   roots: ['<rootDir>/src', '<rootDir>/test'],
   moduleNameMapper: {
     '^SolidLogic$': 'solid-logic',
