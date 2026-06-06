@@ -9,11 +9,10 @@ import { DataBrowserContext, NewPaneOptions } from 'pane-registry'
 import * as mime from 'mime-types'
 import { html, render as litRender } from 'lit'
 import { log } from './debug'
-import { renderSourceCard } from './SourceCard'
+import './components/sourceEditor/SourceEditor'
 import { renderHeader } from './Header'
 import { getStatusSection } from './StatusSection'
-import './sourcePane.css'
-import { refresh } from './helpers'
+import './SourcePane.styles.css'
 import { SourcePaneState } from './types'
 
 const pane = {
@@ -102,11 +101,15 @@ const pane = {
     sourcePane.setAttribute('class', 'sourcePane')
     litRender(html`
         ${renderHeader(store, subject, sourcePaneState)}
-        ${renderSourceCard(store, subject, sourcePaneState)}
+        <source-editor
+          .store=${store}
+          .subject=${subject}
+          .sourcePaneState=${sourcePaneState}
+        >
+        </source-editor>
         ${renderStatusSection()}
     `, sourcePane)
 
-    refresh(store, subject, sourcePaneState)
     return sourcePane
   }
 }
