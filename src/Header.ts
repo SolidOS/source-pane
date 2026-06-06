@@ -3,7 +3,7 @@ import { ref } from 'lit/directives/ref.js'
 import { parse, serialize, NamedNode, LiveStore } from 'rdflib'
 import { widgets, icons } from 'solid-ui'
 import { getStatusSection } from './StatusSection'
-import { applyResponseHeaders, checkSyntax, getResponseHeaders, happy, refresh, setControlVisible, setEdited, setUnedited } from './helpers'
+import { applyResponseHeaders, checkSyntax, getResponseHeaders, happy, setControlVisible, setEdited, setUnedited } from './helpers'
 import { SourcePaneState } from './types'
 import { compactable } from './compactableFormats'
 import SourceEditor from './components/sourceEditor/SourceEditor'
@@ -49,13 +49,11 @@ export function renderHeader (store: LiveStore, subject: NamedNode, sourcePaneSt
   function setEditable (sourcePaneState: SourcePaneState) {
     const editor = document.querySelector('source-editor') as SourceEditor | null
     const textArea = editor?.getTextArea()
-    const cancelButton = document.querySelector('.sourcePaneCancelButton') as HTMLElement
     const saveButton = document.querySelector('.sourcePaneSaveButton') as HTMLElement
     const myEditButton = document.querySelector('.sourcePaneEditButton') as HTMLElement
     const myCompactButton = document.querySelector('.sourcePaneCompactButton') as HTMLElement
     if (sourcePaneState.broken) return
     sourcePaneState.editing = true
-    setControlVisible(cancelButton, true) // not logically needed but may be comforting
     setControlVisible(saveButton, false)
     setControlVisible(myEditButton, false)
     setControlVisible(myCompactButton, false) // do not allow compact while editing
@@ -68,8 +66,7 @@ export function renderHeader (store: LiveStore, subject: NamedNode, sourcePaneSt
     const compactContentType = contentType?.split(';')[0]
     const editor = document.querySelector('source-editor') as SourceEditor | null
     const textArea = editor?.getTextArea()
-    const cancelButton = document.querySelector('.sourcePaneCancelButton') as HTMLElement
-    const { showError } = getStatusSection()
+  const { showError } = getStatusSection()
 
     if (compactContentType && compactable[compactContentType]) {
       try {
@@ -79,7 +76,6 @@ export function renderHeader (store: LiveStore, subject: NamedNode, sourcePaneSt
         serialized.then(result => {
           if (typeof result === 'string') textArea.value = result /*return div*/
         })
-        setControlVisible(cancelButton, true)
       } catch (e: any) {  
         showError(String(e))
       }
@@ -96,12 +92,6 @@ export function renderHeader (store: LiveStore, subject: NamedNode, sourcePaneSt
       <span class="sourcePaneControlHost" ${ref((host: Element | undefined) => {
         if (host instanceof HTMLElement) {
           mountButton(host, createCompactButton(host.ownerDocument, () => compactHandler(store, subject, sourcePaneState)))
-
-        }
-      })}></span>
-      <span class="sourcePaneControlHost" ${ref((host: Element | undefined) => {
-        if (host instanceof HTMLElement) {
-          mountButton(host, createCancelButton(host.ownerDocument, () => refresh(store, subject, sourcePaneState)))
         }
       })}></span>
       <span class="sourcePaneControlHost" ${ref((host: Element | undefined) => {
@@ -138,15 +128,6 @@ export function createCompactButton (dom: Document, onClick?: EventListener) {
     myCompactButton.addEventListener('click', onClick)
   }
   return myCompactButton
-}
-
-export function createCancelButton (dom: Document, onClick?: EventListener) {
-  const myCancelButton = widgets.cancelButton(dom)
-  myCancelButton.classList.add('sourcePaneCancelButton')
-  if (onClick) {
-    myCancelButton.addEventListener('click', onClick)
-  }
-  return myCancelButton
 }
 
 export function createSaveButton (dom: Document, onClick?: EventListener) {
