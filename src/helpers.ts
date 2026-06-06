@@ -146,7 +146,6 @@ export function setControlVisible (button: HTMLElement | null, visible: boolean)
 }
 
 export function setUnedited (subject: NamedNode, sourcePaneState: SourcePaneState, textArea: HTMLTextAreaElement) {
-  const cancelButton = document.querySelector('.sourcePaneCancelButton') as HTMLElement
   const saveButton = document.querySelector('.sourcePaneSaveButton') as HTMLElement
   const myEditButton = document.querySelector('.sourcePaneEditButton') as HTMLElement
   const myCompactButton = document.querySelector('.sourcePaneCompactButton') as HTMLElement
