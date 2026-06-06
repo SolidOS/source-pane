@@ -10,13 +10,14 @@ const pathsUsingDecorators = ['src/design-system', 'src/primitives', 'src/storyb
 
 export const litDecoratorsBabelOptions = {
   assumptions: {
-    setPublicClassFields: false
+    setPublicClassFields: true,
+    privateFieldsAsSymbols: true
   },
   plugins: [
     '@babel/plugin-transform-class-static-block',
     ['@babel/plugin-transform-typescript', { allowDeclareFields: true }],
     ['@babel/plugin-proposal-decorators', { version: '2023-05' }],
-    ['@babel/plugin-transform-class-properties', { loose: true }]
+    '@babel/plugin-transform-class-properties'
   ]
 }
 
