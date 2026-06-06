@@ -9,7 +9,8 @@
     "LICENSE"
   ],
   "sideEffects": [
-    "**/*.css"
+    "**/*.css",
+    "src/components/**/*.ts"
   ],
   "scripts": {
     "clean": "rm -rf lib",
@@ -50,8 +51,13 @@
   "homepage": "https://github.com/SolidOS/source-pane",
   "devDependencies": {
     "@babel/eslint-parser": "^7.28.6",
+    "@babel/plugin-proposal-decorators": "^7.29.7",
+    "@babel/plugin-transform-class-properties": "^7.29.7",
+    "@babel/plugin-transform-class-static-block": "^7.29.7",
+    "@babel/plugin-transform-typescript": "^7.29.7",
     "@babel/preset-env": "^7.28.6",
     "@babel/preset-typescript": "^7.29.7",
+    "@tailwindcss/postcss": "^4.3.0",
     "@testing-library/dom": "^10.4.1",
     "@types/mime-types": "^3.0.1",
     "babel-loader": "^10.0.0",
@@ -64,11 +70,19 @@
     "jest": "^30.2.0",
     "jest-environment-jsdom": "^30.2.0",
     "jest-fetch-mock": "^3.0.3",
+    "lit-css-loader": "^4.0.1",
     "node-polyfill-webpack-plugin": "^4.1.0",
+<<<<<<< HEAD
     "pane-registry": "3.1.2-0",
     "rdflib": "2.3.9",
     "solid-logic": "4.0.8-0",
     "solid-ui": "3.1.3-5",
+=======
+    "postcss": "^8.5.15",
+    "rdflib": "^2.3.6",
+    "solid-logic": "^4.0.6",
+    "solid-ui": "^3.1.0",
+>>>>>>> b704221 (#171 basic web component)
     "style-loader": "^4.0.0",
     "terser-webpack-plugin": "^5.4.0",
     "webpack": "^5.97.1",

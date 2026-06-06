@@ -1,9 +1,14 @@
 .sourcePane {
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: stretch;
   gap: 23px;
   padding-bottom: 29px;
+}
+
+source-editor {
+  display: block;
+  width: 100%;
 }
 
 .sourcePaneControls {
@@ -25,20 +30,6 @@
 .sourcePaneMain,
 .sourcePaneStatus {
   width: 100%;
-}
-
-.sourcePaneTextArea {
-  box-sizing: border-box;
-  width: 100%;
-  max-width: 100%;
-  min-width: 0;
-  font-family: monospace;
-  font-size: 100%;
-  margin: var(--spacing-md, 1em) 0.2em;
-  padding: var(--spacing-md, 1em);
-  border: 0.1em solid #888;
-  border-radius: var(--border-radius-base, 0.5em);
-  resize: vertical;
 }
 
 .sourcePaneCompactButton {

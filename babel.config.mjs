@@ -1,3 +1,10 @@
+import path from 'path'
+import { fileURLToPath } from 'url'
+import { resolvePathsUsingDecorators, litDecoratorsBabelOptions } from './config/babel.mjs'
+
+const projectRoot = path.dirname(fileURLToPath(import.meta.url))
+const pathsUsingDecorators = resolvePathsUsingDecorators(projectRoot)
+
 export default {
   presets: [
     '@babel/preset-typescript',
@@ -19,5 +26,11 @@ export default {
         ]
       }
     ]
+  ],
+  overrides: [
+    {
+      include: pathsUsingDecorators,
+      ...litDecoratorsBabelOptions,
+    }
   ]
 }

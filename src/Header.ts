@@ -6,6 +6,7 @@ import { getStatusSection } from './StatusSection'
 import { applyResponseHeaders, checkSyntax, getResponseHeaders, happy, refresh, setControlVisible, setEdited, setUnedited } from './helpers'
 import { SourcePaneState } from './types'
 import { compactable } from './compactableFormats'
+import SourceEditor from './components/sourceEditor/SourceEditor'
 
 function mountButton (host: HTMLElement, button: HTMLElement) {
   host.replaceChildren(button)
@@ -14,11 +15,13 @@ function mountButton (host: HTMLElement, button: HTMLElement) {
 export function renderHeader (store: LiveStore, subject: NamedNode, sourcePaneState: SourcePaneState) {
   async function saveBack (store: LiveStore, subject: NamedNode, sourcePaneState: SourcePaneState) {
     const fetcher = store.fetcher
-    const textArea = document.querySelector('.sourcePaneTextArea') as HTMLTextAreaElement  
+    const editor = document.querySelector('source-editor') as SourceEditor | null
+    const textArea = editor?.getTextArea()
+    if (!textArea) return
     const data = textArea.value
     const { contentType, eTag } = sourcePaneState
     if (!checkSyntax(store, subject, data, contentType, subject)) {
-      setEdited(sourcePaneState)
+      setEdited(sourcePaneState, textArea)
       const { showError } = getStatusSection()
       showError('Syntax error: fix the document before saving.')
       return
@@ -33,7 +36,7 @@ export function renderHeader (store: LiveStore, subject: NamedNode, sourcePaneSt
         const response = await fetcher.webOperation('HEAD', subject.uri) // , defaultFetchHeaders())
         if (!happy(response, 'HEAD')) return
         applyResponseHeaders(sourcePaneState, getResponseHeaders(store, subject, response))
-        setUnedited(subject, sourcePaneState)
+        setUnedited(subject, sourcePaneState, textArea)
       } catch (err) {
         throw err
       }
@@ -44,7 +47,8 @@ export function renderHeader (store: LiveStore, subject: NamedNode, sourcePaneSt
   }
 
   function setEditable (sourcePaneState: SourcePaneState) {
-    const textArea = document.querySelector('.sourcePaneTextArea') as HTMLTextAreaElement
+    const editor = document.querySelector('source-editor') as SourceEditor | null
+    const textArea = editor?.getTextArea()
     const cancelButton = document.querySelector('.sourcePaneCancelButton') as HTMLElement
     const saveButton = document.querySelector('.sourcePaneSaveButton') as HTMLElement
     const myEditButton = document.querySelector('.sourcePaneEditButton') as HTMLElement
@@ -56,12 +60,14 @@ export function renderHeader (store: LiveStore, subject: NamedNode, sourcePaneSt
     setControlVisible(myEditButton, false)
     setControlVisible(myCompactButton, false) // do not allow compact while editing
     if (textArea) textArea.removeAttribute('readonly')
+    editor?.focusEditor()  
   }
 
   function compactHandler (store: LiveStore, subject: NamedNode, sourcePaneState: SourcePaneState) {
     const { contentType } = sourcePaneState
     const compactContentType = contentType?.split(';')[0]
-    const textArea = document.querySelector('.sourcePaneTextArea') as HTMLTextAreaElement
+    const editor = document.querySelector('source-editor') as SourceEditor | null
+    const textArea = editor?.getTextArea()
     const cancelButton = document.querySelector('.sourcePaneCancelButton') as HTMLElement
     const { showError } = getStatusSection()
 
