@@ -7,7 +7,7 @@ const require = createRequire(import.meta.url)
 
 const common = {
   mode: 'production',
-  entry: './src/SourcePane.ts',
+  entry: './src/sourcePane.ts',
   module: {
     rules: moduleRules,
   },
