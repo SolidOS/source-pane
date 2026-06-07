@@ -4,7 +4,7 @@ import './StatusSection.css'
 export function getStatusSection(){
   function showError(message: string) {
     const statusSection = document.querySelector('.sourcePaneStatus') as HTMLElement | null
-    const statusMessageArea = document.getElementById('statusMessageArea')
+    const statusMessageArea = statusSection?.querySelector('#statusMessageArea') as HTMLElement | null
     if (statusSection) {
       statusSection.dataset.visible = 'true'
     }
@@ -19,7 +19,7 @@ export function getStatusSection(){
 
   function clearError() {
     const statusSection = document.querySelector('.sourcePaneStatus') as HTMLElement | null
-    const statusMessageArea = document.getElementById('statusMessageArea')
+    const statusMessageArea = statusSection?.querySelector('#statusMessageArea') as HTMLElement | null
     if (statusSection) {
       statusSection.dataset.visible = 'false'
     }
