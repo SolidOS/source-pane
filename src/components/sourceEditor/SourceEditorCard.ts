@@ -6,13 +6,13 @@ import { fetchContentAndMetadata, setUnedited } from '../../helpers'
 import styles from './SourceEditorCard.styles.css'
 import WebComponent from '../../primitives/WebComponent'
 import { SourcePaneState } from '../../types'
-import { SourceEditor } from '../../SourceEditor'
+import { SourceEditor } from './SourceEditor'
 import { getStatusSection } from '../../StatusSection'
 
 @customElement('source-editor-card')
 export default class SourceEditorCard extends WebComponent {
   static styles = styles
-  private _editor!: SourceEditor
+  private _editor?: SourceEditor
   private _editorMount = createRef<HTMLDivElement>()
   
   @property({ attribute: false })
@@ -24,25 +24,26 @@ export default class SourceEditorCard extends WebComponent {
   @property({ attribute: false })
   accessor sourcePaneState!: SourcePaneState
 
-  private _getFileName (uri: string) {
+  private _getFileName (uri?: string) {
+    if (!uri) return ''
     const url = new URL(uri).pathname // remove #me and #this
     return url.substring(url.lastIndexOf('/') + 1)
   }
 
   getValue () {
-    return this._editor.getValue()
+    return this._editor?.getValue()
   }
 
   focusEditor () {
-    this._editor.focusEditor()
+    this._editor?.focusEditor()
   }
 
   setReadOnly (readOnly: boolean) {
-    this._editor.setReadOnly(readOnly)
+    this._editor?.setReadOnly(readOnly)
   }
 
   setValue (text: string) {
-    this._editor.replaceContent(text)
+    this._editor?.replaceContent(text)
   }
 
   private async _initializeEditor () {
@@ -66,7 +67,7 @@ export default class SourceEditorCard extends WebComponent {
   disconnectedCallback() {
     super.disconnectedCallback()
     if (this._editor) {
-      // this._editor.destroy?.() need to write a destroy method.
+      this._editor.destroy()
       this._editor = undefined
     }
   }

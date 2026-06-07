@@ -2,6 +2,7 @@
 import { Compartment } from '@codemirror/state'
 import { EditorView } from '@codemirror/view'
 import type { ThemeMode } from 'pane-registry'
+import { darkThemeExtension } from './themes/dark'
 
 export class SourceEditor {
   private _view: EditorView | null = null
@@ -41,7 +42,7 @@ export class SourceEditor {
     const state = EditorState.create({
       doc: initialDoc,
       extensions: [
-        theme === 'dark' ? oneDark : [],
+        theme === 'dark' ? darkThemeExtension : [],
         this._languageCompartment.of(languageExtension),
         this._editableCompartment.of(EditorView.editable.of(true)),
         syntaxHighlighting(defaultHighlightStyle, { fallback: true }),
@@ -60,6 +61,11 @@ export class SourceEditor {
       state,
       parent: container
     })
+  }
+
+  destroy() {
+    this._view?.destroy()
+    this._view = null
   }
 
   getValue(): string {

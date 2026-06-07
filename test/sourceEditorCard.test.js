@@ -11,6 +11,7 @@ jest.mock('../src/components/sourceEditor/SourceEditor', () => {
       focusEditor: jest.fn(),
       setReadOnly: jest.fn(),
       replaceContent: jest.fn(),
+      destroy: jest.fn(),
     })),
   }
 })

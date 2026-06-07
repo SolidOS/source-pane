@@ -140,9 +140,10 @@ export function setUnedited (subject: NamedNode, sourcePaneState: SourcePaneStat
   const saveButton = document.querySelector('.sourcePaneSaveButton') as HTMLElement
   const myEditButton = document.querySelector('.sourcePaneEditButton') as HTMLElement
   const myCompactButton = document.querySelector('.sourcePaneCompactButton') as HTMLElement
-  const { broken, contentType } = sourcePaneState
+  const { broken, contentType, allowed } = sourcePaneState
   if (broken) return
-  setControlVisible(myEditButton, !subject.uri.endsWith('/'))
+  const canEdit = !subject.uri.endsWith('/') && (!allowed || allowed.includes('PUT'))
+  setControlVisible(myEditButton, canEdit)
   setControlVisible(saveButton, false)
   setControlVisible(myCompactButton, !!(contentType && compactable[contentType.split(';')[0]]))
   editorCard?.setReadOnly(true)
