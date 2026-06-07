@@ -117,12 +117,10 @@ export function createCompactButton (dom: Document, onClick?: EventListener) {
     dom,
     undefined,
     'Compact',
+    onClick,
     { needsBorder: true }
   )
   myCompactButton.classList.add('sourcePaneCompactButton')
-  if (onClick) {
-    myCompactButton.addEventListener('click', onClick)
-  }
   return myCompactButton
 }
 
