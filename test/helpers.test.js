@@ -96,7 +96,7 @@ describe('helpers', () => {
 
     expect(editorCard.setReadOnly).toHaveBeenCalledWith(true)
     expect(saveButton.className).toContain('sourcePaneControlHidden')
-    expect(editButton.className).toContain('sourcePaneControlVisible')
+    expect(editButton.className).toContain('sourcePaneControlHidden')
     expect(compactButton.className).toContain('sourcePaneControlVisible')
   })
 })
