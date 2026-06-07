@@ -4,7 +4,7 @@ import { error, log } from './debug'
 import { ns } from 'solid-ui'
 import { HttpResourceMetadata, SourcePaneState } from './types'
 import { compactable } from './compactableFormats'
-import SourceEditor from './components/sourceEditor/SourceEditor'
+import SourceEditorCard from './components/sourceEditor/SourceEditorCard'
 
 const parseable: Record<string, boolean> = {
   'text/n3': true,
@@ -73,16 +73,6 @@ function HTMLDataIsland (data: string): [string, string] {
   return [dataIsland, dataIslandContentType]
 }
 
-function setTextState (stateClass: string, textArea: HTMLTextAreaElement) {
-  textArea.classList.remove(
-    'sourcePaneTextAreaUnedited',
-    'sourcePaneTextAreaEditing',
-    'sourcePaneTextAreaEdited',
-    'sourcePaneTextAreaError'
-  )
-  textArea.classList.add(stateClass)
-}
-
 export function checkSyntax (store: LiveStore, subject: NamedNode, data: string, contentType: string | undefined, base: NamedNode) {
   const fetcher = store.fetcher
   const { showError, clearError } = getStatusSection()
@@ -145,36 +135,17 @@ export function setControlVisible (button: HTMLElement | null, visible: boolean)
   button.classList.toggle('sourcePaneControlHidden', !visible)
 }
 
-export function setUnedited (subject: NamedNode, sourcePaneState: SourcePaneState, textArea: HTMLTextAreaElement) {
+export function setUnedited (subject: NamedNode, sourcePaneState: SourcePaneState) {
+  const editorCard = document.querySelector('source-editor-card') as SourceEditorCard | null
   const saveButton = document.querySelector('.sourcePaneSaveButton') as HTMLElement
   const myEditButton = document.querySelector('.sourcePaneEditButton') as HTMLElement
   const myCompactButton = document.querySelector('.sourcePaneCompactButton') as HTMLElement
-  const { broken, readonly, contentType } = sourcePaneState
+  const { broken, contentType } = sourcePaneState
   if (broken) return
-  sourcePaneState.editing = false
-  setControlVisible(myEditButton, !readonly && !subject.uri.endsWith('/'))
-  setControlVisible(cancelButton, true)
+  setControlVisible(myEditButton, !subject.uri.endsWith('/'))
   setControlVisible(saveButton, false)
   setControlVisible(myCompactButton, !!(contentType && compactable[contentType.split(';')[0]]))
-  setTextState('sourcePaneTextAreaUnedited', textArea)
-  textArea.setAttribute('readonly', 'true')
-}
-
-export function setEdited (sourcePaneState: SourcePaneState, textArea: HTMLTextAreaElement) {
-  const { showError } = getStatusSection()
-  const cancelButton = document.querySelector('.sourcePaneCancelButton') as HTMLElement
-  const saveButton = document.querySelector('.sourcePaneSaveButton') as HTMLElement
-  const myEditButton = document.querySelector('.sourcePaneEditButton') as HTMLElement
-  const myCompactButton = document.querySelector('.sourcePaneCompactButton') as HTMLElement
-  sourcePaneState.editing = true
-  showError('Unsaved changes')
-  if (sourcePaneState.broken || !sourcePaneState.editing) return
-  setControlVisible(cancelButton, true)
-  setControlVisible(saveButton, true)
-  setControlVisible(myEditButton, false)
-  setControlVisible(myCompactButton, false)
-  setTextState('sourcePaneTextAreaEdited', textArea)
-  textArea.removeAttribute('readonly')
+  editorCard?.setReadOnly(true)
 }
 
 export function applyResponseHeaders (sourcePaneState: SourcePaneState, metadata: HttpResourceMetadata) {
@@ -214,47 +185,32 @@ export function getResponseHeaders (store: LiveStore, subject: NamedNode, respon
   return { contentType, allowed, eTag }
 }
 
-export function refresh (store: LiveStore, subject: NamedNode, sourcePaneState: SourcePaneState) {
-  // see https://github.com/linkeddata/rdflib.js/issues/629
-  // const options = defaultFetchHeaders()
+export async function fetchContentAndMetadata(store: LiveStore, subject: NamedNode, sourcePaneState: SourcePaneState): Promise<{ content: string, metadata: HttpResourceMetadata }> {
   const fetcher = store.fetcher
   const { showError } = getStatusSection()
-  const editor = document.querySelector('source-editor') as SourceEditor | null
-  const textArea = editor?.getTextArea()
-  if (!textArea) {
-    showError('Error reading file: source text area is not mounted.')
-    return
+
+  try {
+    const response = await fetcher.webOperation('GET', subject.uri)
+    if (!happy(response, 'GET')) {
+      throw new Error('GET request failed')
+    }
+
+    const content = (response as Response & { responseText?: string }).responseText
+    if (content === undefined) { // Defensive https://github.com/linkeddata/rdflib.js/issues/506
+      throw new Error('source pane: No text in response object!!')
+    }
+
+    const metadata = getResponseHeaders(store, subject, response)
+    if (!metadata.contentType) {
+      throw new Error('Error: No content-type available!')
+    }
+    applyResponseHeaders(sourcePaneState, metadata)
+    if (!metadata.allowed) {
+      error('@@@@@@@@@@ No Allow: header from this server')
+    }
+    return { content, metadata }
+  } catch (err: any) {
+    showError('Error reading file: ' + err)
+    throw err
   }
-
-  fetcher
-    .webOperation('GET', subject.uri) // , options)
-    .then(function (response: Response) {
-      if (!happy(response, 'GET')) return
-      const desc = (response as Response & { responseText?: string }).responseText
-      if (desc === undefined) { // Defensive https://github.com/linkeddata/rdflib.js/issues/506
-        const msg = 'source pane: No text in response object!!'
-        showError(msg)
-        return // Never mis-represent the contents of the file.
-      }
-      if (!textArea) {
-        showError('Error reading file: source text area is not mounted.')
-        return
-      }
-      textArea.rows = desc.split('\n').length + 2
-      textArea.value = desc
-
-      const metadata = getResponseHeaders(store, subject, response)
-      if (!metadata.contentType) {
-        showError('Error: No content-type available!')
-        return
-      }
-      applyResponseHeaders(sourcePaneState, metadata)
-      if (!metadata.allowed) {
-        error('@@@@@@@@@@ No Allow: header from this server')
-      }
-      setUnedited(subject, sourcePaneState, textArea)
-    })
-    .catch((err: any) => {
-      showError('Error reading file: ' + err)
-    })
 }

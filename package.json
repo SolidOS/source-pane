@@ -72,17 +72,11 @@
     "jest-fetch-mock": "^3.0.3",
     "lit-css-loader": "^4.0.1",
     "node-polyfill-webpack-plugin": "^4.1.0",
-<<<<<<< HEAD
     "pane-registry": "3.1.2-0",
+    "postcss": "^8.5.15",
     "rdflib": "2.3.9",
     "solid-logic": "4.0.8-0",
     "solid-ui": "3.1.3-5",
-=======
-    "postcss": "^8.5.15",
-    "rdflib": "^2.3.6",
-    "solid-logic": "^4.0.6",
-    "solid-ui": "^3.1.0",
->>>>>>> b704221 (#171 basic web component)
     "style-loader": "^4.0.0",
     "terser-webpack-plugin": "^5.4.0",
     "webpack": "^5.97.1",
@@ -90,7 +84,18 @@
     "webpack-dev-server": "^5.2.3"
   },
   "dependencies": {
-    "patch-package": "^8.0.1"
+    "patch-package": "^8.0.1",
+    "@codemirror/lang-css": "^6.3.1",
+    "@codemirror/lang-html": "^6.4.11",
+    "@codemirror/lang-javascript": "^6.2.5",
+    "@codemirror/lang-json": "^6.0.2",
+    "@codemirror/lang-xml": "^6.1.0",
+    "@codemirror/language": "^6.12.3",
+    "@codemirror/legacy-modes": "^6.5.3",
+    "@codemirror/state": "^6.6.0",
+    "@codemirror/theme-one-dark": "^6.1.3",
+    "@codemirror/view": "^6.43.0",
+    "codemirror": "^6.0.2"
   },
   "solidosDependencies": [
     "rdflib",
