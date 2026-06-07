@@ -3,10 +3,10 @@ import { ref } from 'lit/directives/ref.js'
 import { parse, serialize, NamedNode, LiveStore } from 'rdflib'
 import { widgets, icons } from 'solid-ui'
 import { getStatusSection } from './StatusSection'
-import { applyResponseHeaders, checkSyntax, getResponseHeaders, happy, setControlVisible, setEdited, setUnedited } from './helpers'
+import { applyResponseHeaders, checkSyntax, getResponseHeaders, happy, setControlVisible, setUnedited } from './helpers'
 import { SourcePaneState } from './types'
 import { compactable } from './compactableFormats'
-import SourceEditor from './components/sourceEditor/SourceEditor'
+import SourceEditorCard from './components/sourceEditor/SourceEditorCard'
 
 function mountButton (host: HTMLElement, button: HTMLElement) {
   host.replaceChildren(button)
@@ -15,13 +15,11 @@ function mountButton (host: HTMLElement, button: HTMLElement) {
 export function renderHeader (store: LiveStore, subject: NamedNode, sourcePaneState: SourcePaneState) {
   async function saveBack (store: LiveStore, subject: NamedNode, sourcePaneState: SourcePaneState) {
     const fetcher = store.fetcher
-    const editor = document.querySelector('source-editor') as SourceEditor | null
-    const textArea = editor?.getTextArea()
-    if (!textArea) return
-    const data = textArea.value
+    const editorCard = document.querySelector('source-editor-card') as SourceEditorCard | null
+    if (!editorCard) return
+    const data = editorCard.getValue()
     const { contentType, eTag } = sourcePaneState
     if (!checkSyntax(store, subject, data, contentType, subject)) {
-      setEdited(sourcePaneState, textArea)
       const { showError } = getStatusSection()
       showError('Syntax error: fix the document before saving.')
       return
@@ -36,7 +34,7 @@ export function renderHeader (store: LiveStore, subject: NamedNode, sourcePaneSt
         const response = await fetcher.webOperation('HEAD', subject.uri) // , defaultFetchHeaders())
         if (!happy(response, 'HEAD')) return
         applyResponseHeaders(sourcePaneState, getResponseHeaders(store, subject, response))
-        setUnedited(subject, sourcePaneState, textArea)
+        setUnedited(subject, sourcePaneState)
       } catch (err) {
         throw err
       }
@@ -47,34 +45,32 @@ export function renderHeader (store: LiveStore, subject: NamedNode, sourcePaneSt
   }
 
   function setEditable (sourcePaneState: SourcePaneState) {
-    const editor = document.querySelector('source-editor') as SourceEditor | null
-    const textArea = editor?.getTextArea()
+    const editorCard = document.querySelector('source-editor-card') as SourceEditorCard | null
     const saveButton = document.querySelector('.sourcePaneSaveButton') as HTMLElement
     const myEditButton = document.querySelector('.sourcePaneEditButton') as HTMLElement
     const myCompactButton = document.querySelector('.sourcePaneCompactButton') as HTMLElement
     if (sourcePaneState.broken) return
-    sourcePaneState.editing = true
-    setControlVisible(saveButton, false)
+      setControlVisible(saveButton, true)
     setControlVisible(myEditButton, false)
     setControlVisible(myCompactButton, false) // do not allow compact while editing
-    if (textArea) textArea.removeAttribute('readonly')
-    editor?.focusEditor()  
+    editorCard?.setReadOnly(false)
+    editorCard?.focusEditor()  
   }
 
   function compactHandler (store: LiveStore, subject: NamedNode, sourcePaneState: SourcePaneState) {
     const { contentType } = sourcePaneState
     const compactContentType = contentType?.split(';')[0]
-    const editor = document.querySelector('source-editor') as SourceEditor | null
-    const textArea = editor?.getTextArea()
-  const { showError } = getStatusSection()
+    const editorCard = document.querySelector('source-editor-card') as SourceEditorCard | null
+    const { showError } = getStatusSection()
 
     if (compactContentType && compactable[compactContentType]) {
       try {
-        parse(textArea.value, store, subject.uri, compactContentType)
+        const text = editorCard?.getValue() ?? ''
+        parse(text, store, subject.uri, compactContentType)
         // for jsonld serialize which is a Promise. New rdflib
         const serialized = Promise.resolve(serialize(store.sym(subject.uri), store, subject.uri, compactContentType))
         serialized.then(result => {
-          if (typeof result === 'string') textArea.value = result /*return div*/
+          if (typeof result === 'string') editorCard?.setValue(result)
         })
       } catch (e: any) {  
         showError(String(e))
