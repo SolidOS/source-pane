@@ -86,8 +86,10 @@ export function checkSyntax (store: LiveStore, subject: NamedNode, data: string,
   }
   try {
     clearError()
-    if (contentType === 'application/json') return JSON.parse(data)
-    else {
+    if (contentType === 'application/json') {
+      JSON.parse(data)
+      return true
+    } else {
       try {
         store.removeDocument(subject)
       } catch (err: any) {
@@ -168,7 +170,7 @@ export function getResponseHeaders (store: LiveStore, subject: NamedNode, respon
     const reqs = store.each(
       null,
       store.sym('http://www.w3.org/2007/ont/link#requestedURI'),
-      subject as any
+      subject
     )
     reqs.forEach((req: any) => {
       const rrr = store.any(
