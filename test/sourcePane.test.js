@@ -1,5 +1,5 @@
-jest.mock('../src/components/sourceEditor/SourceEditorCard', () => {
-  if (!globalThis.customElements.get('source-editor-card')) {
+jest.mock('../src/components/sourceEditorCard/SourceEditorCard', () => {
+  if (!globalThis.customElements.get('solid-panes-source-editor-card')) {
     class MockSourceEditorCard extends globalThis.HTMLElement {
       getValue() {
         return ''
@@ -12,10 +12,10 @@ jest.mock('../src/components/sourceEditor/SourceEditorCard', () => {
       focusEditor() {}
     }
 
-    globalThis.customElements.define('source-editor-card', MockSourceEditorCard)
+    globalThis.customElements.define('solid-panes-source-editor-card', MockSourceEditorCard)
   }
 
-  return globalThis.customElements.get('source-editor-card')
+  return globalThis.customElements.get('solid-panes-source-editor-card')
 })
 
 const { context } = require('./helpers/setup')

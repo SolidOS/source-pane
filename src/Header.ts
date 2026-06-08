@@ -6,7 +6,7 @@ import { getStatusSection } from './StatusSection'
 import { applyResponseHeaders, checkSyntax, getResponseHeaders, happy, setControlVisible, setUnedited } from './helpers'
 import { SourcePaneState } from './types'
 import { compactable } from './compactableFormats'
-import SourceEditorCard from './components/sourceEditor/SourceEditorCard'
+import SourceEditorCard from './components/sourceEditorCard/SourceEditorCard'
 
 function mountButton (host: HTMLElement, button: HTMLElement) {
   host.replaceChildren(button)
@@ -15,7 +15,7 @@ function mountButton (host: HTMLElement, button: HTMLElement) {
 export function renderHeader (store: LiveStore, subject: NamedNode, sourcePaneState: SourcePaneState) {
   async function saveBack (store: LiveStore, subject: NamedNode, sourcePaneState: SourcePaneState) {
     const fetcher = store.fetcher
-    const editorCard = document.querySelector('source-editor-card') as SourceEditorCard | null
+    const editorCard = document.querySelector('solid-panes-source-editor-card') as SourceEditorCard | null
     if (!editorCard) return
     const data = editorCard.getValue()
     const { contentType, eTag } = sourcePaneState
@@ -45,7 +45,7 @@ export function renderHeader (store: LiveStore, subject: NamedNode, sourcePaneSt
   }
 
   function setEditable (sourcePaneState: SourcePaneState) {
-    const editorCard = document.querySelector('source-editor-card') as SourceEditorCard | null
+    const editorCard = document.querySelector('solid-panes-source-editor-card') as SourceEditorCard | null
     const saveButton = document.querySelector('.sourcePaneSaveButton') as HTMLElement
     const myEditButton = document.querySelector('.sourcePaneEditButton') as HTMLElement
     const myCompactButton = document.querySelector('.sourcePaneCompactButton') as HTMLElement
@@ -60,7 +60,7 @@ export function renderHeader (store: LiveStore, subject: NamedNode, sourcePaneSt
   function compactHandler (store: LiveStore, subject: NamedNode, sourcePaneState: SourcePaneState) {
     const { contentType } = sourcePaneState
     const compactContentType = contentType?.split(';')[0]
-    const editorCard = document.querySelector('source-editor-card') as SourceEditorCard | null
+    const editorCard = document.querySelector('solid-panes-source-editor-card') as SourceEditorCard | null
     const { showError } = getStatusSection()
 
     if (compactContentType && compactable[compactContentType]) {

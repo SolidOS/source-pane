@@ -77,10 +77,6 @@ jest.mock('@codemirror/commands', () => ({
   historyKeymap: [{ key: 'history' }]
 }))
 
-jest.mock('@codemirror/theme-one-dark', () => ({
-  oneDark: { name: 'oneDark' }
-}))
-
 jest.mock('@codemirror/lang-css', () => ({
   css: jest.fn(() => ({ type: 'css' }))
 }))
@@ -113,11 +109,11 @@ jest.mock('@codemirror/legacy-modes/mode/ntriples', () => ({
   ntriples: { name: 'ntriples' }
 }))
 
-jest.mock('../src/components/sourceEditor/themes/dark', () => ({
+jest.mock('../src/components/sourceEditorCard/themes/dark', () => ({
   darkThemeExtension: [{ type: 'darkTheme' }]
 }))
 
-const { SourceEditor } = require('../src/components/sourceEditor/SourceEditor')
+const { SourceEditor } = require('../src/components/sourceEditorCard/SourceEditor')
 
 describe('SourceEditor', () => {
   beforeEach(() => {

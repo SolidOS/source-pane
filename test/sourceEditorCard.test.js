@@ -3,7 +3,7 @@ jest.mock('../src/helpers', () => ({
   setUnedited: jest.fn(),
 }))
 
-jest.mock('../src/components/sourceEditor/SourceEditor', () => {
+jest.mock('../src/components/sourceEditorCard/SourceEditor', () => {
   return {
     SourceEditor: jest.fn().mockImplementation(() => ({
       initialize: jest.fn(),
@@ -17,10 +17,10 @@ jest.mock('../src/components/sourceEditor/SourceEditor', () => {
 })
 
 const { fetchContentAndMetadata, setUnedited } = require('../src/helpers')
-const { SourceEditor } = require('../src/components/sourceEditor/SourceEditor')
-require('../src/components/sourceEditor/SourceEditorCard')
+const { SourceEditor } = require('../src/components/sourceEditorCard/SourceEditor')
+require('../src/components/sourceEditorCard/SourceEditorCard')
 
-describe('source-editor-card', () => {
+describe('solid-panes-source-editor-card', () => {
   beforeEach(() => {
     document.body.innerHTML = ''
     jest.clearAllMocks()
@@ -36,7 +36,7 @@ describe('source-editor-card', () => {
       },
     })
 
-    const card = document.createElement('source-editor-card')
+    const card = document.createElement('solid-panes-source-editor-card')
     card.store = { fetcher: {} }
     card.subject = {
       uri: 'https://testingsolidos.solidcommunity.net/profile/card',
@@ -62,7 +62,7 @@ describe('source-editor-card', () => {
   })
 
   it('delegates editor API methods', () => {
-    const card = document.createElement('source-editor-card')
+    const card = document.createElement('solid-panes-source-editor-card')
     const editorInstance = SourceEditor.mock.results[0]?.value ?? {
       getValue: jest.fn(() => 'editor value'),
       focusEditor: jest.fn(),

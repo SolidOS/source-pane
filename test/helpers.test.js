@@ -1,4 +1,4 @@
-jest.mock('../src/components/sourceEditor/SourceEditorCard', () => {
+jest.mock('../src/components/sourceEditorCard/SourceEditorCard', () => {
   return class SourceEditorCard {}
 })
 
@@ -75,7 +75,7 @@ describe('helpers', () => {
   })
 
   it('sets the editor back to read only and shows the edit controls', () => {
-    const editorCard = document.createElement('source-editor-card')
+    const editorCard = document.createElement('solid-panes-source-editor-card')
     editorCard.setReadOnly = jest.fn()
     document.body.appendChild(editorCard)
 

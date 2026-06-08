@@ -9,7 +9,7 @@ import WebComponent from '../../primitives/WebComponent'
 import { SourcePaneState } from '../../types'
 import { getStatusSection } from '../../StatusSection'
 
-@customElement('source-editor-card')
+@customElement('solid-panes-source-editor-card')
 export default class SourceEditorCard extends WebComponent {
   static styles = styles
   private _editor?: SourceEditor
