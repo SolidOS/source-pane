@@ -9,7 +9,7 @@ import { DataBrowserContext, NewPaneOptions } from 'pane-registry'
 import * as mime from 'mime-types'
 import { html, render as litRender } from 'lit'
 import { log } from './debug'
-import './components/sourceEditor/SourceEditorCard'
+import './components/sourceEditorCard/SourceEditorCard'
 import { renderHeader } from './Header'
 import { getStatusSection } from './StatusSection'
 import './sourcePane.css'
@@ -99,12 +99,12 @@ const pane = {
     sourcePane.setAttribute('class', 'sourcePane')
     litRender(html`
         ${renderHeader(store, subject, sourcePaneState)}
-        <source-editor-card
+        <solid-panes-source-editor-card
           .store=${store}
           .subject=${subject}
           .sourcePaneState=${sourcePaneState}
         >
-        </source-editor-card>
+        </solid-panes-source-editor-card>
         ${renderStatusSection()}
     `, sourcePane)
 
