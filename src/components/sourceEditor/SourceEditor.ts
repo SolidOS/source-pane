@@ -1,31 +1,31 @@
-
-import { Compartment } from '@codemirror/state'
-import { EditorView } from '@codemirror/view'
 import type { ThemeMode } from 'pane-registry'
+import { Compartment, EditorState } from '@codemirror/state'
+import { EditorView, drawSelection, keymap, lineNumbers } from '@codemirror/view'
+import { defaultHighlightStyle, syntaxHighlighting, StreamLanguage } from '@codemirror/language'
+import { defaultKeymap, history, historyKeymap } from '@codemirror/commands'
+import { css } from '@codemirror/lang-css'
+import { html } from '@codemirror/lang-html'
+import { javascript } from '@codemirror/lang-javascript'
+import { json } from '@codemirror/lang-json'
+import { xml } from '@codemirror/lang-xml'
+// import { oneDark } from '@codemirror/theme-one-dark'
+import { turtle } from '@codemirror/legacy-modes/mode/turtle'
+import { sparql } from '@codemirror/legacy-modes/mode/sparql'
+import { ntriples } from '@codemirror/legacy-modes/mode/ntriples'
 import { darkThemeExtension } from './themes/dark'
 
 export class SourceEditor {
-  private _view: EditorView | null = null
-  private _languageCompartment = new Compartment()
-  private _editableCompartment = new Compartment()
+  private _view: any = null
+  private _languageCompartment: any = null
+  private _editableCompartment: any = null
 
   async initialize(container: HTMLElement, initialDoc = '', contentType: string = 'text/turtle', theme: ThemeMode = 'dark') {
     if (this._view) {
       this._view.destroy()
     }
-    const [
-      { EditorState },
-      { drawSelection, keymap, lineNumbers }, 
-      { defaultHighlightStyle, syntaxHighlighting },
-      { defaultKeymap, history, historyKeymap }, 
-      { oneDark }
-    ] = await Promise.all([
-      import(/* webpackChunkName: "codemirror-core" */ '@codemirror/state'),
-      import(/* webpackChunkName: "codemirror-core" */ '@codemirror/view'),
-      import(/* webpackChunkName: "codemirror-core" */ '@codemirror/language'),
-      import(/* webpackChunkName: "codemirror-core" */ '@codemirror/commands'),
-      import(/* webpackChunkName: "codemirror-core" */ '@codemirror/theme-one-dark')
-    ])
+
+    this._languageCompartment = new Compartment()
+    this._editableCompartment = new Compartment()
     const languageExtension = await this._getLanguageExtension(contentType)
     /* we could add this if we want to update automatically
        perhaps or tell the user they have unsaved changes ,
@@ -103,52 +103,39 @@ export class SourceEditor {
   }
 
   private async _getLanguageExtension(contentType: string) {
-    const getStreamLanguage = async () =>
-      (await import(/* webpackChunkName: "codemirror-core" */ '@codemirror/language')).StreamLanguage
-    
+
     switch (contentType) {
       case 'text/turtle':
       case 'text/n3':
-        const turtleStreamLanguage = await getStreamLanguage()
-        const { turtle } = await import(/* webpackChunkName: "lang-rdf" */ '@codemirror/legacy-modes/mode/turtle')
-        return turtleStreamLanguage.define(turtle)
+        return StreamLanguage.define(turtle)
 
       case 'application/sparql-update':
       case 'application/sparql-query': 
-        const sparqlStreamLanguage = await getStreamLanguage()
-        const { sparql } = await import(/* webpackChunkName: "lang-rdf" */ '@codemirror/legacy-modes/mode/sparql')
-        return sparqlStreamLanguage.define(sparql)
+        return StreamLanguage.define(sparql)
 
       case 'application/nquads':
       case 'application/n-quads':
       case 'application/n-triples':
-        const nTriplesStreamLanguage = await getStreamLanguage()
-        const { ntriples } = await import(/* webpackChunkName: "lang-rdf" */ '@codemirror/legacy-modes/mode/ntriples')
-        return nTriplesStreamLanguage.define(ntriples)
+        return StreamLanguage.define(ntriples)
 
       case 'application/json':
       case 'application/ld+json':
-        const { json } = await import(/* webpackChunkName: "lang-json" */ '@codemirror/lang-json')
         return json()
 
       case 'text/html':
       case 'application/xhtml+xml':
-        const { html } = await import(/* webpackChunkName: "lang-html" */ '@codemirror/lang-html')
         return html()
 
       case 'application/rdf+xml':
       case 'application/xml':
-        const { xml } = await import(/* webpackChunkName: "lang-xml" */ '@codemirror/lang-xml')
         return xml()
 
       case 'text/css':
-        const { css } = await import(/* webpackChunkName: "lang-css" */ '@codemirror/lang-css')
         return css()
 
       case 'text/javascript':
       case 'application/javascript':
       case 'application/ecmascript':
-        const { javascript } = await import(/* webpackChunkName: "lang-javascript" */ '@codemirror/lang-javascript')
         return javascript()
 
       default:

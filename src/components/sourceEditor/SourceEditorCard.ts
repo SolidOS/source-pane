@@ -2,11 +2,11 @@ import { html } from 'lit'
 import { createRef, ref } from 'lit/directives/ref.js'
 import { customElement, property } from 'lit/decorators.js'
 import { LiveStore, NamedNode } from 'rdflib'
+import type { SourceEditor } from './SourceEditor'
 import { fetchContentAndMetadata, setUnedited } from '../../helpers'
 import styles from './SourceEditorCard.styles.css'
 import WebComponent from '../../primitives/WebComponent'
 import { SourcePaneState } from '../../types'
-import { SourceEditor } from './SourceEditor'
 import { getStatusSection } from '../../StatusSection'
 
 @customElement('source-editor-card')
@@ -50,6 +50,7 @@ export default class SourceEditorCard extends WebComponent {
     const sourcePaneEditor = this._editorMount.value
     if (!sourcePaneEditor) return
     try {
+      const { SourceEditor } = await import('./SourceEditor')
       const { content, metadata } = await fetchContentAndMetadata(this.store, this.subject, this.sourcePaneState)
       this._editor = new SourceEditor()
       await this._editor.initialize(sourcePaneEditor, content, metadata.contentType)
