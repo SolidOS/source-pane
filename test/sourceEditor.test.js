@@ -81,6 +81,42 @@ jest.mock('@codemirror/theme-one-dark', () => ({
   oneDark: { name: 'oneDark' }
 }))
 
+jest.mock('@codemirror/lang-css', () => ({
+  css: jest.fn(() => ({ type: 'css' }))
+}))
+
+jest.mock('@codemirror/lang-html', () => ({
+  html: jest.fn(() => ({ type: 'html' }))
+}))
+
+jest.mock('@codemirror/lang-javascript', () => ({
+  javascript: jest.fn(() => ({ type: 'javascript' }))
+}))
+
+jest.mock('@codemirror/lang-json', () => ({
+  json: jest.fn(() => ({ type: 'json' }))
+}))
+
+jest.mock('@codemirror/lang-xml', () => ({
+  xml: jest.fn(() => ({ type: 'xml' }))
+}))
+
+jest.mock('@codemirror/legacy-modes/mode/turtle', () => ({
+  turtle: { name: 'turtle' }
+}))
+
+jest.mock('@codemirror/legacy-modes/mode/sparql', () => ({
+  sparql: { name: 'sparql' }
+}))
+
+jest.mock('@codemirror/legacy-modes/mode/ntriples', () => ({
+  ntriples: { name: 'ntriples' }
+}))
+
+jest.mock('../src/components/sourceEditor/themes/dark', () => ({
+  darkThemeExtension: [{ type: 'darkTheme' }]
+}))
+
 const { SourceEditor } = require('../src/components/sourceEditor/SourceEditor')
 
 describe('SourceEditor', () => {
