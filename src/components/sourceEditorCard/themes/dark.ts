@@ -9,7 +9,12 @@ const darkTheme = EditorView.theme({
   '&': {
     color: '#e0e0e0',
     backgroundColor: '#1e1e1e',
-    height: '100%'
+    height: '100%',
+    minHeight: '24rem'
+  },
+
+  '.cm-scroller': {
+    minHeight: '24rem'
   },
   
   // Targets the active editing area where text lives
