@@ -46,6 +46,7 @@ const normalConfig = {
   output: {
     path: path.resolve(process.cwd(), 'lib'),
     filename: 'source-pane.js',
+    chunkFilename: '[name].js',
     library: {
       type: 'umd',
       name: 'SourcePane',
@@ -59,6 +60,7 @@ const normalConfig = {
   ],
   optimization: {
     minimize: false,
+    splitChunks: false, // this is needed so we get 1 file for source editor instead of 2
   }
 }
 
@@ -68,6 +70,7 @@ const minConfig = {
   output: {
     path: path.resolve(process.cwd(), 'lib'),
     filename: 'source-pane.min.js',
+    chunkFilename: '[name].min.js',
     library: {
       type: 'umd',
       name: 'SourcePane',
@@ -81,6 +84,7 @@ const minConfig = {
   ],
   optimization: {
     minimize: true,
+    splitChunks: false,
     minimizer: [
       new TerserPlugin({
         terserOptions: {

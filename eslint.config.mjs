@@ -1,39 +1,67 @@
 import globals from 'globals'
+import tsParser from '@typescript-eslint/parser'
+import tsPlugin from '@typescript-eslint/eslint-plugin'
+
+const commonGlobals = {
+    ...globals.browser,
+    ...globals.node,
+    Atomics: 'readonly',
+    SharedArrayBuffer: 'readonly',
+}
+
+const commonRules = {
+    semi: ['error', 'never'],
+    quotes: ['error', 'single'],
+    'no-console': 'warn',
+    'prefer-const': 'error',
+    'no-var': 'error',
+}
 
 export default [
     {
         ignores: [
             'node_modules/**',
-            'coverage/**'
+            'coverage/**',
+            'lib/**'
         ],
     },
     {
         files: ['src/**/*.js'],
         languageOptions: {
             globals: {
-                ...globals.browser,
-                ...globals.node,
-                Atomics: 'readonly',
-                SharedArrayBuffer: 'readonly',
+                ...commonGlobals,
             },
         },
 
         rules: {
-        // Code style - match TypeScript settings
-        semi: ['error', 'never'],
-        quotes: ['error', 'single'],
-
-        // Strict checking - match TypeScript strictness
-        'no-console': 'warn',
-        'no-unused-vars': 'warn', // Match TypeScript noUnusedLocals: true
+        ...commonRules,
+        'no-unused-vars': 'warn',
         'no-undef': 'error',
-        strict: ['error', 'global'], // Match TypeScript alwaysStrict: true
-
-        // Additional strictness to match TypeScript behavior
+        strict: ['error', 'global'],
         'no-implicit-globals': 'error',
-        'prefer-const': 'error', // Encourage immutability
-        'no-var': 'error', // Use let/const only
         'no-redeclare': 'error'
+        }
+    },
+    {
+        files: ['src/**/*.ts', '**/*.d.ts'],
+        languageOptions: {
+            parser: tsParser,
+            parserOptions: {
+                sourceType: 'module',
+            },
+            globals: {
+                ...commonGlobals,
+            },
+        },
+        plugins: {
+            '@typescript-eslint': tsPlugin,
+        },
+        rules: {
+        ...commonRules,
+        'no-unused-vars': 'off',
+        'no-undef': 'off',
+        'no-redeclare': 'off',
+        '@typescript-eslint/no-unused-vars': 'warn'
         }
     }
 ]
