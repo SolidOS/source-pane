@@ -53,7 +53,7 @@ const normalConfig = {
       export: 'default',
     },
     globalObject: 'this',
-    clean: true,
+    clean: false,
   },
   plugins: [
     ...(common.plugins || []),
