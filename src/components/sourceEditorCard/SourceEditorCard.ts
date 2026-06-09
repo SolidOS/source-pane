@@ -50,7 +50,7 @@ export default class SourceEditorCard extends WebComponent {
     const sourcePaneEditor = this._editorMount.value
     if (!sourcePaneEditor) return
     try {
-      const { SourceEditor } = await import('./SourceEditor')
+      const { SourceEditor } = await import(/* webpackChunkName: "source-editor" */ './SourceEditor')
       const { content, metadata } = await fetchContentAndMetadata(this.store, this.subject, this.sourcePaneState)
       this._editor = new SourceEditor()
       await this._editor.initialize(sourcePaneEditor, content, metadata.contentType)

@@ -1,6 +1,6 @@
-import { EditorView } from '@codemirror/view';
+import { EditorView } from '@codemirror/view'
 import { HighlightStyle, syntaxHighlighting } from '@codemirror/language'
-import { tags as t } from '@lezer/highlight';
+import { tags as t } from '@lezer/highlight'
 
 /* The base styles were copied from google 
    highlighting was modified to fit our design and needs */
