@@ -1,29 +1,32 @@
 :host {
+  display: block;
+  width: 100%;
 
-    section {
-      display: flex;
-      flex-direction: column;
-      width: 100%;
-      padding: var(--spacing-md, 1.25rem);
-      align-items: flex-start;
-      gap: var(--spacing-md, 1.25rem);
-      border-radius: var(--border-radius-full, 0.625rem);
-      background: var(--color-card-bg, #FFFFFF);
-      box-shadow: 0 0 6px 0 rgba(0, 0, 0, 0.25);
-    }
-
-    div.sourcePaneEditor {
-      box-sizing: border-box;
-      width: 100%;
-      max-width: 100%;
-      min-width: 0;
-      resize: vertical;
-    }
-
-    p {
-      color: var(--color-text-primary, var(--gray-700, #364153));
-      font-size: 1.25rem; /* 20px */
-      font-weight: var(--font-weight-md, 500);
-      align-self: stretch;
-    }
+  section {
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    padding: var(--spacing-md, 1.25rem);
+    align-items: flex-start;
+    gap: var(--spacing-md, 1.25rem);
+    border-radius: var(--border-radius-full, 0.625rem);
+    background: var(--color-card-bg, #FFFFFF);
+    box-shadow: 0 0 6px 0 rgba(0, 0, 0, 0.25);
   }
+
+  .sourcePaneEditor {
+    box-sizing: border-box;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    resize: vertical;
+  }
+
+  p {
+    color: var(--color-text-primary, var(--gray-700, #364153));
+    font-size: 1.25rem;
+    font-weight: var(--font-weight-md, 500);
+    align-self: stretch;
+  }
+}
