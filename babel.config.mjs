@@ -4,6 +4,7 @@ import { resolvePathsUsingDecorators, litDecoratorsBabelOptions } from './config
 
 const projectRoot = path.dirname(fileURLToPath(import.meta.url))
 const pathsUsingDecorators = resolvePathsUsingDecorators(projectRoot)
+const isCommonJsBuild = process.env.BABEL_ENV === 'cjs'
 
 export default {
   presets: [
@@ -11,6 +12,7 @@ export default {
     [
       '@babel/preset-env',
       {
+        modules: isCommonJsBuild ? 'commonjs' : false,
         targets: {
           browsers: ['> 1%', 'last 3 versions', 'not dead']
         },
