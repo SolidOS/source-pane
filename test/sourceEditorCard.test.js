@@ -37,7 +37,6 @@ describe('solid-panes-source-editor-card', () => {
     })
 
     const card = document.createElement('solid-panes-source-editor-card')
-    card.store = { fetcher: {} }
     card.subject = {
       uri: 'https://testingsolidos.solidcommunity.net/profile/card',
       value: 'https://testingsolidos.solidcommunity.net/profile/card',
@@ -48,6 +47,18 @@ describe('solid-panes-source-editor-card', () => {
       allowed: undefined,
       eTag: undefined,
     }
+    Object.defineProperty(card, 'sourceContext', {
+      value: {
+        context: {
+          session: {
+            store: { fetcher: {} },
+          },
+        },
+        subject: card.subject.uri,
+        sourcePaneState: card.sourcePaneState,
+      },
+      writable: true,
+    })
 
     document.body.appendChild(card)
     await card.updateComplete
@@ -55,9 +66,16 @@ describe('solid-panes-source-editor-card', () => {
     await new Promise((resolve) => setTimeout(resolve, 0))
 
     const editorInstance = SourceEditor.mock.results[0].value
-    expect(fetchContentAndMetadata).toHaveBeenCalledWith(card.store, card.subject, card.sourcePaneState)
+    expect(fetchContentAndMetadata).toHaveBeenCalledWith(
+      card.sourceContext.context.session.store,
+      expect.objectContaining({ value: card.subject.uri }),
+      card.sourcePaneState,
+    )
     expect(editorInstance.initialize).toHaveBeenCalled()
-    expect(setUnedited).toHaveBeenCalledWith(card.subject, card.sourcePaneState)
+    expect(setUnedited).toHaveBeenCalledWith(
+      expect.objectContaining({ value: card.subject.uri }),
+      card.sourcePaneState,
+    )
     expect(card.shadowRoot.textContent).toContain('card')
   })
 

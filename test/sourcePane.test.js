@@ -35,30 +35,37 @@ describe('source-pane', () => {
     const turtlePane = pane.render(turtleSubject, context)
     document.body.appendChild(turtlePane)
 
-    setUnedited(turtleSubject, {
-      broken: false,
-      contentType: 'text/turtle',
-      allowed: 'GET,PUT',
-      eTag: '"123"',
+    const turtleProvider = turtlePane.querySelector('solid-panes-source-provider')
+    return turtleProvider.updateComplete.then(() => {
+      setUnedited(turtleSubject, {
+        broken: false,
+        contentType: 'text/turtle',
+        allowed: 'GET,PUT',
+        eTag: '"123"',
+      })
+
+      expect(turtlePane.querySelector('.sourcePaneCompactButton').className).toContain('sourcePaneControlVisible')
+      expect(turtlePane.querySelector('.sourcePaneEditButton').className).toContain('sourcePaneControlVisible')
+
+      document.body.innerHTML = ''
+
+      const textSubject = { uri: 'https://janedoe.example/test.txt' }
+      const textPane = pane.render(textSubject, context)
+      document.body.appendChild(textPane)
+
+      const textProvider = textPane.querySelector('solid-panes-source-provider')
+
+      return textProvider.updateComplete.then(() => {
+        setUnedited(textSubject, {
+          broken: false,
+          contentType: 'text/plain',
+          allowed: 'GET,PUT',
+          eTag: '"123"',
+        })
+
+        expect(textPane.querySelector('.sourcePaneCompactButton').className).toContain('sourcePaneControlHidden')
+      })
     })
-
-    expect(turtlePane.querySelector('.sourcePaneCompactButton').className).toContain('sourcePaneControlVisible')
-    expect(turtlePane.querySelector('.sourcePaneEditButton').className).toContain('sourcePaneControlVisible')
-
-    document.body.innerHTML = ''
-
-    const textSubject = { uri: 'https://janedoe.example/test.txt' }
-    const textPane = pane.render(textSubject, context)
-    document.body.appendChild(textPane)
-
-    setUnedited(textSubject, {
-      broken: false,
-      contentType: 'text/plain',
-      allowed: 'GET,PUT',
-      eTag: '"123"',
-    })
-
-    expect(textPane.querySelector('.sourcePaneCompactButton').className).toContain('sourcePaneControlHidden')
   })
 
   it('shows Save after edit and hides Compact until save', () => {
@@ -66,16 +73,20 @@ describe('source-pane', () => {
     const result = pane.render(subject, context)
     document.body.appendChild(result)
 
-    setUnedited(subject, {
-      broken: false,
-      contentType: 'text/turtle',
-      allowed: 'GET,PUT',
-      eTag: '"123"',
+    const provider = result.querySelector('solid-panes-source-provider')
+
+    return provider.updateComplete.then(() => {
+      setUnedited(subject, {
+        broken: false,
+        contentType: 'text/turtle',
+        allowed: 'GET,PUT',
+        eTag: '"123"',
+      })
+
+      fireEvent.click(result.querySelector('.sourcePaneEditButton'))
+
+      expect(result.querySelector('.sourcePaneSaveButton').className).toContain('sourcePaneControlVisible')
+      expect(result.querySelector('.sourcePaneCompactButton').className).toContain('sourcePaneControlHidden')
     })
-
-    fireEvent.click(result.querySelector('.sourcePaneEditButton'))
-
-    expect(result.querySelector('.sourcePaneSaveButton').className).toContain('sourcePaneControlVisible')
-    expect(result.querySelector('.sourcePaneCompactButton').className).toContain('sourcePaneControlHidden')
   })
 })
