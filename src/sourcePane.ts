@@ -10,8 +10,7 @@ import * as mime from 'mime-types'
 import { html, render as litRender } from 'lit'
 import { log } from './debug'
 import './components/sourceEditorCard/SourceEditorCard'
-import { renderHeader } from './Header'
-import { getStatusSection } from './StatusSection'
+import './components/source-provider/SourceProvider'
 import './sourcePane.css'
 import { SourcePaneState } from './types'
 
@@ -86,8 +85,6 @@ const pane = {
   },
 
   render: function (subject: NamedNode, context: DataBrowserContext) {
-    const store = context.session.store
-    const { renderStatusSection } = getStatusSection()
     const sourcePaneState: SourcePaneState = {
       broken: false,
       allowed: undefined,
@@ -98,14 +95,12 @@ const pane = {
     const sourcePane = context.dom.createElement('div')
     sourcePane.setAttribute('class', 'sourcePane')
     litRender(html`
-        ${renderHeader(store, subject, sourcePaneState)}
-        <solid-panes-source-editor-card
-          .store=${store}
+        <solid-panes-source-provider
+          .context=${context}
           .subject=${subject}
           .sourcePaneState=${sourcePaneState}
         >
-        </solid-panes-source-editor-card>
-        ${renderStatusSection()}
+        </solid-panes-source-provider>
     `, sourcePane)
 
     return sourcePane
