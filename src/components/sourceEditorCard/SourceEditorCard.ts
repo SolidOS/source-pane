@@ -1,28 +1,30 @@
 import { html } from 'lit'
+import { consume } from '@lit/context'
 import { createRef, ref } from 'lit/directives/ref.js'
-import { customElement, property } from 'lit/decorators.js'
-import { LiveStore, NamedNode } from 'rdflib'
+import { customElement, state } from 'lit/decorators.js'
+import { NamedNode } from 'rdflib'
 import type { SourceEditor } from './SourceEditor'
 import { fetchContentAndMetadata, setUnedited } from '../../helpers'
 import styles from './SourceEditorCard.styles.css'
 import WebComponent from '../../primitives/WebComponent'
-import { SourcePaneState } from '../../types'
 import { getStatusSection } from '../../StatusSection'
+import { SourceContext } from '../../primitives/context'
+import { sourceContext } from '../../primitives/context'
 
 @customElement('solid-panes-source-editor-card')
 export default class SourceEditorCard extends WebComponent {
   static styles = styles
   private _editor?: SourceEditor
+  @state()
+  accessor _editorReady = false
   private _editorMount = createRef<HTMLDivElement>()
-  
-  @property({ attribute: false })
-  accessor store!: LiveStore
 
-  @property({ attribute: false })
-  accessor subject!: NamedNode
+  @consume({ context: sourceContext, subscribe: true })
+  accessor sourceContext: SourceContext | undefined
 
-  @property({ attribute: false })
-  accessor sourcePaneState!: SourcePaneState
+  private _getSourceContext () {
+    return this.sourceContext
+  }
 
   private _getFileName (uri?: string) {
     if (!uri) return ''
@@ -47,14 +49,20 @@ export default class SourceEditorCard extends WebComponent {
   }
 
   private async _initializeEditor () {
+    if (this._editor) return
     const sourcePaneEditor = this._editorMount.value
-    if (!sourcePaneEditor) return
+    const sourceContext = this._getSourceContext()
+    if (!sourcePaneEditor || !sourceContext) {
+      return
+    }
     try {
       const { SourceEditor } = await import(/* webpackChunkName: "source-editor" */ './SourceEditor')
-      const { content, metadata } = await fetchContentAndMetadata(this.store, this.subject, this.sourcePaneState)
+      const subjectNode = new NamedNode(sourceContext.subject)
+      const { content, metadata } = await fetchContentAndMetadata(sourceContext.context.session.store, subjectNode, sourceContext.sourcePaneState)
       this._editor = new SourceEditor()
       await this._editor.initialize(sourcePaneEditor, content, metadata.contentType)
-      setUnedited(this.subject, this.sourcePaneState)
+      this._editorReady = true
+      setUnedited(subjectNode, sourceContext.sourcePaneState)
     } catch (err) {
       const { showError } = getStatusSection()
       showError('Error fetching content: ' + err)
@@ -71,15 +79,17 @@ export default class SourceEditorCard extends WebComponent {
       this._editor.destroy()
       this._editor = undefined
     }
+    this._editorReady = false
   }
 
   render() {
-    return html`
-      <section class="sourcePaneCard">
-        <div class="sourcePaneEditor" ${ref(this._editorMount)}>
-        </div>
-        <p>${this._getFileName(this.subject.value)}</p>
+    const sectionClass = this._editorReady ? 'sourcePaneCard' : 'sourcePaneCard sourcePaneCardLoading'
+
+    return this._getSourceContext() ? html`
+      <section class=${sectionClass}>
+        <div class="sourcePaneEditor" ${ref(this._editorMount)}></div>
+        <p>${this._getFileName(this._getSourceContext()?.subject)}</p>
       </section>
-    `
+    ` : html``
   }
 }
