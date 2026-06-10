@@ -109,8 +109,9 @@ jest.mock('@codemirror/legacy-modes/mode/ntriples', () => ({
   ntriples: { name: 'ntriples' }
 }))
 
-jest.mock('../src/components/sourceEditorCard/themes/dark', () => ({
-  darkThemeExtension: [{ type: 'darkTheme' }]
+jest.mock('@uiw/codemirror-theme-vscode', () => ({
+  vscodeDark: [{ type: 'darkTheme' }],
+  vscodeLight: [{ type: 'lightTheme' }]
 }))
 
 const { SourceEditor } = require('../src/components/sourceEditorCard/SourceEditor')
