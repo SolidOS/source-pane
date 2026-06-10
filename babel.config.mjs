@@ -4,7 +4,7 @@ import { resolvePathsUsingDecorators, litDecoratorsBabelOptions } from './config
 
 const projectRoot = path.dirname(fileURLToPath(import.meta.url))
 const pathsUsingDecorators = resolvePathsUsingDecorators(projectRoot)
-const isCommonJsBuild = process.env.BABEL_ENV === 'cjs'
+const isCommonJsBuild = process.env.BABEL_ENV === 'cjs' || process.env.NODE_ENV === 'test'
 
 export default {
   presets: [
