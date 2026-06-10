@@ -8,12 +8,10 @@ import { html } from '@codemirror/lang-html'
 import { javascript } from '@codemirror/lang-javascript'
 import { json } from '@codemirror/lang-json'
 import { xml } from '@codemirror/lang-xml'
-// import { oneDark } from '@codemirror/theme-one-dark'
+import { vscodeDark, vscodeLight } from '@uiw/codemirror-theme-vscode'
 import { turtle } from '@codemirror/legacy-modes/mode/turtle'
 import { sparql } from '@codemirror/legacy-modes/mode/sparql'
 import { ntriples } from '@codemirror/legacy-modes/mode/ntriples'
-import { darkThemeExtension } from './themes/dark'
-
 export class SourceEditor {
   private _view: any = null
   private _languageCompartment: any = null
@@ -42,7 +40,7 @@ export class SourceEditor {
     const state = EditorState.create({
       doc: initialDoc,
       extensions: [
-        theme === 'dark' ? darkThemeExtension : [],
+        theme === 'dark' ? vscodeDark : vscodeLight,
         this._languageCompartment.of(languageExtension),
         this._editableCompartment.of(EditorView.editable.of(true)),
         syntaxHighlighting(defaultHighlightStyle, { fallback: true }),
