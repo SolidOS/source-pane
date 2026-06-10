@@ -2,8 +2,6 @@ import { EditorView } from '@codemirror/view'
 import { HighlightStyle, syntaxHighlighting } from '@codemirror/language'
 import { tags as t } from '@lezer/highlight'
 
-/* The base styles were copied from google 
-   highlighting was modified to fit our design and needs */
 const darkTheme = EditorView.theme({
   // Targets the outermost editor container
   '&': {
