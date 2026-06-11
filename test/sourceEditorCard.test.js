@@ -26,7 +26,7 @@ describe('solid-panes-source-editor-card', () => {
     jest.clearAllMocks()
   })
 
-  it('renders the filename and initializes the editor with fetched content', async () => {
+  it('renders the editor controls and initializes the editor with fetched content', async () => {
     fetchContentAndMetadata.mockResolvedValue({
       content: 'hello world',
       metadata: {
@@ -76,7 +76,9 @@ describe('solid-panes-source-editor-card', () => {
       expect.objectContaining({ value: card.subject.uri }),
       card.sourcePaneState,
     )
-    expect(card.shadowRoot.textContent).toContain('card')
+    expect(card.getEditor()).toBe(editorInstance)
+    expect(card.getEditor()?.getValue()).toBe('editor value')
+    expect(card.shadowRoot.querySelector('.sourcePanePrettyButton')).not.toBeNull()
   })
 
   it('delegates editor API methods', () => {
@@ -88,8 +90,6 @@ describe('solid-panes-source-editor-card', () => {
       replaceContent: jest.fn(),
     }
     card._editor = editorInstance
-
-    expect(card.getValue()).toBe('editor value')
 
     card.focusEditor()
     expect(editorInstance.focusEditor).toHaveBeenCalled()

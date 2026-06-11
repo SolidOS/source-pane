@@ -30,7 +30,12 @@ export default class SourceProvider extends WebComponent {
     return this
   }
 
-  // updateSourcePaneState(...)
+  updateSourcePaneState = <K extends keyof SourcePaneState>(key: K, value: SourcePaneState[K]) => {
+    this.sourcePaneState = {
+      ...this.sourcePaneState,
+      [key]: value
+    }
+  }
 
   protected willUpdate (changedProperties: Map<string, any>) {
     super.willUpdate(changedProperties)
@@ -40,6 +45,7 @@ export default class SourceProvider extends WebComponent {
       context: this.context,
       subject: this.subject?.uri ?? '',
       sourcePaneState: this.sourcePaneState,
+      updateSourcePaneState: this.updateSourcePaneState,
     }
   }
 

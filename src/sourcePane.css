@@ -2,9 +2,9 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 1.438rem; /* 23px */
-  padding-bottom: 1.813rem; /* 29px */
-  border-radius: var(--border-radius-base, 0.3125rem); /* 5px */
+  gap: 23px; 
+  padding-bottom: 29px; 
+  border-radius: 5px; 
   border: 1px solid var(--color-border, var(--gray-200, #E5E7EB));
 }
 
@@ -12,11 +12,11 @@
   display: flex;
   justify-content: flex-end;
   align-items: center;
-  gap: 0.4rem;
+  gap: 6px;
   flex-wrap: wrap;
   width: 100%;
   text-align: right;
-  padding: 0 0.2em var(--spacing-md, 1em) 0;
+  padding: 0 3px 16px 0;
 }
 /* generative ai */
 .sourcePaneControls > * {
@@ -34,27 +34,27 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 6rem;
-  padding: var(--spacing-xs, 0.55rem) var(--spacing-md, 0.9rem);
+  min-width: 96px;
+  padding: 9px 14px;
   line-height: 1.2;
   white-space: nowrap;
 }
 
 @media (max-width: 900px) {
   .sourcePaneControls {
-    padding-right: 0.2em;
+    padding-right: 3px;
   }
 
   .sourcePaneTextArea {
-    margin: var(--spacing-sm, 0.75em) 0.1em;
-    padding: var(--spacing-sm, 0.75em);
+    margin: 12px 2px;
+    padding: 12px;
   }
 }
 
 @media (max-width: 600px) {
   .sourcePaneControls {
     justify-content: flex-start;
-    gap: 0.3rem;
+    gap: 5px;
   }
 
   .sourcePaneCompactButton {
@@ -62,21 +62,8 @@
   }
 }
 
-/* generative ai */
-.sourcePaneTextAreaUnedited {
-  color: #888;
-}
-
-.sourcePaneTextAreaEditing {
-  color: black;
-}
-
-.sourcePaneTextAreaEdited {
-  color: green;
-}
-
 .sourcePaneTextAreaError {
-  color: red;
+  color: var(--solid-ui-color-error, #b00020);
 }
 
 .sourcePaneControlVisible {

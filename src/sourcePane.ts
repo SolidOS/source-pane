@@ -87,6 +87,8 @@ const pane = {
   render: function (subject: NamedNode, context: DataBrowserContext) {
     const sourcePaneState: SourcePaneState = {
       broken: false,
+      dirty: false,
+      editing: false,
       allowed: undefined,
       contentType: undefined,
       eTag: undefined

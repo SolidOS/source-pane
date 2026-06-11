@@ -5,7 +5,8 @@ import { SourcePaneState } from '../types'
 export interface SourceContext {
   context: DataBrowserContext,
   readonly subject: string,
-  sourcePaneState: SourcePaneState
+  sourcePaneState: SourcePaneState,
+  updateSourcePaneState: <K extends keyof SourcePaneState>(key: K, value: SourcePaneState[K]) => void
 }
 
 export const sourceContext = createContext<SourceContext>(Symbol('source'))

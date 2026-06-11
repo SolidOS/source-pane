@@ -7,11 +7,11 @@
     display: flex;
     flex-direction: column;
     width: 100%;
-    padding: var(--spacing-md, 1.25rem);
+    padding: 20px;
     align-items: flex-start;
-    gap: var(--spacing-md, 1.25rem);
-    border-radius: var(--border-radius-full, 0.625rem);
-    background: var(--color-card-bg, #FFFFFF);
+    gap: 20px;
+    border-radius: 10px;
+    background: var(--solid-ui-color-white, #FFFFFF);
     box-shadow: 0 0 6px 0 rgba(0, 0, 0, 0.25);
   }
 
@@ -19,10 +19,14 @@
     visibility: hidden;
   }
 
-  p {
-    color: var(--color-text-primary, var(--gray-700, #364153));
-    font-size: 1.25rem;
-    font-weight: var(--font-weight-md, 500);
+  .sourcePaneEditorFooter {
+    box-sizing: border-box;
+    display: flex;
+    justify-content: flex-end;
     align-self: stretch;
+    width: 100%;
+    gap: 10px;
+    border-top: 1px solid var(--solid-ui-color-slate-200, #E2E8F0);
+    padding: 20px 5px 15px;
   }
 }
