@@ -6,4 +6,6 @@ export type HttpResourceMetadata = {
 
 export type SourcePaneState = {
   broken: boolean
+  dirty: boolean
+  editing: boolean
 } & HttpResourceMetadata

@@ -1,6 +1,16 @@
 jest.mock('../src/components/sourceEditorCard/SourceEditorCard', () => {
   if (!globalThis.customElements.get('solid-panes-source-editor-card')) {
     class MockSourceEditorCard extends globalThis.HTMLElement {
+      connectedCallback() {
+        this.innerHTML = `
+          <section class="sourcePaneCard">
+            <button class="sourcePaneEditButton sourcePaneControlVisible">Edit</button>
+            <button class="sourcePaneSaveButton sourcePaneControlHidden">Save Changes</button>
+            <button class="sourcePaneCompactButton sourcePaneControlHidden">Compact</button>
+          </section>
+        `
+      }
+
       getValue() {
         return ''
       }
@@ -10,6 +20,19 @@ jest.mock('../src/components/sourceEditorCard/SourceEditorCard', () => {
       setReadOnly() {}
 
       focusEditor() {}
+
+      updateEditingState(editing) {
+        const saveButton = this.querySelector('.sourcePaneSaveButton')
+        const compactButton = this.querySelector('.sourcePaneCompactButton')
+        if (saveButton) {
+          saveButton.classList.toggle('sourcePaneControlVisible', Boolean(editing))
+          saveButton.classList.toggle('sourcePaneControlHidden', !editing)
+        }
+        if (compactButton) {
+          compactButton.classList.toggle('sourcePaneControlVisible', !editing)
+          compactButton.classList.toggle('sourcePaneControlHidden', Boolean(editing))
+        }
+      }
     }
 
     globalThis.customElements.define('solid-panes-source-editor-card', MockSourceEditorCard)

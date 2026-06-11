@@ -2,19 +2,25 @@ import { html } from 'lit'
 import { consume } from '@lit/context'
 import { createRef, ref } from 'lit/directives/ref.js'
 import { customElement, state } from 'lit/decorators.js'
-import { NamedNode } from 'rdflib'
+import { NamedNode, parse, serialize } from 'rdflib'
 import type { SourceEditor } from './SourceEditor'
-import { fetchContentAndMetadata, setUnedited } from '../../helpers'
+import { applyResponseHeaders, checkSyntax, fetchContentAndMetadata, getResponseHeaders, happy, setUnedited } from '../../helpers'
 import styles from './SourceEditorCard.styles.css'
 import WebComponent from '../../primitives/WebComponent'
 import { getStatusSection } from '../../StatusSection'
 import { SourceContext } from '../../primitives/context'
 import { sourceContext } from '../../primitives/context'
+import 'solid-ui/components/button'
+import { compactable } from '../../compactableFormats'
 
 @customElement('solid-panes-source-editor-card')
 export default class SourceEditorCard extends WebComponent {
   static styles = styles
   private _editor?: SourceEditor
+  private _originalContent?: string
+  private _dirtyState = false
+  private _editingState = false
+
   @state()
   accessor _editorReady = false
   private _editorMount = createRef<HTMLDivElement>()
@@ -26,14 +32,12 @@ export default class SourceEditorCard extends WebComponent {
     return this.sourceContext
   }
 
-  private _getFileName (uri?: string) {
-    if (!uri) return ''
-    const url = new URL(uri).pathname // remove #me and #this
-    return url.substring(url.lastIndexOf('/') + 1)
+  getOriginalContent () {
+    return this._originalContent
   }
 
-  getValue () {
-    return this._editor?.getValue()
+  getEditor () {
+    return this._editor
   }
 
   focusEditor () {
@@ -48,6 +52,18 @@ export default class SourceEditorCard extends WebComponent {
     this._editor?.replaceContent(text)
   }
 
+  updateDirtyState(dirty: boolean) {
+    if (this._dirtyState === dirty) return
+    this._dirtyState = dirty
+    this.sourceContext?.updateSourcePaneState('dirty', dirty)
+  }
+
+  updateEditingState(editing: boolean) {
+    if (this._editingState === editing) return
+    this._editingState = editing
+    this.sourceContext?.updateSourcePaneState('editing', editing)
+  }
+
   private async _initializeEditor () {
     if (this._editor) return
     const sourcePaneEditor = this._editorMount.value
@@ -59,8 +75,11 @@ export default class SourceEditorCard extends WebComponent {
       const { SourceEditor } = await import(/* webpackChunkName: "source-editor" */ './SourceEditor')
       const subjectNode = new NamedNode(sourceContext.subject)
       const { content, metadata } = await fetchContentAndMetadata(sourceContext.context.session.store, subjectNode, sourceContext.sourcePaneState)
+      this._originalContent = content
       this._editor = new SourceEditor()
-      await this._editor.initialize(sourcePaneEditor, content, metadata.contentType)
+      await this._editor.initialize(sourcePaneEditor, content, metadata.contentType, 'dark', dirty => {
+        this.updateDirtyState(dirty)
+      })
       this._editorReady = true
       setUnedited(subjectNode, sourceContext.sourcePaneState)
     } catch (err) {
@@ -80,15 +99,103 @@ export default class SourceEditorCard extends WebComponent {
       this._editor = undefined
     }
     this._editorReady = false
+    this._dirtyState = false
+    this._editingState = false
   }
 
+  private cancelHandler = () => {
+    const sourceContext = this.sourceContext
+    if (!sourceContext) return
+    const subjectNode = new NamedNode(sourceContext.subject)
+    const currentContent = this.getEditor()?.getValue()
+    if (this._originalContent !== undefined && currentContent !== this._originalContent) {
+      this.setValue(this._originalContent)
+    }
+    this._editor?.resetDirtyState()
+    this.updateDirtyState(false)
+    this.updateEditingState(false)
+    setUnedited(subjectNode, sourceContext.sourcePaneState)
+  }
+
+  private saveBack = async () => {
+    const sourceContext = this.sourceContext
+    if (!sourceContext) return
+
+    const store = sourceContext.context.session.store
+    const subject = new NamedNode(sourceContext.subject)
+    const sourcePaneState = sourceContext.sourcePaneState
+    const fetcher = store.fetcher
+    const data = this.getEditor()?.getValue() ?? ''
+    const { contentType, eTag } = sourceContext.sourcePaneState
+    if (!checkSyntax(store, subject, data, contentType, subject)) {
+      const { showError } = getStatusSection()
+      showError('Syntax error: fix the document before saving.')
+      return
+    }
+    const options: { data: string; contentType: string | undefined; headers?: { 'if-match': string } } = { data, contentType }
+    if (eTag) options.headers = { 'if-match': eTag } // avoid overwriting changed files -> status 412
+    try {
+      const response = await fetcher.webOperation('PUT', subject.uri, options)
+      if (!happy(response, 'PUT')) return
+      this._originalContent = data
+      /// @@ show edited: make save button disabled until edited again.
+      try {
+        const response = await fetcher.webOperation('HEAD', subject.uri) // , defaultFetchHeaders())
+        if (!happy(response, 'HEAD')) return
+        applyResponseHeaders(sourcePaneState, getResponseHeaders(store, subject, response))
+        this._editor?.resetDirtyState()
+        this.updateDirtyState(false)
+        setUnedited(subject, sourcePaneState)
+      } catch (err) {
+        throw err
+      }
+    } catch (err: any) {
+      const { showError } = getStatusSection()
+      showError('Error saving back: ' + err)
+    }
+  }
+
+  private prettyHandler = () => {
+    const sourceContext = this.sourceContext
+    if (!sourceContext) return
+
+    const { contentType } = sourceContext.sourcePaneState
+    const compactContentType = contentType?.split(';')[0]
+    const { showError } = getStatusSection()
+    const store = sourceContext.context.session.store
+    const subjectNode = new NamedNode(sourceContext.subject)
+
+    if (compactContentType && compactable[compactContentType]) {
+      try {
+        const text = this.getEditor()?.getValue() ?? ''
+        parse(text, store, subjectNode.uri, compactContentType)
+        // for jsonld serialize which is a Promise. New rdflib
+        const serialized = Promise.resolve(serialize(store.sym(subjectNode.uri), store, subjectNode.uri, compactContentType))
+        serialized.then(result => {
+          if (typeof result === 'string') this.setValue(result)
+        })
+      } catch (e: any) {  
+        showError(String(e))
+      }
+    }
+  }
+  
   render() {
     const sectionClass = this._editorReady ? 'sourcePaneCard' : 'sourcePaneCard sourcePaneCardLoading'
 
     return this._getSourceContext() ? html`
       <section class=${sectionClass}>
         <div class="sourcePaneEditor" ${ref(this._editorMount)}></div>
-        <p>${this._getFileName(this._getSourceContext()?.subject)}</p>
+        <div class="sourcePaneEditorFooter">
+          ${this._editingState
+            ? html`
+                <solid-ui-button class="sourcePaneCancelButton" variant="secondary" @click=${this.cancelHandler}>Cancel</solid-ui-button>
+                <solid-ui-button class="sourcePaneSaveButton" variant="primary" @click=${this.saveBack}>Save Changes</solid-ui-button>
+              `
+            : html`
+                <solid-ui-button class="sourcePanePrettyButton" variant="secondary" @click=${this.prettyHandler}>Prettify</solid-ui-button>
+              `}
+        </div>
       </section>
     ` : html``
   }

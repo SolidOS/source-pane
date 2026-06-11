@@ -16,26 +16,19 @@ export class SourceEditor {
   private _view: any = null
   private _languageCompartment: any = null
   private _editableCompartment: any = null
+  private _onDirtyChange?: (dirty: boolean) => void
+  private _isDirty = false
 
-  async initialize(container: HTMLElement, initialDoc = '', contentType: string = 'text/turtle', theme: ThemeMode = 'dark') {
+  async initialize(container: HTMLElement, initialDoc = '', contentType: string = 'text/turtle', theme: ThemeMode = 'dark', onDirtyChange?: (dirty: boolean) => void) {
     if (this._view) {
       this._view.destroy()
     }
 
     this._languageCompartment = new Compartment()
     this._editableCompartment = new Compartment()
+    this._onDirtyChange = onDirtyChange
+    this._isDirty = false
     const languageExtension = await this._getLanguageExtension(contentType)
-    /* we could add this if we want to update automatically
-       perhaps or tell the user they have unsaved changes ,
-        EditorView.updateListener.of((update) => {
-          if (update.docChanged) {
-            const text = update.state.doc.toString()
-           this._onChange(text)
-           // We could also set a flag here and then check it in the save handler to avoid doing expensive operations on every change
-          }
-            }
-        }) 
-    and then set an onChange callback from the parent component to handle changes */
 
     const state = EditorState.create({
       doc: initialDoc,
@@ -47,7 +40,13 @@ export class SourceEditor {
         lineNumbers(),
         history(),
         drawSelection(),
-        EditorView.lineWrapping, 
+        EditorView.lineWrapping,
+        EditorView.updateListener.of((update) => {
+          if (update.docChanged && !this._isDirty) {
+            this._isDirty = true
+            this._onDirtyChange?.(true)
+          }
+        }),
         keymap.of([
           ...defaultKeymap,
           ...historyKeymap
@@ -64,6 +63,7 @@ export class SourceEditor {
   destroy() {
     this._view?.destroy()
     this._view = null
+    this._isDirty = false
   }
 
   getValue(): string {
@@ -78,6 +78,10 @@ export class SourceEditor {
     this._view.dispatch({
       changes: { from: 0, to: this._view.state.doc.length, insert: text }
     })
+  }
+
+  resetDirtyState() {
+    this._isDirty = false
   }
 
   setReadOnly(readOnly: boolean) {
