@@ -4,7 +4,7 @@ import { createRef, ref } from 'lit/directives/ref.js'
 import { customElement, state } from 'lit/decorators.js'
 import { NamedNode, parse, serialize } from 'rdflib'
 import type { SourceEditor } from './SourceEditor'
-import { applyResponseHeaders, checkSyntax, fetchContentAndMetadata, getResponseHeaders, happy, setUnedited } from '../../helpers'
+import { applyResponseHeaders, checkSyntax, fetchContentAndMetadata, getResponseHeaders, happy } from '../../helpers'
 import styles from './SourceEditorCard.styles.css'
 import WebComponent from '../../primitives/WebComponent'
 import { getStatusSection } from '../../StatusSection'
@@ -64,6 +64,13 @@ export default class SourceEditorCard extends WebComponent {
     this.sourceContext?.updateSourcePaneState('editing', editing)
   }
 
+  private _resetEditorState() {
+    this._editor?.resetDirtyState()
+    this.updateDirtyState(false)
+    this.updateEditingState(false)
+    this._editor?.setReadOnly(true)
+  }
+
   private async _initializeEditor () {
     if (this._editor) return
     const sourcePaneEditor = this._editorMount.value
@@ -73,15 +80,14 @@ export default class SourceEditorCard extends WebComponent {
     }
     try {
       const { SourceEditor } = await import(/* webpackChunkName: "source-editor" */ './SourceEditor')
-      const subjectNode = new NamedNode(sourceContext.subject)
-      const { content, metadata } = await fetchContentAndMetadata(sourceContext.context.session.store, subjectNode, sourceContext.sourcePaneState)
+      const { content, metadata } = await fetchContentAndMetadata(sourceContext.context.session.store, new NamedNode(sourceContext.subject), sourceContext.sourcePaneState)
       this._originalContent = content
       this._editor = new SourceEditor()
       await this._editor.initialize(sourcePaneEditor, content, metadata.contentType, 'dark', dirty => {
         this.updateDirtyState(dirty)
       })
       this._editorReady = true
-      setUnedited(subjectNode, sourceContext.sourcePaneState)
+      this._editor?.setReadOnly(true)
     } catch (err) {
       const { showError } = getStatusSection()
       showError('Error fetching content: ' + err)
@@ -106,15 +112,11 @@ export default class SourceEditorCard extends WebComponent {
   private cancelHandler = () => {
     const sourceContext = this.sourceContext
     if (!sourceContext) return
-    const subjectNode = new NamedNode(sourceContext.subject)
     const currentContent = this.getEditor()?.getValue()
     if (this._originalContent !== undefined && currentContent !== this._originalContent) {
       this.setValue(this._originalContent)
     }
-    this._editor?.resetDirtyState()
-    this.updateDirtyState(false)
-    this.updateEditingState(false)
-    setUnedited(subjectNode, sourceContext.sourcePaneState)
+    this._resetEditorState()
   }
 
   private saveBack = async () => {
@@ -143,10 +145,7 @@ export default class SourceEditorCard extends WebComponent {
         const response = await fetcher.webOperation('HEAD', subject.uri) // , defaultFetchHeaders())
         if (!happy(response, 'HEAD')) return
         applyResponseHeaders(sourcePaneState, getResponseHeaders(store, subject, response))
-        this._editor?.resetDirtyState()
-        this.updateDirtyState(false)
-        this.updateEditingState(false)
-        setUnedited(subject, sourcePaneState)
+        this._resetEditorState()
       } catch (err) {
         throw err
       }
@@ -183,6 +182,13 @@ export default class SourceEditorCard extends WebComponent {
   
   render() {
     const sectionClass = this._editorReady ? 'sourcePaneCard' : 'sourcePaneCard sourcePaneCardLoading'
+    const compactContentType = this.sourceContext?.sourcePaneState.contentType?.split(';')[0]
+    const showPrettyButton = !this._editingState && !!compactContentType && compactable[compactContentType]
+    const prettyButton = showPrettyButton
+      ? html`
+          <solid-ui-button class="sourcePanePrettyButton" variant="secondary" @click=${this.prettyHandler}>Prettify</solid-ui-button>
+        `
+      : html``
 
     return this._getSourceContext() ? html`
       <section class=${sectionClass}>
@@ -193,9 +199,7 @@ export default class SourceEditorCard extends WebComponent {
                 <solid-ui-button class="sourcePaneCancelButton" variant="secondary" @click=${this.cancelHandler}>Cancel</solid-ui-button>
                 <solid-ui-button class="sourcePaneSaveButton" variant="primary" @click=${this.saveBack}>Save Changes</solid-ui-button>
               `
-            : html`
-                <solid-ui-button class="sourcePanePrettyButton" variant="secondary" @click=${this.prettyHandler}>Prettify</solid-ui-button>
-              `}
+            : prettyButton}
         </div>
       </section>
     ` : html``

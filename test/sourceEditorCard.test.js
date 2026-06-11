@@ -1,6 +1,5 @@
 jest.mock('../src/helpers', () => ({
   fetchContentAndMetadata: jest.fn(),
-  setUnedited: jest.fn(),
 }))
 
 jest.mock('../src/components/sourceEditorCard/SourceEditor', () => {
@@ -16,7 +15,7 @@ jest.mock('../src/components/sourceEditorCard/SourceEditor', () => {
   }
 })
 
-const { fetchContentAndMetadata, setUnedited } = require('../src/helpers')
+const { fetchContentAndMetadata } = require('../src/helpers')
 const { SourceEditor } = require('../src/components/sourceEditorCard/SourceEditor')
 require('../src/components/sourceEditorCard/SourceEditorCard')
 
@@ -43,7 +42,7 @@ describe('solid-panes-source-editor-card', () => {
     }
     card.sourcePaneState = {
       broken: false,
-      contentType: undefined,
+      contentType: 'text/turtle',
       allowed: undefined,
       eTag: undefined,
     }
@@ -64,6 +63,7 @@ describe('solid-panes-source-editor-card', () => {
     await card.updateComplete
 
     await new Promise((resolve) => setTimeout(resolve, 0))
+    await card.updateComplete
 
     const editorInstance = SourceEditor.mock.results[0].value
     expect(fetchContentAndMetadata).toHaveBeenCalledWith(
@@ -72,13 +72,51 @@ describe('solid-panes-source-editor-card', () => {
       card.sourcePaneState,
     )
     expect(editorInstance.initialize).toHaveBeenCalled()
-    expect(setUnedited).toHaveBeenCalledWith(
-      expect.objectContaining({ value: card.subject.uri }),
-      card.sourcePaneState,
-    )
     expect(card.getEditor()).toBe(editorInstance)
     expect(card.getEditor()?.getValue()).toBe('editor value')
     expect(card.shadowRoot.querySelector('.sourcePanePrettyButton')).not.toBeNull()
+  })
+
+  it('hides prettify for non-compactable content', async () => {
+    fetchContentAndMetadata.mockResolvedValue({
+      content: 'hello world',
+      metadata: {
+        contentType: 'text/plain',
+        allowed: 'GET',
+        eTag: '"123"',
+      },
+    })
+
+    const card = document.createElement('solid-panes-source-editor-card')
+    card.subject = {
+      uri: 'https://testingsolidos.solidcommunity.net/profile/card.txt',
+      value: 'https://testingsolidos.solidcommunity.net/profile/card.txt',
+    }
+    card.sourcePaneState = {
+      broken: false,
+      contentType: 'text/plain',
+      allowed: undefined,
+      eTag: undefined,
+    }
+    Object.defineProperty(card, 'sourceContext', {
+      value: {
+        context: {
+          session: {
+            store: { fetcher: {} },
+          },
+        },
+        subject: card.subject.uri,
+        sourcePaneState: card.sourcePaneState,
+      },
+      writable: true,
+    })
+
+    document.body.appendChild(card)
+    await card.updateComplete
+    await new Promise((resolve) => setTimeout(resolve, 0))
+    await card.updateComplete
+
+    expect(card.shadowRoot.querySelector('.sourcePanePrettyButton')).toBeNull()
   })
 
   it('delegates editor API methods', () => {

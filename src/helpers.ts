@@ -3,8 +3,6 @@ import { getStatusSection } from './StatusSection'
 import { error, log } from './debug'
 import { ns } from 'solid-ui'
 import { HttpResourceMetadata, SourcePaneState } from './types'
-import { compactable } from './compactableFormats'
-import SourceEditorCard from './components/sourceEditorCard/SourceEditorCard'
 
 const parseable: Record<string, boolean> = {
   'text/n3': true,
@@ -135,20 +133,6 @@ export function setControlVisible (button: HTMLElement | null, visible: boolean)
   if (!button) return
   button.classList.toggle('sourcePaneControlVisible', visible)
   button.classList.toggle('sourcePaneControlHidden', !visible)
-}
-
-export function setUnedited (subject: NamedNode, sourcePaneState: SourcePaneState) {
-  const editorCard = document.querySelector('solid-panes-source-editor-card') as SourceEditorCard | null
-  const saveButton = document.querySelector('.sourcePaneSaveButton') as HTMLElement
-  const myEditButton = document.querySelector('.sourcePaneEditButton') as HTMLElement
-  const myCompactButton = document.querySelector('.sourcePaneCompactButton') as HTMLElement
-  const { broken, contentType, allowed } = sourcePaneState
-  if (broken) return
-  const canEdit = !subject.uri.endsWith('/') && (!allowed || allowed.includes('PUT'))
-  setControlVisible(myEditButton, canEdit)
-  setControlVisible(saveButton, false)
-  setControlVisible(myCompactButton, !!(contentType && compactable[contentType.split(';')[0]]))
-  editorCard?.setReadOnly(true)
 }
 
 export function applyResponseHeaders (sourcePaneState: SourcePaneState, metadata: HttpResourceMetadata) {
