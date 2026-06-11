@@ -5,7 +5,7 @@ jest.mock('../src/components/sourceEditorCard/SourceEditorCard', () => {
         this.innerHTML = `
           <section class="sourcePaneCard">
             <button class="sourcePaneSaveButton sourcePaneControlHidden">Save Changes</button>
-            <button class="sourcePaneCompactButton sourcePaneControlHidden">Compact</button>
+            <button class="sourcePanePrettyButton sourcePaneControlHidden">Prettify</button>
           </section>
         `
       }
@@ -22,14 +22,14 @@ jest.mock('../src/components/sourceEditorCard/SourceEditorCard', () => {
 
       updateEditingState(editing) {
         const saveButton = this.querySelector('.sourcePaneSaveButton')
-        const compactButton = this.querySelector('.sourcePaneCompactButton')
+        const prettyButton = this.querySelector('.sourcePanePrettyButton')
         if (saveButton) {
           saveButton.classList.toggle('sourcePaneControlVisible', Boolean(editing))
           saveButton.classList.toggle('sourcePaneControlHidden', !editing)
         }
-        if (compactButton) {
-          compactButton.classList.toggle('sourcePaneControlVisible', !editing)
-          compactButton.classList.toggle('sourcePaneControlHidden', Boolean(editing))
+        if (prettyButton) {
+          prettyButton.classList.toggle('sourcePaneControlVisible', !editing)
+          prettyButton.classList.toggle('sourcePaneControlHidden', Boolean(editing))
         }
       }
     }
@@ -62,7 +62,7 @@ describe('source-pane', () => {
       expect(result.querySelector('solid-panes-source-provider')).not.toBeNull()
       expect(result.querySelector('.sourcePaneEditButton')).not.toBeNull()
       expect(result.querySelector('.sourcePaneSaveButton').className).toContain('sourcePaneControlHidden')
-      expect(result.querySelector('.sourcePaneCompactButton').className).toContain('sourcePaneControlHidden')
+      expect(result.querySelector('.sourcePanePrettyButton').className).toContain('sourcePaneControlHidden')
     })
   })
 
@@ -95,7 +95,7 @@ describe('source-pane', () => {
       expect(editorCard.setReadOnly).toHaveBeenCalledWith(false)
       expect(editorCard.focusEditor).toHaveBeenCalled()
       expect(result.querySelector('.sourcePaneSaveButton').className).toContain('sourcePaneControlVisible')
-      expect(result.querySelector('.sourcePaneCompactButton').className).toContain('sourcePaneControlHidden')
+      expect(result.querySelector('.sourcePanePrettyButton').className).toContain('sourcePaneControlHidden')
     })
   })
 })
