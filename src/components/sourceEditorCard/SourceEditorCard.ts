@@ -145,6 +145,7 @@ export default class SourceEditorCard extends WebComponent {
         applyResponseHeaders(sourcePaneState, getResponseHeaders(store, subject, response))
         this._editor?.resetDirtyState()
         this.updateDirtyState(false)
+        this.updateEditingState(false)
         setUnedited(subject, sourcePaneState)
       } catch (err) {
         throw err
