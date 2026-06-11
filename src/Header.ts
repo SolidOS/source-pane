@@ -5,6 +5,12 @@ import { widgets, icons } from 'solid-ui'
 import { SourcePaneState } from './types'
 import SourceEditorCard from './components/sourceEditorCard/SourceEditorCard'
 
+/* This we will use in the header ticket, didn't want to lose the code */
+export function canEditSource (subject: NamedNode, sourcePaneState: SourcePaneState) {
+  const { allowed } = sourcePaneState
+  return !subject.uri.endsWith('/') && (!allowed || allowed.includes('PUT'))
+}
+
 function mountButton (host: HTMLElement, button: HTMLElement) {
   host.replaceChildren(button)
 }

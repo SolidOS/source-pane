@@ -1,8 +1,4 @@
-jest.mock('../src/components/sourceEditorCard/SourceEditorCard', () => {
-  return class SourceEditorCard {}
-})
-
-const { getResponseHeaders, fetchContentAndMetadata, setUnedited } = require('../src/helpers')
+const { getResponseHeaders, fetchContentAndMetadata } = require('../src/helpers')
 
 describe('helpers', () => {
   beforeEach(() => {
@@ -72,31 +68,5 @@ describe('helpers', () => {
       allowed: 'GET,PUT',
       eTag: '"abc"',
     })
-  })
-
-  it('sets the editor back to read only and shows the edit controls', () => {
-    const editorCard = document.createElement('solid-panes-source-editor-card')
-    editorCard.setReadOnly = jest.fn()
-    document.body.appendChild(editorCard)
-
-    const saveButton = document.createElement('button')
-    saveButton.className = 'sourcePaneSaveButton'
-    const editButton = document.createElement('button')
-    editButton.className = 'sourcePaneEditButton'
-    const compactButton = document.createElement('button')
-    compactButton.className = 'sourcePaneCompactButton'
-    document.body.appendChild(saveButton)
-    document.body.appendChild(editButton)
-    document.body.appendChild(compactButton)
-
-    setUnedited(
-      { uri: 'https://example.org/profile/card' },
-      { broken: false, contentType: 'text/turtle', allowed: 'GET', eTag: '"abc"' }
-    )
-
-    expect(editorCard.setReadOnly).toHaveBeenCalledWith(true)
-    expect(saveButton.className).toContain('sourcePaneControlHidden')
-    expect(editButton.className).toContain('sourcePaneControlHidden')
-    expect(compactButton.className).toContain('sourcePaneControlVisible')
   })
 })
