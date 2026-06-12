@@ -25,7 +25,7 @@
     "watch": "sh -c 'npm run watch-js & npm run watch-dist & wait'",
     "watch:workspace": "sh -c 'npm run watch-js & npm run watch-dist & wait'",
     "watch-js": "sh -c \"BABEL_ENV=cjs babel src --out-dir lib --extensions '.ts' --copy-files --watch & BABEL_ENV=esm babel src --out-dir lib/esm --extensions '.ts' --copy-files --watch & wait\"",
-    "lint": "eslint . --ext .js,.ts",
+    "lint": "eslint",
     "lint-fix": "eslint --fix",
     "test": "jest --no-coverage",
     "test-coverage": "jest --coverage --collectCoverageFrom=src/**/*.[jt]s",
