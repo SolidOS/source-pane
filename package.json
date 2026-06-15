@@ -2,32 +2,40 @@
   "name": "source-pane",
   "version": "3.1.1-1",
   "description": "Solid-compatible Panes: Source editor",
-  "main": "lib/source-pane.js",
-  "module": "lib/esm/sourcePane.js",
+  "main": "dist/source-pane.js",
+  "module": "dist/source-pane.esm.js",
+  "types": "dist/SourcePane.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/source-pane.esm.js",
+      "require": "./dist/source-pane.js",
+      "types": "./dist/SourcePane.d.ts"
+    }
+  },
   "files": [
-    "/lib",
+    "/dist",
     "README.md",
     "LICENSE"
   ],
   "sideEffects": [
     "**/*.css",
-    "lib/**/*.js",
-    "lib/esm/**/*.js"
+    "dist/**/*.js"
   ],
   "scripts": {
-    "clean": "rm -rf lib",
+    "clean": "rm -rf dist",
     "build": "npm run clean && npm run typecheck && npm run build-js && npm run build-dist",
     "typecheck": "tsc --noEmit",
     "build-dist": "webpack --progress",
-    "build-js": "BABEL_ENV=cjs babel src --out-dir lib --extensions '.ts' --copy-files && BABEL_ENV=esm babel src --out-dir lib/esm --extensions '.ts' --copy-files && tsc --emitDeclarationOnly",
+    "build-js": "tsc --emitDeclarationOnly",
     "dev": "sh -c 'npm run watch-dist & npm run start'",
     "watch-dist": "webpack --watch --progress",
     "watch": "sh -c 'npm run watch-js & npm run watch-dist & wait'",
-    "watch:workspace": "sh -c 'npm run watch-js & npm run watch-dist & wait'",
-    "watch-js": "sh -c \"BABEL_ENV=cjs babel src --out-dir lib --extensions '.ts' --copy-files --watch & BABEL_ENV=esm babel src --out-dir lib/esm --extensions '.ts' --copy-files --watch & wait\"",
     "lint": "eslint",
     "lint-fix": "eslint --fix",
+    "watch-workspace": "sh -c 'npm run watch-js & npm run watch-dist & wait'",
+    "watch-js": "tsc --watch --emitDeclarationOnly",
     "test": "jest --no-coverage",
+    "typecheck-test": "tsc --noEmit -p tsconfig.test.json",
     "test-coverage": "jest --coverage --collectCoverageFrom=src/**/*.[jt]s",
     "prepublishOnly": "npm run test && npm run build",
     "preversion": "npm run lint && npm test",
@@ -67,7 +75,6 @@
     "@tailwindcss/postcss": "^4.3.0",
     "@testing-library/dom": "^10.4.1",
     "@types/mime-types": "^3.0.1",
-    "@typescript-eslint/eslint-plugin": "^8.59.3",
     "@typescript-eslint/parser": "^8.59.3",
     "babel-loader": "^10.0.0",
     "babel-plugin-inline-import": "^3.0.0",
@@ -75,6 +82,7 @@
     "copy-webpack-plugin": "^14.0.0",
     "css-loader": "^7.1.2",
     "eslint": "^9.39.2",
+    "eslint-plugin-import": "^2.32.0",
     "html-webpack-plugin": "^5.6.6",
     "jest": "^30.2.0",
     "jest-environment-jsdom": "^30.2.0",

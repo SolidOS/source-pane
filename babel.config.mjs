@@ -4,20 +4,15 @@ import { resolvePathsUsingDecorators, litDecoratorsBabelOptions } from './config
 
 const projectRoot = path.dirname(fileURLToPath(import.meta.url))
 const pathsUsingDecorators = resolvePathsUsingDecorators(projectRoot)
-const isCommonJsBuild = process.env.BABEL_ENV === 'cjs' || process.env.NODE_ENV === 'test'
 
 export default {
   presets: [
-    '@babel/preset-typescript',
-    [
-      '@babel/preset-env',
-      {
-        modules: isCommonJsBuild ? 'commonjs' : false,
-        targets: {
-          browsers: ['> 1%', 'last 3 versions', 'not dead']
-        },
-      },
-    ],
+    ['@babel/preset-env', {
+      targets: { 
+        browsers: ['> 1%', 'last 3 versions', 'not dead']
+      }
+    }],
+    '@babel/preset-typescript'
   ],
   plugins: [
     'babel-plugin-transform-import-meta',

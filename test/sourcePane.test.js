@@ -41,7 +41,7 @@ jest.mock('../src/components/sourceEditorCard/SourceEditorCard', () => {
 })
 
 const { context } = require('./helpers/setup')
-const paneModule = require('../src/sourcePane')
+const paneModule = require('../src/SourcePane')
 const pane = paneModule.default || paneModule
 const { fireEvent } = require('@testing-library/dom')
 

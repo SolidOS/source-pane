@@ -26,7 +26,7 @@ export default class SourceEditorCard extends WebComponent {
   private _editorMount = createRef<HTMLDivElement>()
 
   @consume({ context: sourceContext, subscribe: true })
-  accessor sourceContext: SourceContext | undefined
+  accessor sourceContext!: SourceContext
 
   private _getSourceContext () {
     return this.sourceContext
@@ -79,7 +79,7 @@ export default class SourceEditorCard extends WebComponent {
       return
     }
     try {
-      const { SourceEditor } = await import(/* webpackChunkName: "source-editor" */ './SourceEditor')
+      const { SourceEditor } = await import('./SourceEditor')
       const { content, metadata } = await fetchContentAndMetadata(sourceContext.context.session.store, new NamedNode(sourceContext.subject), sourceContext.sourcePaneState)
       this._originalContent = content
       this._editor = new SourceEditor()
