@@ -1,5 +1,5 @@
 import * as logic from 'solid-logic'
-import pane from '../src/sourcePane'
+import pane from '../src/SourcePane'
 import './dev-global.css'
 import * as $rdf from 'rdflib'
 import * as UI from 'solid-ui'
@@ -32,9 +32,9 @@ finishLogin()
 // const targetURIToShow = "https://solidproject.solidcommunity.net/Roadmap/index.ttl#this";
 
 // const targetURIToShow = "https://timbl.com/timbl/Automation/mother/tracker.n3#mother"
-// const targetURIToShow = 'https://sstratsianis.solidcommunity.net/TestingTracker/index.ttl#this'
-// const targetURIToShow = 'https://testingsolidos.solidcommunity.net/profile/card#me'
-const targetURIToShow = 'https://sharontest.solidcommunity.net/profile/card#me'
+// const targetURIToShow = 'https://sharontest.solidcommunity.net/profile/card#me'
+const targetURIToShow = 'https://testingsolidos.solidcommunity.net/profile/card#me'
+
 const context = {
   dom: document,
   session: {

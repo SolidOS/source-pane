@@ -1,67 +1,50 @@
-import globals from 'globals'
 import tsParser from '@typescript-eslint/parser'
-import tsPlugin from '@typescript-eslint/eslint-plugin'
-
-const commonGlobals = {
-    ...globals.browser,
-    ...globals.node,
-    Atomics: 'readonly',
-    SharedArrayBuffer: 'readonly',
-}
-
-const commonRules = {
-    semi: ['error', 'never'],
-    quotes: ['error', 'single'],
-    'no-console': 'warn',
-    'prefer-const': 'error',
-    'no-var': 'error',
-}
+import importPlugin from 'eslint-plugin-import'
 
 export default [
-    {
-        ignores: [
-            'node_modules/**',
-            'coverage/**',
-            'lib/**'
-        ],
+  {
+    ignores: [
+      'dist/**',
+      'lib/**',
+      'node_modules/**',
+      'coverage/**'
+    ],
+  },
+  {
+    files: ['src/**/*.ts'],
+    languageOptions: {
+      parser: tsParser,
+      parserOptions: {
+        project: ['./tsconfig.json'],
+        sourceType: 'module',
+      },
     },
-    {
-        files: ['src/**/*.js'],
-        languageOptions: {
-            globals: {
-                ...commonGlobals,
-            },
-        },
-
-        rules: {
-        ...commonRules,
-        'no-unused-vars': 'warn',
-        'no-undef': 'error',
-        strict: ['error', 'global'],
-        'no-implicit-globals': 'error',
-        'no-redeclare': 'error'
-        }
+    plugins: {
+      import: importPlugin,
     },
-    {
-        files: ['src/**/*.ts', '**/*.d.ts'],
-        languageOptions: {
-            parser: tsParser,
-            parserOptions: {
-                sourceType: 'module',
-            },
-            globals: {
-                ...commonGlobals,
-            },
-        },
-        plugins: {
-            '@typescript-eslint': tsPlugin,
-        },
-        rules: {
-        ...commonRules,
-        'no-unused-vars': 'off',
-        'no-undef': 'off',
-        'no-redeclare': 'off',
-        '@typescript-eslint/no-unused-vars': 'warn'
-        }
+    rules: {
+      // Style rules (not handled by TypeScript)
+      semi: ['error', 'never'],
+      quotes: ['error', 'single'],
+      
+      // Disable ESLint rules that TypeScript handles better
+      'no-unused-vars': 'off', // TypeScript handles this via noUnusedLocals
+      'no-undef': 'off', // TypeScript handles undefined variables
+    },
+  },
+  {
+    files: ['test/**/*.ts'],
+    languageOptions: {
+      parser: tsParser,
+      parserOptions: {
+        project: ['./tsconfig.test.json'],
+      },
+    },
+    rules: {
+      semi: ['error', 'never'],
+      quotes: ['error', 'single'],
+      'no-console': 'off', // Allow console in tests
+      'no-undef': 'off', // Tests may define globals
     }
+  }
 ]
