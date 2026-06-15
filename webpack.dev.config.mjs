@@ -8,7 +8,7 @@ export default [
     mode: 'development',
     entry: ['./dev/index.js'],
     output: {
-      path: path.resolve(process.cwd(), 'lib'),
+      path: path.resolve(process.cwd(), 'dist'),
       filename: 'main.js',
       clean: false,
     },
