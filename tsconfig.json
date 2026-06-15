@@ -3,7 +3,7 @@
     /* Basic Options */
     "target": "ES2019" /* Specify ECMAScript target version - matches your browser support */,
     "module": "ESNext" /* Let bundlers handle module transformation for better tree-shaking */,
-    "moduleResolution": "bundler", /* Use bundler-aware module resolution for modern Webpack builds. */
+    "moduleResolution": "node", /* Use bundler-aware module resolution for modern Webpack builds. */
     /* Crucial for library compatibility: */
     "skipLibCheck": true, // Skip type checking of declaration files for faster builds
     "allowSyntheticDefaultImports": true, // Often helps with ESM interop
@@ -21,7 +21,7 @@
     "sourceMap": true /* Generates corresponding '.map' file. */,
     // "outFile": "./",                       /* Concatenate and emit output to single file. */
 
-    "outDir": "lib" /* Redirect output structure to the directory. */,
+    "outDir": "dist" /* Redirect output structure to the directory. */,
     "rootDir": "src/",
     "plugins": [{ "name": "typescript-plugin-css-modules" }],
 

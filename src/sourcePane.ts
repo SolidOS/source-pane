@@ -9,10 +9,14 @@ import { DataBrowserContext, NewPaneOptions } from 'pane-registry'
 import * as mime from 'mime-types'
 import { html, render as litRender } from 'lit'
 import { log } from './debug'
-import './components/sourceEditorCard/SourceEditorCard'
-import './components/source-provider/SourceProvider'
+import SourceEditorCard from './components/sourceEditorCard/SourceEditorCard'
+import SourceProvider from './components/source-provider/SourceProvider'
 import './sourcePane.css'
 import { SourcePaneState } from './types'
+
+// Keep custom-element modules in the bundle; they are registered for side effects.
+void SourceEditorCard
+void SourceProvider
 
 const pane = {
   icon: icons.iconBase + 'noun_109873.svg', // noun_109873_51A7F9.svg

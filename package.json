@@ -3,15 +3,8 @@
   "version": "3.1.1-1",
   "description": "Solid-compatible Panes: Source editor",
   "main": "dist/source-pane.js",
-  "module": "dist/source-pane.esm.js",
-  "types": "dist/SourcePane.d.ts",
-  "exports": {
-    ".": {
-      "import": "./dist/source-pane.esm.js",
-      "require": "./dist/source-pane.js",
-      "types": "./dist/SourcePane.d.ts"
-    }
-  },
+  "module": "dist/esm/source-pane.esm.js",
+  "types": "dist/sourcePane.d.ts",
   "files": [
     "/dist",
     "README.md",
@@ -23,7 +16,7 @@
   ],
   "scripts": {
     "clean": "rm -rf dist",
-    "build": "npm run clean && npm run typecheck && npm run build-js && npm run build-dist",
+    "build": "npm run clean && npm run typecheck && npm run build-dist && npm run build-js",
     "typecheck": "tsc --noEmit",
     "build-dist": "webpack --progress",
     "build-js": "tsc --emitDeclarationOnly",
@@ -32,7 +25,7 @@
     "watch": "sh -c 'npm run watch-js & npm run watch-dist & wait'",
     "lint": "eslint",
     "lint-fix": "eslint --fix",
-    "watch-workspace": "sh -c 'npm run watch-js & npm run watch-dist & wait'",
+    "watch:workspace": "sh -c 'npm run watch-js & npm run watch-dist & wait'",
     "watch-js": "tsc --watch --emitDeclarationOnly",
     "test": "jest --no-coverage",
     "typecheck-test": "tsc --noEmit -p tsconfig.test.json",
@@ -96,7 +89,7 @@
     "solid-ui": "3.1.3-5",
     "style-loader": "^4.0.0",
     "terser-webpack-plugin": "^5.4.0",
-    "typescript": "^6.0.3",
+    "typescript": "^5.9.3",
     "webpack": "^5.97.1",
     "webpack-cli": "^7.0.2",
     "webpack-dev-server": "^5.2.3"

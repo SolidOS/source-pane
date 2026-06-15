@@ -26,8 +26,8 @@ const externalsESM = {
 }
 
 const commonConfig = {
-  mode: 'production',
   entry: './src/sourcePane.ts',
+  mode: 'production',
   module: {
     rules: moduleRules,
   },
@@ -47,15 +47,16 @@ const umdConfig = {
     path: path.resolve(process.cwd(), 'dist'),
     filename: 'source-pane.js',
     chunkFilename: '[name].js',
+    publicPath: 'auto',
     library: {
       type: 'umd',
       name: 'SourcePane',
       export: 'default',
     },
     globalObject: 'this',
-    clean: false,
   },
   optimization: {
+    concatenateModules: false,
     minimize: false,
   },
 }
@@ -67,15 +68,16 @@ const minConfig = {
     path: path.resolve(process.cwd(), 'dist'),
     filename: 'source-pane.min.js',
     chunkFilename: '[name].min.js',
+    publicPath: 'auto',
     library: {
       type: 'umd',
       name: 'SourcePane',
       export: 'default',
     },
     globalObject: 'this',
-    clean: false,
   },
   optimization: {
+    concatenateModules: false,
     minimize: true,
     minimizer: [
       new TerserPlugin({
@@ -90,25 +92,29 @@ const minConfig = {
   },
 }
 
-const esmConfig = {
+const esmPaneConfig = {
   ...commonConfig,
+  devtool: false,
   externals: externalsESM,
   externalsType: 'module',
   experiments: {
     outputModule: true,
   },
   output: {
-    path: path.resolve(process.cwd(), 'dist'),
+    path: path.resolve(process.cwd(), 'dist/esm'),
     filename: 'source-pane.esm.js',
     chunkFilename: '[name].esm.js',
+    publicPath: 'auto',
     library: {
       type: 'module',
     },
-    clean: false,
   },
   optimization: {
+    concatenateModules: false,
+    runtimeChunk: false,
+    splitChunks: false,
     minimize: false,
   },
 }
 
-export default [umdConfig, minConfig, esmConfig]
+export default [umdConfig, minConfig, esmPaneConfig]
