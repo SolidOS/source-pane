@@ -51,8 +51,8 @@
   "homepage": "https://github.com/SolidOS/source-pane",
   "peerDependencies": {
     "rdflib": "^2.3.6",
-    "solid-logic": "^4.0.6",
-    "solid-ui": "^3.1.0"
+    "solid-logic": "file:../solid-logic",
+    "solid-ui": "file:../solid-ui"
   },
   "devDependencies": {
     "@babel/eslint-parser": "^7.28.6",
@@ -60,6 +60,7 @@
     "@testing-library/dom": "^10.4.1",
     "babel-loader": "^10.0.0",
     "babel-plugin-inline-import": "^3.0.0",
+    "babel-plugin-transform-import-meta": "^2.3.3",
     "copy-webpack-plugin": "^14.0.0",
     "css-loader": "^7.1.2",
     "eslint": "^9.39.2",
@@ -68,8 +69,9 @@
     "jest-environment-jsdom": "^30.2.0",
     "jest-fetch-mock": "^3.0.3",
     "node-polyfill-webpack-plugin": "^4.1.0",
+    "pane-registry": "^3.1.1",
     "rdflib": "^2.3.6",
-    "solid-logic": "^4.0.6",
+    "solid-logic": "^4.0.7",
     "solid-ui": "^3.1.0",
     "style-loader": "^4.0.0",
     "terser-webpack-plugin": "^5.4.0",
