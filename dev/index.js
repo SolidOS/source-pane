@@ -1,13 +1,17 @@
 import * as logic from 'solid-logic'
-import pane from '../src/SourcePane'
+import pane from '../src/sourcePane'
 import './dev-global.css'
 import * as $rdf from 'rdflib'
 import * as UI from 'solid-ui'
 
+console.log('dev/index.js loaded, pane is:', pane)
+
 const loginBanner = document.getElementById('loginBanner')
 const webId = document.getElementById('webId')
 
-loginBanner.appendChild(UI.login.loginStatusBox(document, null, {}))
+if (loginBanner) {
+  loginBanner.appendChild(UI.login.loginStatusBox(document, null, {}))
+}
 
 async function finishLogin () {
   await logic.authn.checkUser()
