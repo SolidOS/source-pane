@@ -52,7 +52,7 @@ const normalConfig = {
       name: 'SourcePane',
       export: 'default',
     },
-    globalObject: 'globalThis',
+    globalObject: 'this',
     clean: true,
   },
   plugins: [
