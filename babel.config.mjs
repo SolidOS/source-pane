@@ -10,6 +10,7 @@ export default {
     ],
   ],
   plugins: [
+    'babel-plugin-transform-import-meta',
     [
       'babel-plugin-inline-import', {
         extensions: [
