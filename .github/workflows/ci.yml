@@ -15,14 +15,18 @@ on:
   workflow_dispatch:
 
 jobs:
+  update-deps:
+    uses: SolidOS/solidos/.github/workflows/update-solidos-deps.yml@main
+    secrets: inherit
+
   build:
-
+    needs: update-deps
     runs-on: ubuntu-latest
-
     strategy:
       matrix:
-        node-version: [22, 24]
-
+        node-version: 
+          - 22
+          - 24
     steps:
       - uses: actions/checkout@v6
       - name: Use Node.js ${{ matrix.node-version }}
