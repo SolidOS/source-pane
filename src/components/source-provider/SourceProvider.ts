@@ -5,7 +5,7 @@ import { NamedNode } from 'rdflib'
 import { DataBrowserContext } from 'pane-registry'
 import { renderHeader } from '../../Header'
 import { getStatusSection } from '../../StatusSection'
-import WebComponent from '../../primitives/WebComponent'
+import { WebComponent } from 'solid-ui'
 import { sourceContext, SourceContext } from '../../primitives/context'
 import { SourcePaneState } from '../../types'
 

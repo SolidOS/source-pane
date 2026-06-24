@@ -6,7 +6,7 @@ import { NamedNode, parse, serialize } from 'rdflib'
 import type { SourceEditor } from './SourceEditor'
 import { applyResponseHeaders, checkSyntax, fetchContentAndMetadata, getResponseHeaders, happy } from '../../helpers'
 import styles from './SourceEditorCard.styles.css'
-import WebComponent from '../../primitives/WebComponent'
+import { WebComponent } from 'solid-ui'
 import { getStatusSection } from '../../StatusSection'
 import { SourceContext } from '../../primitives/context'
 import { sourceContext } from '../../primitives/context'
@@ -26,9 +26,13 @@ export default class SourceEditorCard extends WebComponent {
   private _editorMount = createRef<HTMLDivElement>()
 
   @consume({ context: sourceContext, subscribe: true })
-  accessor sourceContext!: SourceContext
+  accessor sourceContext: SourceContext = undefined as unknown as SourceContext
 
-  private _getSourceContext () {
+  private _requireSourceContext () {
+    if (!this.sourceContext) {
+      throw new Error('The element is missing the required `sourceContext` property.')
+    }
+
     return this.sourceContext
   }
 
@@ -74,7 +78,7 @@ export default class SourceEditorCard extends WebComponent {
   private async _initializeEditor () {
     if (this._editor) return
     const sourcePaneEditor = this._editorMount.value
-    const sourceContext = this._getSourceContext()
+    const sourceContext = this.sourceContext
     if (!sourcePaneEditor || !sourceContext) {
       return
     }
@@ -120,8 +124,7 @@ export default class SourceEditorCard extends WebComponent {
   }
 
   private saveBack = async () => {
-    const sourceContext = this.sourceContext
-    if (!sourceContext) return
+    const sourceContext = this._requireSourceContext()
 
     const store = sourceContext.context.session.store
     const subject = new NamedNode(sourceContext.subject)
@@ -156,8 +159,7 @@ export default class SourceEditorCard extends WebComponent {
   }
 
   private prettyHandler = () => {
-    const sourceContext = this.sourceContext
-    if (!sourceContext) return
+    const sourceContext = this._requireSourceContext()
 
     const { contentType } = sourceContext.sourcePaneState
     const compactContentType = contentType?.split(';')[0]
@@ -181,8 +183,9 @@ export default class SourceEditorCard extends WebComponent {
   }
   
   render() {
+    const sourceContext = this._requireSourceContext()
     const sectionClass = this._editorReady ? 'sourcePaneCard' : 'sourcePaneCard sourcePaneCardLoading'
-    const compactContentType = this.sourceContext?.sourcePaneState.contentType?.split(';')[0]
+    const compactContentType = sourceContext.sourcePaneState.contentType?.split(';')[0]
     const showPrettyButton = !this._editingState && !!compactContentType && compactable[compactContentType]
     const prettyButton = showPrettyButton
       ? html`
@@ -190,7 +193,7 @@ export default class SourceEditorCard extends WebComponent {
         `
       : html``
 
-    return this._getSourceContext() ? html`
+    return html`
       <section class=${sectionClass}>
         <div class="sourcePaneEditor" ${ref(this._editorMount)}></div>
         <div class="sourcePaneEditorFooter">
@@ -202,6 +205,6 @@ export default class SourceEditorCard extends WebComponent {
             : prettyButton}
         </div>
       </section>
-    ` : html``
+    `
   }
 }

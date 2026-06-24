@@ -10,11 +10,8 @@ const parseable: Record<string, boolean> = {
   'application/rdf+xml': true,
   'application/xhtml+xml': true, // For RDFa?
   'text/html': true, // For data island
-  //        'application/sparql-update': true,
   'application/json': true,
   'application/ld+json': true
-  //        'application/nquads' : true,
-  //        'application/n-quads' : true
 }
 
 export function happy (response: Response, method: string) {
@@ -141,7 +138,6 @@ export function applyResponseHeaders (sourcePaneState: SourcePaneState, metadata
   sourcePaneState.eTag = metadata.eTag
 }
 
-// get response headers
 export function getResponseHeaders (store: LiveStore, subject: NamedNode, response: Response): HttpResourceMetadata {
   let contentType: string | undefined
   let allowed: string | undefined
