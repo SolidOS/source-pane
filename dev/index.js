@@ -14,22 +14,12 @@ if (loginBanner) {
 }
 
 async function finishLogin () {
-  const me = await logic.authn.checkUser()
+  await logic.authn.checkUser()
   const session = logic.authSession
-  const sessionWebId = session?.webId ?? session?.info?.webId ?? null
-  const meWebId = me?.uri ?? me?.value ?? null
-  const webIdUri = meWebId ?? sessionWebId
-  const isLoggedIn = Boolean(
-    me ||
-    session?.isActive ||
-    session?.info?.isLoggedIn ||
-    sessionWebId
-  )
-
-  if (isLoggedIn && webIdUri) {
-    if (webId) {
-      webId.innerHTML = 'Logged in as: ' + webIdUri
-    }
+  const isLoggedIn = session?.info?.isLoggedIn ?? session?.isActive ?? Boolean(session?.webId)
+  if (isLoggedIn) {
+    // Update the page with the status.
+    webId.innerHTML = 'Logged in as: ' + logic.authn.currentUser().uri
   } else {
     if (webId) {
       webId.innerHTML = ''
