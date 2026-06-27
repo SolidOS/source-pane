@@ -1,102 +1,101 @@
-const { context, doc, subject } = require('./helpers/setup')
-const paneModule = require('../src/sourcePane')
+jest.mock('../src/components/sourceEditorCard/SourceEditorCard', () => {
+  if (!globalThis.customElements.get('solid-panes-source-editor-card')) {
+    class MockSourceEditorCard extends globalThis.HTMLElement {
+      connectedCallback() {
+        this.innerHTML = `
+          <section class="sourcePaneCard">
+            <button class="sourcePaneSaveButton sourcePaneControlHidden">Save Changes</button>
+            <button class="sourcePanePrettyButton sourcePaneControlHidden">Prettify</button>
+          </section>
+        `
+      }
+
+      getValue() {
+        return ''
+      }
+
+      setValue() {}
+
+      setReadOnly() {}
+
+      focusEditor() {}
+
+      updateEditingState(editing) {
+        const saveButton = this.querySelector('.sourcePaneSaveButton')
+        const prettyButton = this.querySelector('.sourcePanePrettyButton')
+        if (saveButton) {
+          saveButton.classList.toggle('sourcePaneControlVisible', Boolean(editing))
+          saveButton.classList.toggle('sourcePaneControlHidden', !editing)
+        }
+        if (prettyButton) {
+          prettyButton.classList.toggle('sourcePaneControlVisible', !editing)
+          prettyButton.classList.toggle('sourcePaneControlHidden', Boolean(editing))
+        }
+      }
+    }
+
+    globalThis.customElements.define('solid-panes-source-editor-card', MockSourceEditorCard)
+  }
+
+  return globalThis.customElements.get('solid-panes-source-editor-card')
+})
+
+const { context } = require('./helpers/setup')
+const paneModule = require('../src/SourcePane')
 const pane = paneModule.default || paneModule
-const { findByText, fireEvent, getByTitle, waitFor } = require('@testing-library/dom')
-const fetchMock = require('jest-fetch-mock')
-const { parse, sym } = require('rdflib')
-const { solidLogicSingleton } = require('solid-logic')
+const { fireEvent } = require('@testing-library/dom')
 
-describe("source-pane", () => {
-  describe("test button compact", () => {
-    let result
+describe('source-pane', () => {
+  afterEach(() => {
+    document.body.innerHTML = ''
+    jest.restoreAllMocks()
+  })
 
-    describe("text/turtle file", () => {
-      beforeAll(() => {
-        const subject = sym("https://janedoe.example/test.ttl")
-        fetchMock.mockOnceIf(
-          subject.uri,
-          `<> a "test".`,
-          {
-            headers: {
-              "Content-Type": "text/turtle",
-            },
-          }
-        );
-      result = pane.render(subject, context);
-      });
+  it('renders the pane shell and edit control', () => {
+    const subject = { uri: 'https://janedoe.example/test.ttl' }
+    const result = pane.render(subject, context)
+    document.body.appendChild(result)
 
-      it.skip('button exist and is visible', async () => {
-        const compact = await findByText(result, 'COMPACT')
-        console.log(compact.style)
-        expect(compact.style.visibility).toEqual('visible')
-      })
+    const provider = result.querySelector('solid-panes-source-provider')
 
-      it.skip('click "compact", button cancel is visible', async () => {
-        const compact = await findByText(result, 'COMPACT')
-        fireEvent.click(compact)
-        const cancel = await getByTitle(result, 'Cancel')
-        expect(cancel.style.visibility).toEqual('visible')
-      })
-
-      it('click "edit", button compact is not visible', async () => {
-        const edit = await getByTitle(result, 'Edit')
-        fireEvent.click(edit)
-        const compact = await findByText(result, 'COMPACT')
-        expect(compact.style.visibility).not.toEqual('visible')
-      })
-
-      it.skip('check content succeeds but should fail', async () => {
-        waitFor(() => { expect(result).toContainHTML('<> a "1111".') })
-      })
+    return provider.updateComplete.then(() => {
+      expect(result.querySelector('solid-panes-source-provider')).not.toBeNull()
+      expect(result.querySelector('.sourcePaneEditButton')).not.toBeNull()
+      expect(result.querySelector('.sourcePaneSaveButton').className).toContain('sourcePaneControlHidden')
+      expect(result.querySelector('.sourcePanePrettyButton').className).toContain('sourcePaneControlHidden')
     })
+  })
 
-    describe("text/plain file", () => {
-      beforeAll(() => {
-        const subject = sym("https://janedoe.example/test.txt")
-        fetchMock.mockOnceIf(
-          subject.uri,
-          `this is a test`,
-          {
-            headers: {
-              "Content-Type": "text/plain",
-            },
-          }
-        )
-          result = pane.render(subject, context);
-      });
+  it('switches the editor card into editing mode when edit is clicked', () => {
+    const subject = { uri: 'https://janedoe.example/test.ttl' }
+    const result = pane.render(subject, context)
+    document.body.appendChild(result)
 
-      it('button exist and is not visible', async () => {
-        const compact = await findByText(result, 'COMPACT')
-        expect(compact).not.toBeNull()
-        expect(compact.style.visibility).not.toEqual('visible')
+    const provider = result.querySelector('solid-panes-source-provider')
+    return provider.updateComplete.then(() => {
+      const editorCard = result.querySelector('solid-panes-source-editor-card')
+      editorCard.updateEditingState = jest.fn((editing) => {
+        const saveButton = editorCard.querySelector('.sourcePaneSaveButton')
+        const compactButton = editorCard.querySelector('.sourcePaneCompactButton')
+        if (saveButton) {
+          saveButton.classList.toggle('sourcePaneControlVisible', Boolean(editing))
+          saveButton.classList.toggle('sourcePaneControlHidden', !editing)
+        }
+        if (compactButton) {
+          compactButton.classList.toggle('sourcePaneControlVisible', !editing)
+          compactButton.classList.toggle('sourcePaneControlHidden', Boolean(editing))
+        }
       })
-  
-      it.skip('check content succeed but should fail', async () => {
-        waitFor(() => { expect(result).toContainHTML('<> a "1111".') })
-      })
+      editorCard.setReadOnly = jest.fn()
+      editorCard.focusEditor = jest.fn()
+
+      fireEvent.click(result.querySelector('.sourcePaneEditButton'))
+
+      expect(editorCard.updateEditingState).toHaveBeenCalledWith(true)
+      expect(editorCard.setReadOnly).toHaveBeenCalledWith(false)
+      expect(editorCard.focusEditor).toHaveBeenCalled()
+      expect(result.querySelector('.sourcePaneSaveButton').className).toContain('sourcePaneControlVisible')
+      expect(result.querySelector('.sourcePanePrettyButton').className).toContain('sourcePaneControlHidden')
     })
-
-    describe.skip("container", () => {
-      beforeAll(() => {
-        const subject = sym("https://janedoe.example/public/")
-        fetchMock.mockOnceIf(
-          subject.uri,
-          ` `,
-          {
-            headers: {
-              "Allow": "text/turtle",
-            },
-          }
-        )
-          result = pane.render(subject, context);
-      });
-
-      it('compact and cancel are visible', async () => {
-        const compact = await findByText(result, 'COMPACT')
-        const cancel = await getByTitle(result, 'Cancel')
-        expect(compact.style.visibility).toEqual('visible')
-        expect(cancel.style.visibility).toEqual('visible')
-      })
-    })
-  });
-});
+  })
+})

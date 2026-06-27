@@ -1,3 +1,5 @@
+import postCSSConfig from './config/postcss.mjs'
+
 export const moduleRules = [
   {
     test: /\.(js|ts)$/,
@@ -5,8 +7,13 @@ export const moduleRules = [
     use: ['babel-loader'],
   },
   {
+    test: /\.styles\.css$/,
+    loader: 'lit-css-loader',
+    options: postCSSConfig,
+  },
+  {
     test: /\.css$/,
-    exclude: /\.module\.css$/,
+    exclude: [/\.module\.css$/, /\.styles\.css$/],
     use: ['style-loader', 'css-loader'],
   },
   {

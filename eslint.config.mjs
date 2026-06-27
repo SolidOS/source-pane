@@ -1,39 +1,49 @@
-import globals from 'globals'
+import tsParser from '@typescript-eslint/parser'
+import importPlugin from 'eslint-plugin-import'
 
 export default [
-    {
-        ignores: [
-            'node_modules/**',
-            'coverage/**'
-        ],
+  {
+    ignores: [
+      'dist/**',
+      'node_modules/**',
+      'coverage/**'
+    ],
+  },
+  {
+    files: ['src/**/*.ts'],
+    languageOptions: {
+      parser: tsParser,
+      parserOptions: {
+        project: ['./tsconfig.json'],
+        sourceType: 'module',
+      },
     },
-    {
-        files: ['src/**/*.js'],
-        languageOptions: {
-            globals: {
-                ...globals.browser,
-                ...globals.node,
-                Atomics: 'readonly',
-                SharedArrayBuffer: 'readonly',
-            },
-        },
-
-        rules: {
-        // Code style - match TypeScript settings
-        semi: ['error', 'never'],
-        quotes: ['error', 'single'],
-
-        // Strict checking - match TypeScript strictness
-        'no-console': 'warn',
-        'no-unused-vars': 'warn', // Match TypeScript noUnusedLocals: true
-        'no-undef': 'error',
-        strict: ['error', 'global'], // Match TypeScript alwaysStrict: true
-
-        // Additional strictness to match TypeScript behavior
-        'no-implicit-globals': 'error',
-        'prefer-const': 'error', // Encourage immutability
-        'no-var': 'error', // Use let/const only
-        'no-redeclare': 'error'
-        }
+    plugins: {
+      import: importPlugin,
+    },
+    rules: {
+      // Style rules (not handled by TypeScript)
+      semi: ['error', 'never'],
+      quotes: ['error', 'single'],
+      
+      // Disable ESLint rules that TypeScript handles better
+      'no-unused-vars': 'off', // TypeScript handles this via noUnusedLocals
+      'no-undef': 'off', // TypeScript handles undefined variables
+    },
+  },
+  {
+    files: ['test/**/*.ts'],
+    languageOptions: {
+      parser: tsParser,
+      parserOptions: {
+        project: ['./tsconfig.test.json'],
+      },
+    },
+    rules: {
+      semi: ['error', 'never'],
+      quotes: ['error', 'single'],
+      'no-console': 'off', // Allow console in tests
+      'no-undef': 'off', // Tests may define globals
     }
+  }
 ]
