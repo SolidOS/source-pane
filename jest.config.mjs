@@ -7,9 +7,9 @@ export default {
   },
   setupFilesAfterEnv: ["./test/helpers/jest.setup.js"],
   transform: {
-    '^.+\\.m?js$': 'babel-jest',
+    '^.+\\.(ts|m?js)$': 'babel-jest',
   },
-  transformIgnorePatterns: ['node_modules/(?!.*(?:@uvdsl|uuid|@noble|lit-html|lit-element|lit|@lit|@lit-labs|solid-ui|solid-logic)(?:/|$))'],
+  transformIgnorePatterns: ['/node_modules/(?!lit-html|lit|@lit|@uvdsl/solid-oidc-client-browser|uuid|@noble|solid-logic|solid-ui)'],
   roots: ['<rootDir>/src', '<rootDir>/test'],
   moduleNameMapper: {
     '^SolidLogic$': 'solid-logic',
