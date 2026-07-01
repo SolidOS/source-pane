@@ -104,7 +104,7 @@ const esmPaneConfig = {
     path: path.resolve(process.cwd(), 'dist/esm'),
     filename: 'source-pane.esm.js',
     chunkFilename: '[name].esm.js',
-    publicPath: 'auto',
+    publicPath: '',
     library: {
       type: 'module',
     },

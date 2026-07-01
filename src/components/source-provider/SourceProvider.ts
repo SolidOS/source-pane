@@ -9,6 +9,25 @@ import { WebComponent } from 'solid-ui'
 import { sourceContext, SourceContext } from '../../primitives/context'
 import { SourcePaneState } from '../../types'
 
+const webComponentIdentityKey = Symbol.for('solid-ui/WebComponentIdentity')
+
+queueMicrotask(() => {
+  const currentWebComponent = WebComponent
+  const previousWebComponent = (globalThis as typeof globalThis & {
+    [webComponentIdentityKey]?: typeof WebComponent
+  })[webComponentIdentityKey]
+
+  ;(globalThis as typeof globalThis & {
+    [webComponentIdentityKey]?: typeof WebComponent
+  })[webComponentIdentityKey] = currentWebComponent
+
+  console.log('WebComponent identity:', {
+    currentName: currentWebComponent.name,
+    hasPrevious: previousWebComponent != null,
+    sameAsPrevious: previousWebComponent === currentWebComponent,
+  })
+})
+
 @customElement('solid-panes-source-provider')
 export default class SourceProvider extends WebComponent {
   @property({ attribute: false })
