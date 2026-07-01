@@ -70,7 +70,6 @@ export class SourceEditor {
     return this._view ? this._view.state.doc.toString() : ''
   }
 
-  // this is used in the compact handler to update the editor content after compacting without changing the editing state
   replaceContent(text: string) {
     if (!this._view) return
     const current = this._view.state.doc.toString()

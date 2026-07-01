@@ -2,7 +2,6 @@ const { getResponseHeaders, fetchContentAndMetadata } = require('../src/helpers'
 
 describe('helpers', () => {
   beforeEach(() => {
-    document.body.innerHTML = ''
     jest.clearAllMocks()
   })
 

@@ -9,44 +9,55 @@ import { WebComponent } from 'solid-ui'
 import { sourceContext, SourceContext } from '../../primitives/context'
 import { SourcePaneState } from '../../types'
 
-const webComponentIdentityKey = Symbol.for('solid-ui/WebComponentIdentity')
-
-queueMicrotask(() => {
-  const currentWebComponent = WebComponent
-  const previousWebComponent = (globalThis as typeof globalThis & {
-    [webComponentIdentityKey]?: typeof WebComponent
-  })[webComponentIdentityKey]
-
-  ;(globalThis as typeof globalThis & {
-    [webComponentIdentityKey]?: typeof WebComponent
-  })[webComponentIdentityKey] = currentWebComponent
-
-  console.log('WebComponent identity:', {
-    currentName: currentWebComponent.name,
-    hasPrevious: previousWebComponent != null,
-    sameAsPrevious: previousWebComponent === currentWebComponent,
-  })
-})
+const defaultSourcePaneState: SourcePaneState = {
+  broken: false,
+  dirty: false,
+  editing: false,
+  allowed: undefined,
+  contentType: undefined,
+  eTag: undefined
+}
 
 @customElement('solid-panes-source-provider')
 export default class SourceProvider extends WebComponent {
   @property({ attribute: false })
-  accessor context!: DataBrowserContext
+  accessor context: DataBrowserContext | undefined = undefined
 
   @property({ attribute: false })
-  accessor subject!: NamedNode
+  accessor subject: NamedNode | undefined = undefined
 
   @property({ attribute: false })
-  accessor sourcePaneState!: SourcePaneState
+  accessor sourcePaneState: SourcePaneState = defaultSourcePaneState
 
   @provide({ context: sourceContext })
-  accessor sourceContextValue!: SourceContext
+  accessor sourceContextValue: SourceContext = {
+    context: undefined as unknown as DataBrowserContext,
+    subject: '',
+    sourcePaneState: defaultSourcePaneState,
+    updateSourcePaneState: () => {},
+  }
 
   // need this while we are using document.querySelector 
   // and rendering plain HTML children. Can remove later when all
   // code is refactored to use context and components.
   createRenderRoot () {
     return this
+  }
+
+  private _requireContext () {
+    if (!this.context) {
+      throw new Error('The element is missing the required `context` property.')
+    }
+
+    return this.context
+  }
+
+  private _requireSubject () {
+    if (!this.subject) {
+      throw new Error('The element is missing the required `subject` property.')
+    }
+
+    return this.subject
   }
 
   updateSourcePaneState = <K extends keyof SourcePaneState>(key: K, value: SourcePaneState[K]) => {
@@ -58,22 +69,25 @@ export default class SourceProvider extends WebComponent {
 
   protected willUpdate (changedProperties: Map<string, any>) {
     super.willUpdate(changedProperties)
-    // will add in source pane updates later as I refactor the header code in
-    // another ticket.
+    const context = this._requireContext()
+    const subject = this._requireSubject()
+
     this.sourceContextValue = {
-      context: this.context,
-      subject: this.subject?.uri ?? '',
+      context,
+      subject: subject.uri,
       sourcePaneState: this.sourcePaneState,
       updateSourcePaneState: this.updateSourcePaneState,
     }
   }
 
   render() {
-    const store = this.context.session.store
+    const context = this._requireContext()
+    const subject = this._requireSubject()
+    const store = context.session.store
     const { renderStatusSection } = getStatusSection()
 
     return html`
-      ${renderHeader(store, this.subject, this.sourcePaneState)}
+      ${renderHeader(store, subject, this.sourcePaneState)}
       <solid-panes-source-editor-card></solid-panes-source-editor-card>
       ${renderStatusSection()}
     `

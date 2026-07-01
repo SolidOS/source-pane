@@ -1,7 +1,6 @@
-import { html } from 'lit'
+import { html, nothing } from 'lit'
 import { consume } from '@lit/context'
-import { createRef, ref } from 'lit/directives/ref.js'
-import { customElement, state } from 'lit/decorators.js'
+import { customElement, query, state } from 'lit/decorators.js'
 import { NamedNode, parse, serialize } from 'rdflib'
 import type { SourceEditor } from './SourceEditor'
 import { applyResponseHeaders, checkSyntax, fetchContentAndMetadata, getResponseHeaders, happy } from '../../helpers'
@@ -23,7 +22,8 @@ export default class SourceEditorCard extends WebComponent {
 
   @state()
   accessor _editorReady = false
-  private _editorMount = createRef<HTMLDivElement>()
+  @query('.sourcePaneEditor')
+  accessor _editorMount: HTMLDivElement | null = null
 
   @consume({ context: sourceContext, subscribe: true })
   accessor sourceContext: SourceContext = undefined as unknown as SourceContext
@@ -77,7 +77,7 @@ export default class SourceEditorCard extends WebComponent {
 
   private async _initializeEditor () {
     if (this._editor) return
-    const sourcePaneEditor = this._editorMount.value
+    const sourcePaneEditor = this._editorMount
     const sourceContext = this.sourceContext
     if (!sourcePaneEditor || !sourceContext) {
       return
@@ -113,7 +113,7 @@ export default class SourceEditorCard extends WebComponent {
     this._editingState = false
   }
 
-  private cancelHandler = () => {
+  private cancelHandler () {
     const sourceContext = this.sourceContext
     if (!sourceContext) return
     const currentContent = this.getEditor()?.getValue()
@@ -123,7 +123,7 @@ export default class SourceEditorCard extends WebComponent {
     this._resetEditorState()
   }
 
-  private saveBack = async () => {
+  private async saveBack () {
     const sourceContext = this._requireSourceContext()
 
     const store = sourceContext.context.session.store
@@ -158,7 +158,7 @@ export default class SourceEditorCard extends WebComponent {
     }
   }
 
-  private prettyHandler = () => {
+  private prettyHandler () {
     const sourceContext = this._requireSourceContext()
 
     const { contentType } = sourceContext.sourcePaneState
@@ -191,11 +191,11 @@ export default class SourceEditorCard extends WebComponent {
       ? html`
           <solid-ui-button class="sourcePanePrettyButton" variant="secondary" @click=${this.prettyHandler}>Prettify</solid-ui-button>
         `
-      : html``
+      : nothing
 
     return html`
       <section class=${sectionClass}>
-        <div class="sourcePaneEditor" ${ref(this._editorMount)}></div>
+        <div class="sourcePaneEditor"></div>
         <div class="sourcePaneEditorFooter">
           ${this._editingState
             ? html`
