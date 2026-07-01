@@ -1,23 +1,39 @@
 import * as logic from 'solid-logic'
-import pane from '../src/sourcePane'
+import pane from '../src/SourcePane'
 import './dev-global.css'
 import * as $rdf from 'rdflib'
 import * as UI from 'solid-ui'
 
+console.log('dev/index.js loaded, pane is:', pane)
+
 const loginBanner = document.getElementById('loginBanner')
 const webId = document.getElementById('webId')
 
-loginBanner.appendChild(UI.login.loginStatusBox(document, null, {}))
+if (loginBanner) {
+  loginBanner.appendChild(UI.login.loginStatusBox(document, null, {}))
+}
 
 async function finishLogin () {
-  await logic.authn.checkUser()
+  const me = await logic.authn.checkUser()
   const session = logic.authSession
-  const isLoggedIn = session?.info?.isLoggedIn ?? session?.isActive ?? Boolean(session?.webId)
-  if (isLoggedIn) {
-    // Update the page with the status.
-    webId.innerHTML = 'Logged in as: ' + logic.authn.currentUser().uri
+  const sessionWebId = session?.webId ?? session?.info?.webId ?? null
+  const meWebId = me?.uri ?? me?.value ?? null
+  const webIdUri = meWebId ?? sessionWebId
+  const isLoggedIn = Boolean(
+    me ||
+    session?.isActive ||
+    session?.info?.isLoggedIn ||
+    sessionWebId
+  )
+
+  if (isLoggedIn && webIdUri) {
+    if (webId) {
+      webId.innerHTML = 'Logged in as: ' + webIdUri
+    }
   } else {
-    webId.innerHTML = ''
+    if (webId) {
+      webId.innerHTML = ''
+    }
   }
 }
 
@@ -33,7 +49,7 @@ finishLogin()
 // const targetURIToShow = "https://solidproject.solidcommunity.net/Roadmap/index.ttl#this";
 
 // const targetURIToShow = "https://timbl.com/timbl/Automation/mother/tracker.n3#mother"
-// const targetURIToShow = 'https://sstratsianis.solidcommunity.net/TestingTracker/index.ttl#this'
+// const targetURIToShow = 'https://sharontest.solidcommunity.net/profile/card#me'
 const targetURIToShow = 'https://testingsolidos.solidcommunity.net/profile/card#me'
 
 const context = {

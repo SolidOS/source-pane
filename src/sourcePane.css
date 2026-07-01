@@ -1,0 +1,75 @@
+.sourcePane {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 23px; 
+  padding-bottom: 29px; 
+  border-radius: 5px; 
+  border: 1px solid var(--color-border, var(--gray-200, #E5E7EB));
+}
+
+.sourcePaneControls {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  width: 100%;
+  text-align: right;
+  padding: 0 3px 16px 0;
+}
+/* generative ai */
+.sourcePaneControls > * {
+  flex: 0 1 auto;
+}
+
+.sourcePaneHeader,
+.sourcePaneCard,
+.sourcePaneStatus {
+  width: 100%;
+}
+
+.sourcePaneCompactButton {
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 96px;
+  padding: 9px 14px;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+@media (max-width: 900px) {
+  .sourcePaneControls {
+    padding-right: 3px;
+  }
+
+  .sourcePaneTextArea {
+    margin: 12px 2px;
+    padding: 12px;
+  }
+}
+
+@media (max-width: 600px) {
+  .sourcePaneControls {
+    justify-content: flex-start;
+    gap: 5px;
+  }
+
+  .sourcePaneCompactButton {
+    min-width: 0;
+  }
+}
+
+.sourcePaneTextAreaError {
+  color: var(--solid-ui-color-error, #b00020);
+}
+
+.sourcePaneControlVisible {
+  display: block;
+}
+
+.sourcePaneControlHidden {
+  display: none;
+}
