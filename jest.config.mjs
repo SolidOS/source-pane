@@ -9,7 +9,7 @@ export default {
   transform: {
     '^.+\\.m?js$': 'babel-jest',
   },
-  transformIgnorePatterns: ['node_modules/(?!.*(?:@uvdsl|uuid|@noble|lit-html|lit-element|lit|@lit|@lit-labs|solid-ui|solid-logic)(?:/|$))'],
+  transformIgnorePatterns: ['node_modules/(?!.*(?:@uvdsl|uuid|@noble|lit-html|lit-element|lit|@lit|@lit-labs|solid-ui|@awesome\.me|@shoelace-style|solid-logic)(?:/|$))'],
   roots: ['<rootDir>/src', '<rootDir>/test'],
   moduleNameMapper: {
     '^SolidLogic$': 'solid-logic',
