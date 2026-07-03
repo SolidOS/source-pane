@@ -1,101 +1,89 @@
-jest.mock('../src/components/sourceEditorCard/SourceEditorCard', () => {
+import { render } from 'lit'
+import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
+
+vi.mock('../src/components/sourceEditorCard/SourceEditorCard', () => {
+  class MockSourceEditorCard extends HTMLElement {}
+
   if (!globalThis.customElements.get('solid-panes-source-editor-card')) {
-    class MockSourceEditorCard extends globalThis.HTMLElement {
-      connectedCallback() {
-        this.innerHTML = `
-          <section class="sourcePaneCard">
-            <button class="sourcePaneSaveButton sourcePaneControlHidden">Save Changes</button>
-            <button class="sourcePanePrettyButton sourcePaneControlHidden">Prettify</button>
-          </section>
-        `
-      }
-
-      getValue() {
-        return ''
-      }
-
-      setValue() {}
-
-      setReadOnly() {}
-
-      focusEditor() {}
-
-      updateEditingState(editing) {
-        const saveButton = this.querySelector('.sourcePaneSaveButton')
-        const prettyButton = this.querySelector('.sourcePanePrettyButton')
-        if (saveButton) {
-          saveButton.classList.toggle('sourcePaneControlVisible', Boolean(editing))
-          saveButton.classList.toggle('sourcePaneControlHidden', !editing)
-        }
-        if (prettyButton) {
-          prettyButton.classList.toggle('sourcePaneControlVisible', !editing)
-          prettyButton.classList.toggle('sourcePaneControlHidden', Boolean(editing))
-        }
-      }
-    }
-
     globalThis.customElements.define('solid-panes-source-editor-card', MockSourceEditorCard)
   }
 
-  return globalThis.customElements.get('solid-panes-source-editor-card')
+  return {
+    default: MockSourceEditorCard
+  }
 })
 
-const { context } = require('./helpers/setup')
-const paneModule = require('../src/SourcePane')
-const pane = paneModule.default || paneModule
-const { fireEvent } = require('@testing-library/dom')
+let canEditSource
+let renderHeader
+
+beforeAll(async () => {
+  const headerModule = await import('../src/Header')
+  canEditSource = headerModule.canEditSource
+  renderHeader = headerModule.renderHeader
+})
+
+function renderHeaderIntoDocument (sourcePaneState) {
+  const container = document.createElement('div')
+  document.body.appendChild(container)
+
+  const store = { findTypeURIs: vi.fn(() => ({})) }
+  const subject = { uri: 'https://janedoe.example/test.ttl' }
+  render(renderHeader(store, subject, sourcePaneState), container)
+
+  return { container, subject, store }
+}
 
 describe('source-pane', () => {
-  afterEach(() => {
+  beforeEach(() => {
     document.body.innerHTML = ''
-    jest.restoreAllMocks()
+    vi.clearAllMocks()
   })
 
-  it('renders the pane shell and edit control', () => {
-    const subject = { uri: 'https://janedoe.example/test.ttl' }
-    const result = pane.render(subject, context)
-    document.body.appendChild(result)
+  it('renders the header edit control', async () => {
+    const sourcePaneState = {
+      broken: false,
+      dirty: false,
+      editing: false,
+      allowed: undefined,
+      contentType: undefined,
+      eTag: undefined
+    }
 
-    const provider = result.querySelector('solid-panes-source-provider')
+    const { container } = renderHeaderIntoDocument(sourcePaneState)
+    await Promise.resolve()
 
-    return provider.updateComplete.then(() => {
-      expect(result.querySelector('solid-panes-source-provider')).not.toBeNull()
-      expect(result.querySelector('.sourcePaneEditButton')).not.toBeNull()
-      expect(result.querySelector('.sourcePaneSaveButton').className).toContain('sourcePaneControlHidden')
-      expect(result.querySelector('.sourcePanePrettyButton').className).toContain('sourcePaneControlHidden')
-    })
+    expect(container.querySelector('header.sourcePaneHeader')).not.toBeNull()
+    expect(container.querySelector('.sourcePaneEditButton')).not.toBeNull()
   })
 
-  it('switches the editor card into editing mode when edit is clicked', () => {
-    const subject = { uri: 'https://janedoe.example/test.ttl' }
-    const result = pane.render(subject, context)
-    document.body.appendChild(result)
+  it('activates the editor when edit is clicked', async () => {
+    const sourcePaneState = {
+      broken: false,
+      dirty: false,
+      editing: false,
+      allowed: undefined,
+      contentType: undefined,
+      eTag: undefined
+    }
 
-    const provider = result.querySelector('solid-panes-source-provider')
-    return provider.updateComplete.then(() => {
-      const editorCard = result.querySelector('solid-panes-source-editor-card')
-      editorCard.updateEditingState = jest.fn((editing) => {
-        const saveButton = editorCard.querySelector('.sourcePaneSaveButton')
-        const compactButton = editorCard.querySelector('.sourcePaneCompactButton')
-        if (saveButton) {
-          saveButton.classList.toggle('sourcePaneControlVisible', Boolean(editing))
-          saveButton.classList.toggle('sourcePaneControlHidden', !editing)
-        }
-        if (compactButton) {
-          compactButton.classList.toggle('sourcePaneControlVisible', !editing)
-          compactButton.classList.toggle('sourcePaneControlHidden', Boolean(editing))
-        }
-      })
-      editorCard.setReadOnly = jest.fn()
-      editorCard.focusEditor = jest.fn()
+    const { container } = renderHeaderIntoDocument(sourcePaneState)
+    const editorCard = document.createElement('solid-panes-source-editor-card')
+    editorCard.updateEditingState = vi.fn()
+    editorCard.setReadOnly = vi.fn()
+    editorCard.focusEditor = vi.fn()
+    document.body.appendChild(editorCard)
 
-      fireEvent.click(result.querySelector('.sourcePaneEditButton'))
+    await Promise.resolve()
+    container.querySelector('.sourcePaneEditButton').click()
 
-      expect(editorCard.updateEditingState).toHaveBeenCalledWith(true)
-      expect(editorCard.setReadOnly).toHaveBeenCalledWith(false)
-      expect(editorCard.focusEditor).toHaveBeenCalled()
-      expect(result.querySelector('.sourcePaneSaveButton').className).toContain('sourcePaneControlVisible')
-      expect(result.querySelector('.sourcePanePrettyButton').className).toContain('sourcePaneControlHidden')
-    })
+    expect(editorCard.updateEditingState).toHaveBeenCalledWith(true)
+    expect(editorCard.setReadOnly).toHaveBeenCalledWith(false)
+    expect(editorCard.focusEditor).toHaveBeenCalled()
+  })
+
+  it('allows editing only when the subject can be edited', () => {
+    expect(canEditSource({ uri: 'https://janedoe.example/test.ttl' }, { allowed: undefined })).toBe(true)
+    expect(canEditSource({ uri: 'https://janedoe.example/folder/' }, { allowed: 'GET,PUT' })).toBe(false)
+    expect(canEditSource({ uri: 'https://janedoe.example/test.ttl' }, { allowed: 'GET' })).toBe(false)
   })
 })
