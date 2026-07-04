@@ -1,28 +1,30 @@
-const { getResponseHeaders, fetchContentAndMetadata } = require('../src/helpers')
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+
+import { fetchContentAndMetadata, getResponseHeaders } from '../src/helpers.ts'
 
 describe('helpers', () => {
   beforeEach(() => {
-    jest.clearAllMocks()
+    vi.clearAllMocks()
   })
 
   it('reads response headers into metadata', () => {
     const response = {
       headers: {
-        get: jest.fn((name) => {
+        get: vi.fn((name) => {
           if (name === 'content-type') return 'text/turtle; charset=utf-8'
           if (name === 'allow') return 'GET,PUT'
           if (name === 'etag') return '"abc"'
           return null
-        }),
-      },
+        })
+      }
     }
-    const store = { each: jest.fn(), any: jest.fn(), anyValue: jest.fn(), sym: jest.fn() }
+    const store = { each: vi.fn(), any: vi.fn(), anyValue: vi.fn(), sym: vi.fn() }
     const subject = { uri: 'https://example.org/profile/card' }
 
     expect(getResponseHeaders(store, subject, response)).toEqual({
       contentType: 'text/turtle',
       allowed: 'GET,PUT',
-      eTag: '"abc"',
+      eTag: '"abc"'
     })
   })
 
@@ -30,23 +32,23 @@ describe('helpers', () => {
     const response = {
       ok: true,
       headers: {
-        get: jest.fn((name) => {
+        get: vi.fn((name) => {
           if (name === 'content-type') return 'text/turtle'
           if (name === 'allow') return 'GET,PUT'
           if (name === 'etag') return '"abc"'
           return null
-        }),
+        })
       },
-      responseText: '<> a <#Thing>.',
+      responseText: '<> a <#Thing>.'
     }
     const store = {
       fetcher: {
-        webOperation: jest.fn().mockResolvedValue(response),
+        webOperation: vi.fn().mockResolvedValue(response)
       },
-      each: jest.fn(),
-      any: jest.fn(),
-      anyValue: jest.fn(),
-      sym: jest.fn(),
+      each: vi.fn(),
+      any: vi.fn(),
+      anyValue: vi.fn(),
+      sym: vi.fn()
     }
     const subject = { uri: 'https://example.org/profile/card' }
     const sourcePaneState = { broken: false, contentType: undefined, allowed: undefined, eTag: undefined }
@@ -58,14 +60,14 @@ describe('helpers', () => {
       metadata: {
         contentType: 'text/turtle',
         allowed: 'GET,PUT',
-        eTag: '"abc"',
-      },
+        eTag: '"abc"'
+      }
     })
     expect(sourcePaneState).toEqual({
       broken: false,
       contentType: 'text/turtle',
       allowed: 'GET,PUT',
-      eTag: '"abc"',
+      eTag: '"abc"'
     })
   })
 })

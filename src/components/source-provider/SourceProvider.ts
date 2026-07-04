@@ -1,5 +1,5 @@
-import { provide } from '@lit/context'
 import { html } from 'lit'
+import { provide } from '@lit/context'
 import { customElement, property } from 'lit/decorators.js'
 import { NamedNode } from 'rdflib'
 import { DataBrowserContext } from 'pane-registry'
@@ -87,7 +87,7 @@ export default class SourceProvider extends WebComponent {
     const { renderStatusSection } = getStatusSection()
 
     return html`
-      ${renderHeader(store, subject, this.sourcePaneState)}
+      ${renderHeader(store as any, subject as any, this.sourcePaneState)}
       <solid-panes-source-editor-card></solid-panes-source-editor-card>
       ${renderStatusSection()}
     `

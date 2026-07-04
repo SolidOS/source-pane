@@ -3,7 +3,7 @@ import { ref } from 'lit/directives/ref.js'
 import { NamedNode, LiveStore } from 'rdflib'
 import { widgets, icons } from 'solid-ui'
 import { SourcePaneState } from './types'
-import SourceEditorCard from './components/sourceEditorCard/SourceEditorCard'
+import type SourceEditorCard from './components/sourceEditorCard/SourceEditorCard'
 
 /* This we will use in the header ticket, didn't want to lose the code */
 export function canEditSource (subject: NamedNode, sourcePaneState: SourcePaneState) {

@@ -18,6 +18,9 @@
   ],
   "sideEffects": [
     "**/*.css",
+    "src/register-components.ts",
+    "src/components/source-provider/SourceProvider.ts",
+    "src/components/sourceEditorCard/SourceEditorCard.ts",
     "dist/**/*.js"
   ],
   "scripts": {

@@ -7,14 +7,15 @@ import { applyResponseHeaders, checkSyntax, fetchContentAndMetadata, getResponse
 import styles from './SourceEditorCard.styles.css'
 import { WebComponent } from 'solid-ui'
 import { getStatusSection } from '../../StatusSection'
-import { SourceContext } from '../../primitives/context'
-import { sourceContext } from '../../primitives/context'
 import 'solid-ui/components/button'
 import { compactable } from '../../compactableFormats'
+import { SourceContext } from '../../primitives/context'
+import { sourceContext } from '../../primitives/context'
 
 @customElement('solid-panes-source-editor-card')
 export default class SourceEditorCard extends WebComponent {
   static styles = styles
+
   private _editor?: SourceEditor
   private _originalContent?: string
   private _dirtyState = false
@@ -84,7 +85,7 @@ export default class SourceEditorCard extends WebComponent {
     }
     try {
       const { SourceEditor } = await import('./SourceEditor')
-      const { content, metadata } = await fetchContentAndMetadata(sourceContext.context.session.store, new NamedNode(sourceContext.subject), sourceContext.sourcePaneState)
+      const { content, metadata } = await fetchContentAndMetadata(sourceContext.context.session.store as any, new NamedNode(sourceContext.subject), sourceContext.sourcePaneState as any)
       this._originalContent = content
       this._editor = new SourceEditor()
       await this._editor.initialize(sourcePaneEditor, content, metadata.contentType, 'dark', dirty => {
@@ -126,13 +127,13 @@ export default class SourceEditorCard extends WebComponent {
   private async saveBack () {
     const sourceContext = this._requireSourceContext()
 
-    const store = sourceContext.context.session.store
+    const store = sourceContext.context.session.store as any
     const subject = new NamedNode(sourceContext.subject)
     const sourcePaneState = sourceContext.sourcePaneState
     const fetcher = store.fetcher
     const data = this.getEditor()?.getValue() ?? ''
     const { contentType, eTag } = sourceContext.sourcePaneState
-    if (!checkSyntax(store, subject, data, contentType, subject)) {
+    if (!checkSyntax(store, subject as any, data, contentType, subject as any)) {
       const { showError } = getStatusSection()
       showError('Syntax error: fix the document before saving.')
       return
@@ -147,7 +148,7 @@ export default class SourceEditorCard extends WebComponent {
       try {
         const response = await fetcher.webOperation('HEAD', subject.uri) // , defaultFetchHeaders())
         if (!happy(response, 'HEAD')) return
-        applyResponseHeaders(sourcePaneState, getResponseHeaders(store, subject, response))
+        applyResponseHeaders(sourcePaneState as any, getResponseHeaders(store, subject as any, response))
         this._resetEditorState()
       } catch (err) {
         throw err
@@ -164,7 +165,7 @@ export default class SourceEditorCard extends WebComponent {
     const { contentType } = sourceContext.sourcePaneState
     const compactContentType = contentType?.split(';')[0]
     const { showError } = getStatusSection()
-    const store = sourceContext.context.session.store
+    const store = sourceContext.context.session.store as any
     const subjectNode = new NamedNode(sourceContext.subject)
 
     if (compactContentType && compactable[compactContentType]) {

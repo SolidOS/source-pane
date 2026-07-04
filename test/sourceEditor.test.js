@@ -1,16 +1,18 @@
-jest.mock('@codemirror/state', () => {
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+
+vi.mock('@codemirror/state', () => {
   class Compartment {
-    of(value) {
+    of (value) {
       return { type: 'compartment-of', value }
     }
 
-    reconfigure(value) {
+    reconfigure (value) {
       return { type: 'reconfigure', value }
     }
   }
 
   const EditorState = {
-    create: jest.fn((config) => ({ ...config }))
+    create: vi.fn((config) => ({ ...config }))
   }
 
   return { Compartment, EditorState }
@@ -18,20 +20,20 @@ jest.mock('@codemirror/state', () => {
 
 const createdViews = []
 
-jest.mock('@codemirror/view', () => {
+vi.mock('@codemirror/view', () => {
   class EditorView {
-    constructor({ state, parent }) {
+    constructor ({ state, parent }) {
       this.state = state
       this.parent = parent
       this.dom = globalThis.document.createElement('div')
-      this.dispatch = jest.fn((transaction) => {
+      this.dispatch = vi.fn((transaction) => {
         this.lastTransaction = transaction
         if (transaction.changes) {
           this.state.doc = transaction.changes.insert
         }
       })
-      this.focus = jest.fn()
-      this.destroy = jest.fn()
+      this.focus = vi.fn()
+      this.destroy = vi.fn()
       createdViews.push(this)
       if (parent) {
         parent.appendChild(this.dom)
@@ -40,87 +42,87 @@ jest.mock('@codemirror/view', () => {
   }
 
   EditorView.editable = {
-    of: jest.fn((value) => ({ type: 'editable', value }))
+    of: vi.fn((value) => ({ type: 'editable', value }))
   }
-  EditorView.theme = jest.fn((spec, options) => ({ type: 'theme', spec, options }))
+  EditorView.theme = vi.fn((spec, options) => ({ type: 'theme', spec, options }))
   EditorView.lineWrapping = { type: 'lineWrapping' }
   EditorView.updateListener = {
-    of: jest.fn((listener) => ({ type: 'updateListener', listener }))
+    of: vi.fn((listener) => ({ type: 'updateListener', listener }))
   }
 
   return {
     EditorView,
-    drawSelection: jest.fn(() => ({ type: 'drawSelection' })),
+    drawSelection: vi.fn(() => ({ type: 'drawSelection' })),
     keymap: {
-      of: jest.fn((value) => ({ type: 'keymap', value }))
+      of: vi.fn((value) => ({ type: 'keymap', value }))
     },
-    lineNumbers: jest.fn(() => ({ type: 'lineNumbers' }))
+    lineNumbers: vi.fn(() => ({ type: 'lineNumbers' }))
   }
 })
 
-jest.mock('@codemirror/language', () => ({
+vi.mock('@codemirror/language', () => ({
   defaultHighlightStyle: { name: 'defaultHighlightStyle' },
-  syntaxHighlighting: jest.fn((style, options) => ({ type: 'syntaxHighlighting', style, options })),
+  syntaxHighlighting: vi.fn((style, options) => ({ type: 'syntaxHighlighting', style, options })),
   HighlightStyle: {
-    define: jest.fn(() => ({ type: 'highlightStyle' }))
+    define: vi.fn(() => ({ type: 'highlightStyle' }))
   },
   StreamLanguage: class {
-    static define(mode) {
+    static define (mode) {
       return { type: 'stream-language', mode }
     }
   }
 }))
 
-jest.mock('@codemirror/commands', () => ({
+vi.mock('@codemirror/commands', () => ({
   defaultKeymap: [{ key: 'default' }],
-  history: jest.fn(() => ({ type: 'history' })),
+  history: vi.fn(() => ({ type: 'history' })),
   historyKeymap: [{ key: 'history' }]
 }))
 
-jest.mock('@codemirror/lang-css', () => ({
-  css: jest.fn(() => ({ type: 'css' }))
+vi.mock('@codemirror/lang-css', () => ({
+  css: vi.fn(() => ({ type: 'css' }))
 }))
 
-jest.mock('@codemirror/lang-html', () => ({
-  html: jest.fn(() => ({ type: 'html' }))
+vi.mock('@codemirror/lang-html', () => ({
+  html: vi.fn(() => ({ type: 'html' }))
 }))
 
-jest.mock('@codemirror/lang-javascript', () => ({
-  javascript: jest.fn(() => ({ type: 'javascript' }))
+vi.mock('@codemirror/lang-javascript', () => ({
+  javascript: vi.fn(() => ({ type: 'javascript' }))
 }))
 
-jest.mock('@codemirror/lang-json', () => ({
-  json: jest.fn(() => ({ type: 'json' }))
+vi.mock('@codemirror/lang-json', () => ({
+  json: vi.fn(() => ({ type: 'json' }))
 }))
 
-jest.mock('@codemirror/lang-xml', () => ({
-  xml: jest.fn(() => ({ type: 'xml' }))
+vi.mock('@codemirror/lang-xml', () => ({
+  xml: vi.fn(() => ({ type: 'xml' }))
 }))
 
-jest.mock('@codemirror/legacy-modes/mode/turtle', () => ({
+vi.mock('@codemirror/legacy-modes/mode/turtle', () => ({
   turtle: { name: 'turtle' }
 }))
 
-jest.mock('@codemirror/legacy-modes/mode/sparql', () => ({
+vi.mock('@codemirror/legacy-modes/mode/sparql', () => ({
   sparql: { name: 'sparql' }
 }))
 
-jest.mock('@codemirror/legacy-modes/mode/ntriples', () => ({
+vi.mock('@codemirror/legacy-modes/mode/ntriples', () => ({
   ntriples: { name: 'ntriples' }
 }))
 
-jest.mock('@uiw/codemirror-theme-vscode', () => ({
+vi.mock('@uiw/codemirror-theme-vscode', () => ({
   vscodeDark: [{ type: 'darkTheme' }],
   vscodeLight: [{ type: 'lightTheme' }]
 }))
 
-const { SourceEditor } = require('../src/components/sourceEditorCard/SourceEditor')
+import { SourceEditor } from '../src/components/sourceEditorCard/SourceEditor.ts'
 
 describe('SourceEditor', () => {
   beforeEach(() => {
     createdViews.length = 0
     document.body.innerHTML = ''
-    jest.clearAllMocks()
+    vi.clearAllMocks()
   })
 
   it('initializes with the provided document text', async () => {
