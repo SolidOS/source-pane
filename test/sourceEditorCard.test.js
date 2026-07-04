@@ -7,7 +7,7 @@ vi.mock('../src/helpers.ts', () => ({
 }))
 
 beforeAll(async () => {
-  await import('../dist/index.esm.js')
+  await import('../src/sourcePane.ts')
 })
 
 describe.skip('solid-panes-source-editor-card', () => {
