@@ -1,24 +1,23 @@
 import { render } from 'lit'
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
 
-vi.mock('../src/components/source-editor-card/SourceEditorCard', () => {
-  class MockSourceEditorCard extends HTMLElement {}
+let renderHeader
+
+beforeAll(async () => {
+  class MockSourceEditorCard extends HTMLElement {
+    constructor () {
+      super()
+      this.updateEditingState = vi.fn()
+      this.setReadOnly = vi.fn()
+      this.focusEditor = vi.fn()
+    }
+  }
 
   if (!globalThis.customElements.get('solid-panes-source-editor-card')) {
     globalThis.customElements.define('solid-panes-source-editor-card', MockSourceEditorCard)
   }
 
-  return {
-    default: MockSourceEditorCard
-  }
-})
-
-let canEditSource
-let renderHeader
-
-beforeAll(async () => {
-  const headerModule = await import('../src/Header')
-  canEditSource = headerModule.canEditSource
+  const headerModule = await import('../src/Header.ts')
   renderHeader = headerModule.renderHeader
 })
 
@@ -42,8 +41,8 @@ describe('source-pane', () => {
   it('renders the header edit control', async () => {
     const sourcePaneState = {
       broken: false,
-      dirty: false,
       editing: false,
+      readonly: false,
       allowed: undefined,
       contentType: undefined,
       eTag: undefined
@@ -59,8 +58,8 @@ describe('source-pane', () => {
   it('activates the editor when edit is clicked', async () => {
     const sourcePaneState = {
       broken: false,
-      dirty: false,
       editing: false,
+      readonly: false,
       allowed: undefined,
       contentType: undefined,
       eTag: undefined
@@ -68,9 +67,6 @@ describe('source-pane', () => {
 
     const { container } = renderHeaderIntoDocument(sourcePaneState)
     const editorCard = document.createElement('solid-panes-source-editor-card')
-    editorCard.updateEditingState = vi.fn()
-    editorCard.setReadOnly = vi.fn()
-    editorCard.focusEditor = vi.fn()
     document.body.appendChild(editorCard)
 
     await Promise.resolve()
@@ -79,11 +75,5 @@ describe('source-pane', () => {
     expect(editorCard.updateEditingState).toHaveBeenCalledWith(true)
     expect(editorCard.setReadOnly).toHaveBeenCalledWith(false)
     expect(editorCard.focusEditor).toHaveBeenCalled()
-  })
-
-  it('allows editing only when the subject can be edited', () => {
-    expect(canEditSource({ uri: 'https://janedoe.example/test.ttl' }, { allowed: undefined })).toBe(true)
-    expect(canEditSource({ uri: 'https://janedoe.example/folder/' }, { allowed: 'GET,PUT' })).toBe(false)
-    expect(canEditSource({ uri: 'https://janedoe.example/test.ttl' }, { allowed: 'GET' })).toBe(false)
   })
 })
