@@ -10,7 +10,7 @@ beforeAll(async () => {
   await import('../src/sourcePane.ts')
 })
 
-describe.skip('solid-panes-source-editor-card', () => {
+describe.skip('source-pane-source-editor-card', () => {
   beforeEach(() => {
     document.body.innerHTML = ''
     vi.clearAllMocks()
@@ -26,7 +26,7 @@ describe.skip('solid-panes-source-editor-card', () => {
       }
     })
 
-    const card = document.createElement('solid-panes-source-editor-card')
+    const card = document.createElement('source-pane-source-editor-card')
     card.subject = {
       uri: 'https://testingsolidos.solidcommunity.net/profile/card',
       value: 'https://testingsolidos.solidcommunity.net/profile/card'
@@ -75,7 +75,7 @@ describe.skip('solid-panes-source-editor-card', () => {
       }
     })
 
-    const card = document.createElement('solid-panes-source-editor-card')
+    const card = document.createElement('source-pane-source-editor-card')
     card.subject = {
       uri: 'https://testingsolidos.solidcommunity.net/profile/card.txt',
       value: 'https://testingsolidos.solidcommunity.net/profile/card.txt'
@@ -108,7 +108,7 @@ describe.skip('solid-panes-source-editor-card', () => {
   })
 
   it('delegates editor API methods', () => {
-    const card = document.createElement('solid-panes-source-editor-card')
+    const card = document.createElement('source-pane-source-editor-card')
     const editorInstance = {
       getValue: vi.fn(() => 'editor value'),
       focusEditor: vi.fn(),

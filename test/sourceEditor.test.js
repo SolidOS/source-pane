@@ -116,7 +116,7 @@ vi.mock('@uiw/codemirror-theme-vscode', () => ({
   vscodeLight: [{ type: 'lightTheme' }]
 }))
 
-import { SourceEditor } from '../src/components/sourceEditorCard/SourceEditor.ts'
+import { SourceEditor } from '../src/components/source-editor-card/SourceEditor.ts'
 
 describe('SourceEditor', () => {
   beforeEach(() => {

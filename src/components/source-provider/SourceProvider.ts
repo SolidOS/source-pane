@@ -9,6 +9,8 @@ import { WebComponent } from 'solid-ui'
 import { sourceContext, SourceContext } from '../../primitives/context'
 import { SourcePaneState } from '../../types'
 
+void import('../source-editor-card/SourceEditorCard').then(() => undefined)
+
 const defaultSourcePaneState: SourcePaneState = {
   broken: false,
   dirty: false,
@@ -18,7 +20,7 @@ const defaultSourcePaneState: SourcePaneState = {
   eTag: undefined
 }
 
-@customElement('solid-panes-source-provider')
+@customElement('source-pane-source-provider')
 export default class SourceProvider extends WebComponent {
   @property({ attribute: false })
   accessor context: DataBrowserContext | undefined = undefined

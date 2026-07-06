@@ -1,7 +1,7 @@
 import { render } from 'lit'
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
 
-vi.mock('../src/components/sourceEditorCard/SourceEditorCard', () => {
+vi.mock('../src/components/source-editor-card/SourceEditorCard', () => {
   class MockSourceEditorCard extends HTMLElement {}
 
   if (!globalThis.customElements.get('solid-panes-source-editor-card')) {

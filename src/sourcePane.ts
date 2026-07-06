@@ -10,7 +10,7 @@ import * as mime from 'mime-types'
 import { html, render as litRender } from 'lit'
 import { log } from './debug'
 import './sourcePane.css'
-import './register-components'
+import './components/source-provider/SourceProvider'
 import { SourcePaneState } from './types'
 
 const pane = {
@@ -96,12 +96,12 @@ const pane = {
     const sourcePane = context.dom.createElement('div')
     sourcePane.setAttribute('class', 'sourcePane')
     litRender(html`
-        <solid-panes-source-provider
+        <source-pane-source-provider
           .context=${context}
           .subject=${subject}
           .sourcePaneState=${sourcePaneState}
         >
-        </solid-panes-source-provider>
+        </source-pane-source-provider>
     `, sourcePane)
 
     return sourcePane
