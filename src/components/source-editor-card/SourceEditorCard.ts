@@ -12,7 +12,7 @@ import { compactable } from '../../compactableFormats'
 import { SourceContext } from '../../primitives/context'
 import { sourceContext } from '../../primitives/context'
 
-@customElement('solid-panes-source-editor-card')
+@customElement('source-pane-source-editor-card')
 export default class SourceEditorCard extends WebComponent {
   static styles = styles
 

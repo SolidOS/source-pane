@@ -91,7 +91,7 @@ export default class SourceProvider extends WebComponent {
 
     return html`
       ${renderHeader(store as any, subject as any, this.sourcePaneState)}
-      <solid-panes-source-editor-card></solid-panes-source-editor-card>
+      <source-pane-source-editor-card></source-pane-source-editor-card>
       ${renderStatusSection()}
     `
   }

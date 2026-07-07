@@ -19,7 +19,7 @@ export function renderHeader (store: LiveStore, subject: NamedNode, sourcePaneSt
   
   function setEditable (sourcePaneState: SourcePaneState) {
     if (sourcePaneState.broken) return
-    const editorCard = document.querySelector('solid-panes-source-editor-card') as SourceEditorCard | null
+    const editorCard = document.querySelector('source-pane-source-editor-card') as SourceEditorCard | null
     editorCard?.updateEditingState(true)
     editorCard?.setReadOnly(false)
     editorCard?.focusEditor()  
