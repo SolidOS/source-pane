@@ -13,8 +13,8 @@ beforeAll(async () => {
     }
   }
 
-  if (!globalThis.customElements.get('solid-panes-source-editor-card')) {
-    globalThis.customElements.define('solid-panes-source-editor-card', MockSourceEditorCard)
+  if (!globalThis.customElements.get('source-pane-source-editor-card')) {
+    globalThis.customElements.define('source-pane-source-editor-card', MockSourceEditorCard)
   }
 
   const headerModule = await import('../src/Header.ts')
@@ -66,7 +66,7 @@ describe('source-pane', () => {
     }
 
     const { container } = renderHeaderIntoDocument(sourcePaneState)
-    const editorCard = document.createElement('solid-panes-source-editor-card')
+    const editorCard = document.createElement('source-pane-source-editor-card')
     document.body.appendChild(editorCard)
 
     await Promise.resolve()
