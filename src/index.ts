@@ -1,1 +1,1 @@
-export { default } from './sourcePane.js'
+export { default } from './sourcePane'

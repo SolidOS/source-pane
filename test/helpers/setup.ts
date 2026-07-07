@@ -1,14 +1,14 @@
 import { graph, sym } from 'rdflib'
 import { vi } from 'vitest'
 
-const webOperationMocks = []
+const webOperationMocks: Array<{ pattern: string | RegExp; handler: any }> = []
 
-function toHeaders (headers) {
+function toHeaders (headers: any) {
   if (headers instanceof Headers) return headers
   return new Headers(headers)
 }
 
-function toResponse (result = {}) {
+function toResponse (result: any = {}) {
   return new Response(result.body ?? '', {
     status: typeof result.status === 'number' ? result.status : (result.ok === false ? 404 : 200),
     headers: toHeaders(result.headers)
@@ -54,7 +54,7 @@ function mockWebOperationOnceIf (pattern, handler) {
   webOperationMocks.push({ pattern, handler })
 }
 
-const store = graph()
+const store: any = graph()
 store.sym = sym
 store.findTypeURIs = vi.fn(() => ({}))
 store.removeDocument = vi.fn(() => undefined)

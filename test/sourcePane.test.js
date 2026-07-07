@@ -1,109 +1,79 @@
-import { beforeAll, describe, expect, it } from 'vitest'
-import { context, mockWebOperationOnceIf } from './helpers/setup.js'
-import pane from '../src/sourcePane.js'
-import { sym } from 'rdflib'
+import { render } from 'lit'
+import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
 
-function fireClick (element) {
-  element.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, composed: true }))
+let renderHeader
+
+beforeAll(async () => {
+  class MockSourceEditorCard extends HTMLElement {
+    constructor () {
+      super()
+      this.updateEditingState = vi.fn()
+      this.setReadOnly = vi.fn()
+      this.focusEditor = vi.fn()
+    }
+  }
+
+  if (!globalThis.customElements.get('solid-panes-source-editor-card')) {
+    globalThis.customElements.define('solid-panes-source-editor-card', MockSourceEditorCard)
+  }
+
+  const headerModule = await import('../src/Header.ts')
+  renderHeader = headerModule.renderHeader
+})
+
+function renderHeaderIntoDocument (sourcePaneState) {
+  const container = document.createElement('div')
+  document.body.appendChild(container)
+
+  const store = { findTypeURIs: vi.fn(() => ({})) }
+  const subject = { uri: 'https://janedoe.example/test.ttl' }
+  render(renderHeader(store, subject, sourcePaneState), container)
+
+  return { container, subject, store }
 }
 
-function findByText (root, text) {
-  const candidates = Array.from(root.querySelectorAll('*'))
-  return candidates.find((element) => element.textContent?.includes(text)) ?? null
-}
+describe('source-pane', () => {
+  beforeEach(() => {
+    document.body.innerHTML = ''
+    vi.clearAllMocks()
+  })
 
-function getByTitle (root, title) {
-  return root.querySelector(`[title="${title}"]`)
-}
+  it('renders the header edit control', async () => {
+    const sourcePaneState = {
+      broken: false,
+      editing: false,
+      readonly: false,
+      allowed: undefined,
+      contentType: undefined,
+      eTag: undefined
+    }
 
-function waitFor (callback) {
-  return Promise.resolve().then(callback)
-}
+    const { container } = renderHeaderIntoDocument(sourcePaneState)
+    await Promise.resolve()
 
-describe("source-pane", () => {
-  describe("test button compact", () => {
-    let result
+    expect(container.querySelector('header.sourcePaneHeader')).not.toBeNull()
+    expect(container.querySelector('.sourcePaneEditButton')).not.toBeNull()
+  })
 
-    describe("text/turtle file", () => {
-      beforeAll(() => {
-        const subject = sym("https://janedoe.example/test.ttl")
-        mockWebOperationOnceIf(subject.uri, {
-          responseText: '<> a "test".',
-          headers: {
-            'Content-Type': 'text/turtle',
-            Allow: 'GET, HEAD, PUT'
-          }
-        })
-      result = pane.render(subject, context);
-      });
+  it('activates the editor when edit is clicked', async () => {
+    const sourcePaneState = {
+      broken: false,
+      editing: false,
+      readonly: false,
+      allowed: undefined,
+      contentType: undefined,
+      eTag: undefined
+    }
 
-      it.skip('button exist and is visible', async () => {
-        const compact = result.querySelector('.sourcePaneCompactButton')
-        expect(compact).not.toBeNull()
-        expect(compact.classList.contains('sourcePaneControlVisible')).toBe(true)
-      })
+    const { container } = renderHeaderIntoDocument(sourcePaneState)
+    const editorCard = document.createElement('solid-panes-source-editor-card')
+    document.body.appendChild(editorCard)
 
-      it.skip('click "compact", button cancel is visible', async () => {
-        const compact = result.querySelector('.sourcePaneCompactButton')
-        fireClick(compact)
-        const cancel = await getByTitle(result, 'Cancel')
-        expect(cancel.classList.contains('sourcePaneControlVisible')).toBe(true)
-      })
+    await Promise.resolve()
+    container.querySelector('.sourcePaneEditButton').click()
 
-      it('click "edit", button compact is not visible', async () => {
-        const edit = await getByTitle(result, 'Edit')
-        fireClick(edit)
-        const compact = result.querySelector('.sourcePaneCompactButton')
-        expect(compact.classList.contains('sourcePaneControlHidden')).toBe(true)
-      })
-
-      it.skip('check content succeeds but should fail', async () => {
-        waitFor(() => { expect(result).toContainHTML('<> a "1111".') })
-      })
-    })
-
-    describe("text/plain file", () => {
-      beforeAll(() => {
-        const subject = sym("https://janedoe.example/test.txt")
-        mockWebOperationOnceIf(subject.uri, {
-          responseText: 'this is a test',
-          headers: {
-            'Content-Type': 'text/plain',
-            Allow: 'GET, HEAD, PUT'
-          }
-        })
-        result = pane.render(subject, context)
-      });
-
-      it('button exist and is not visible', async () => {
-        const compact = result.querySelector('.sourcePaneCompactButton')
-        expect(compact).not.toBeNull()
-        expect(compact.classList.contains('sourcePaneControlHidden')).toBe(true)
-      })
-  
-      it.skip('check content succeed but should fail', async () => {
-        waitFor(() => { expect(result).toContainHTML('<> a "1111".') })
-      })
-    })
-
-    describe.skip("container", () => {
-      beforeAll(() => {
-        const subject = sym("https://janedoe.example/public/")
-        mockWebOperationOnceIf(subject.uri, {
-          responseText: ' ',
-          headers: {
-            Allow: 'text/turtle'
-          }
-        })
-        result = pane.render(subject, context)
-      });
-
-      it('compact and cancel are visible', async () => {
-        const compact = await findByText(result, 'COMPACT')
-        const cancel = await getByTitle(result, 'Cancel')
-        expect(compact.classList.contains('sourcePaneControlVisible')).toBe(true)
-        expect(cancel.classList.contains('sourcePaneControlVisible')).toBe(true)
-      })
-    })
-  });
-});
+    expect(editorCard.updateEditingState).toHaveBeenCalledWith(true)
+    expect(editorCard.setReadOnly).toHaveBeenCalledWith(false)
+    expect(editorCard.focusEditor).toHaveBeenCalled()
+  })
+})

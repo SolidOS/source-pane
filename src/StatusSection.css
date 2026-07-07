@@ -1,0 +1,19 @@
+.sourcePaneStatus {
+  display: none;
+  box-sizing: border-box;
+  transition: all 0.2s ease-in-out;
+}
+
+.sourcePaneStatus[data-visible='true'] {
+  display: block;
+}
+
+.error-text {
+  margin: 0;
+  padding: 12px;
+  background-color: #fde8e8;
+  border: 1px solid #f8b4b4;
+  border-radius: 4px;
+  color: #9b1c1c;
+  font-weight: 500;
+}

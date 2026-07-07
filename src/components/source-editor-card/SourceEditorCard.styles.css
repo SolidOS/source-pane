@@ -1,0 +1,32 @@
+:host {
+  display: block;
+  width: 100%;
+
+  section {
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    padding: 20px;
+    align-items: flex-start;
+    gap: 20px;
+    border-radius: 10px;
+    background: var(--solid-ui-color-white, #FFFFFF);
+    box-shadow: 0 0 6px 0 rgba(0, 0, 0, 0.25);
+  }
+
+  .sourcePaneCardLoading {
+    visibility: hidden;
+  }
+
+  .sourcePaneEditorFooter {
+    box-sizing: border-box;
+    display: flex;
+    justify-content: flex-end;
+    align-self: stretch;
+    width: 100%;
+    gap: 10px;
+    border-top: 1px solid var(--solid-ui-color-slate-200, #E2E8F0);
+    padding: 20px 5px 15px;
+  }
+}
