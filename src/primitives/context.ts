@@ -6,7 +6,8 @@ export interface SourceContext {
   context: DataBrowserContext,
   readonly subject: string,
   sourcePaneState: SourcePaneState,
-  updateSourcePaneState: <K extends keyof SourcePaneState>(key: K, value: SourcePaneState[K]) => void
+  updateSourcePaneState: <K extends keyof SourcePaneState>(key: K, value: SourcePaneState[K]) => void,
+  setEditing: () => void
 }
 
 export const sourceContext = createContext<SourceContext>(Symbol('source'))

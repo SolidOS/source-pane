@@ -1,8 +1,6 @@
 import { LiveStore, NamedNode, parse, serialize } from 'rdflib'
 import { getStatusSection } from './StatusSection'
-import { error, log } from './debug'
-import { ns } from 'solid-ui'
-import { HttpResourceMetadata, SourcePaneState } from './types'
+import { error } from './debug'
 
 const parseable: Record<string, boolean> = {
   'text/n3': true,
@@ -130,70 +128,4 @@ export function setControlVisible (button: HTMLElement | null, visible: boolean)
   if (!button) return
   button.classList.toggle('sourcePaneControlVisible', visible)
   button.classList.toggle('sourcePaneControlHidden', !visible)
-}
-
-export function applyResponseHeaders (sourcePaneState: SourcePaneState, metadata: HttpResourceMetadata) {
-  sourcePaneState.contentType = metadata.contentType
-  sourcePaneState.allowed = metadata.allowed
-  sourcePaneState.eTag = metadata.eTag
-}
-
-export function getResponseHeaders (store: LiveStore, subject: NamedNode, response: Response): HttpResourceMetadata {
-  let contentType: string | undefined
-  let allowed: string | undefined
-  let eTag: string | undefined
-  if (response.headers && response.headers.get('content-type')) {
-    contentType = response.headers.get('content-type')?.split(';')[0] ?? undefined // Should work but headers may be empty
-    allowed = response.headers.get('allow') ?? undefined //     const cts = store.fetcher.getHeader(subject.doc(), 'content-type')
-    eTag = response.headers.get('etag') ?? undefined
-  } else {
-    const reqs = store.each(
-      null,
-      store.sym('http://www.w3.org/2007/ont/link#requestedURI'),
-      subject
-    )
-    reqs.forEach((req: any) => {
-      const rrr = store.any(
-        req as any,
-        store.sym('http://www.w3.org/2007/ont/link#response')
-      )
-      if (rrr && rrr.termType === 'NamedNode') {
-        contentType = store.anyValue(rrr as any, ns.httph('content-type')) || undefined
-        allowed = store.anyValue(rrr as any, ns.httph('allow')) || undefined
-        eTag = store.anyValue(rrr as any, ns.httph('etag')) || undefined
-        if (!eTag) log('sourcePane: No eTag on GET')
-      }
-    })
-  }
-  return { contentType, allowed, eTag }
-}
-
-export async function fetchContentAndMetadata(store: LiveStore, subject: NamedNode, sourcePaneState: SourcePaneState): Promise<{ content: string, metadata: HttpResourceMetadata }> {
-  const fetcher = store.fetcher
-  const { showError } = getStatusSection()
-
-  try {
-    const response = await fetcher.webOperation('GET', subject.uri)
-    if (!happy(response, 'GET')) {
-      throw new Error('GET request failed')
-    }
-
-    const content = (response as Response & { responseText?: string }).responseText
-    if (content === undefined) { // Defensive https://github.com/linkeddata/rdflib.js/issues/506
-      throw new Error('source pane: No text in response object!!')
-    }
-
-    const metadata = getResponseHeaders(store, subject, response)
-    if (!metadata.contentType) {
-      throw new Error('Error: No content-type available!')
-    }
-    applyResponseHeaders(sourcePaneState, metadata)
-    if (!metadata.allowed) {
-      error('@@@@@@@@@@ No Allow: header from this server')
-    }
-    return { content, metadata }
-  } catch (err: any) {
-    showError('Error reading file: ' + err)
-    throw err
-  }
 }

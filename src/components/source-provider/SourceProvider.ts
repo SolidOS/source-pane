@@ -1,13 +1,14 @@
-import { html } from 'lit'
+import { html, type PropertyValues } from 'lit'
 import { provide } from '@lit/context'
-import { customElement, property } from 'lit/decorators.js'
+import { customElement, property, query } from 'lit/decorators.js'
 import { NamedNode } from 'rdflib'
 import { DataBrowserContext } from 'pane-registry'
-import { renderHeader } from '../../Header'
 import { getStatusSection } from '../../StatusSection'
 import { WebComponent } from 'solid-ui'
 import { sourceContext, SourceContext } from '../../primitives/context'
 import { SourcePaneState } from '../../types'
+import type SourceEditorCard from '../source-editor-card/SourceEditorCard'
+import '../header/SourceHeader'
 
 void import('../source-editor-card/SourceEditorCard').then(() => undefined)
 
@@ -17,7 +18,9 @@ const defaultSourcePaneState: SourcePaneState = {
   editing: false,
   allowed: undefined,
   contentType: undefined,
-  eTag: undefined
+  eTag: undefined,
+  title: undefined,
+  modified: undefined
 }
 
 @customElement('source-pane-source-provider')
@@ -37,29 +40,16 @@ export default class SourceProvider extends WebComponent {
     subject: '',
     sourcePaneState: defaultSourcePaneState,
     updateSourcePaneState: () => {},
+    setEditing: () => {}
   }
 
+  @query('source-pane-source-editor-card')
+  private accessor editorCard: SourceEditorCard | null = null
   // need this while we are using document.querySelector 
   // and rendering plain HTML children. Can remove later when all
   // code is refactored to use context and components.
   createRenderRoot () {
     return this
-  }
-
-  private _requireContext () {
-    if (!this.context) {
-      throw new Error('The element is missing the required `context` property.')
-    }
-
-    return this.context
-  }
-
-  private _requireSubject () {
-    if (!this.subject) {
-      throw new Error('The element is missing the required `subject` property.')
-    }
-
-    return this.subject
   }
 
   updateSourcePaneState = <K extends keyof SourcePaneState>(key: K, value: SourcePaneState[K]) => {
@@ -69,27 +59,34 @@ export default class SourceProvider extends WebComponent {
     }
   }
 
-  protected willUpdate (changedProperties: Map<string, any>) {
+  setEditing = () => {
+    this.updateSourcePaneState('editing', true)
+    this.editorCard?.updateEditingState(true)
+    this.editorCard?.setReadOnly(false)
+    this.editorCard?.focusEditor()
+  }
+
+  protected willUpdate (changedProperties: PropertyValues<this>) {
     super.willUpdate(changedProperties)
-    const context = this._requireContext()
-    const subject = this._requireSubject()
+
+    if (!this.context) {
+      throw new Error('The element is missing the required `context` property.')
+    }
 
     this.sourceContextValue = {
-      context,
-      subject: subject.uri,
+      context: this.context,
+      subject: this.subject?.uri ?? '',
       sourcePaneState: this.sourcePaneState,
       updateSourcePaneState: this.updateSourcePaneState,
+      setEditing: this.setEditing
     }
   }
 
   render() {
-    const context = this._requireContext()
-    const subject = this._requireSubject()
-    const store = context.session.store
     const { renderStatusSection } = getStatusSection()
 
     return html`
-      ${renderHeader(store as any, subject as any, this.sourcePaneState)}
+      <source-pane-source-header></source-pane-source-header>
       <source-pane-source-editor-card></source-pane-source-editor-card>
       ${renderStatusSection()}
     `
