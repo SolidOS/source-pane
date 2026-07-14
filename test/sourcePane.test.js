@@ -19,6 +19,8 @@ beforeAll(async () => {
 
   const headerModule = await import('../src/Header.ts')
   renderHeader = headerModule.renderHeader
+
+  await import('../src/components/header/SourceHeader.ts')
 })
 
 function renderHeaderIntoDocument (sourcePaneState) {
@@ -71,6 +73,31 @@ describe('source-pane', () => {
 
     await Promise.resolve()
     container.querySelector('.sourcePaneEditButton').click()
+
+    expect(editorCard.updateEditingState).toHaveBeenCalledWith(true)
+    expect(editorCard.setReadOnly).toHaveBeenCalledWith(false)
+    expect(editorCard.focusEditor).toHaveBeenCalled()
+  })
+
+  it('opens the editor card from the migrated header even without setEditing', async () => {
+    const header = document.createElement('source-pane-source-header')
+    Object.defineProperty(header, 'sourceContext', {
+      value: {
+        sourcePaneState: {
+          broken: false
+        }
+      },
+      writable: true
+    })
+
+    const editorCard = document.createElement('source-pane-source-editor-card')
+    document.body.appendChild(header)
+    document.body.appendChild(editorCard)
+
+    await header.updateComplete
+    await Promise.resolve()
+
+    header.shadowRoot.querySelectorAll('solid-ui-button')[1].click()
 
     expect(editorCard.updateEditingState).toHaveBeenCalledWith(true)
     expect(editorCard.setReadOnly).toHaveBeenCalledWith(false)

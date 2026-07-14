@@ -58,6 +58,7 @@
     "@types/mime-types": "^3.0.1",
     "@types/node": "^22.20.0",
     "@vitest/coverage-v8": "^4.0.18",
+    "@iconify-json/lucide": "^1.2.116",
     "eslint": "^9.39.2",
     "eslint-plugin-import": "^2.32.0",
     "jsdom": "^28.1.0",

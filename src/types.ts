@@ -2,6 +2,7 @@ export type HttpResourceMetadata = {
   contentType: string | undefined
   allowed: string | undefined
   eTag: string | undefined
+  modified: string | undefined
 }
 
 export type SourcePaneState = {

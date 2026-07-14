@@ -2,15 +2,15 @@ import { html, nothing } from 'lit'
 import { consume } from '@lit/context'
 import { customElement, query, state } from 'lit/decorators.js'
 import { NamedNode, parse, serialize } from 'rdflib'
-import type { SourceEditor } from './SourceEditor'
-import { applyResponseHeaders, checkSyntax, fetchContentAndMetadata, getResponseHeaders, happy } from '../../helpers'
-import styles from './SourceEditorCard.styles.css'
 import { WebComponent } from 'solid-ui'
-import { getStatusSection } from '../../StatusSection'
 import 'solid-ui/components/button'
+import type { SourceEditor } from './SourceEditor'
+import { checkSyntax, happy } from '../../helpers'
+import { applyResponseHeaders, fetchContentAndMetadata, getResponseHeaders } from '../../resourceMetadata'
+import styles from './SourceEditorCard.styles.css'
+import { getStatusSection } from '../../StatusSection'
 import { compactable } from '../../compactableFormats'
-import { SourceContext } from '../../primitives/context'
-import { sourceContext } from '../../primitives/context'
+import { sourceContext, SourceContext } from '../../primitives/context'
 
 @customElement('source-pane-source-editor-card')
 export default class SourceEditorCard extends WebComponent {
@@ -19,10 +19,11 @@ export default class SourceEditorCard extends WebComponent {
   private _editor?: SourceEditor
   private _originalContent?: string
   private _dirtyState = false
-  private _editingState = false
+  private _initializing = false
 
   @state()
   accessor _editorReady = false
+  
   @query('.sourcePaneEditor')
   accessor _editorMount: HTMLDivElement | null = null
 
@@ -64,8 +65,7 @@ export default class SourceEditorCard extends WebComponent {
   }
 
   updateEditingState(editing: boolean) {
-    if (this._editingState === editing) return
-    this._editingState = editing
+    if (this.sourceContext?.sourcePaneState.editing === editing) return
     this.sourceContext?.updateSourcePaneState('editing', editing)
   }
 
@@ -77,15 +77,18 @@ export default class SourceEditorCard extends WebComponent {
   }
 
   private async _initializeEditor () {
-    if (this._editor) return
+    if (this._editor || this._initializing) return
+    this._initializing = true
     const sourcePaneEditor = this._editorMount
     const sourceContext = this.sourceContext
     if (!sourcePaneEditor || !sourceContext) {
+      this._initializing = false
       return
     }
     try {
       const { SourceEditor } = await import('./SourceEditor')
       const { content, metadata } = await fetchContentAndMetadata(sourceContext.context.session.store as any, new NamedNode(sourceContext.subject), sourceContext.sourcePaneState as any)
+      this.sourceContext?.updateSourcePaneState('modified', metadata.modified)
       this._originalContent = content
       this._editor = new SourceEditor()
       await this._editor.initialize(sourcePaneEditor, content, metadata.contentType, 'dark', dirty => {
@@ -96,6 +99,8 @@ export default class SourceEditorCard extends WebComponent {
     } catch (err) {
       const { showError } = getStatusSection()
       showError('Error fetching content: ' + err)
+    } finally {
+      this._initializing = false
     }
   }
 
@@ -118,7 +123,7 @@ export default class SourceEditorCard extends WebComponent {
     }
     this._editorReady = false
     this._dirtyState = false
-    this._editingState = false
+    this._initializing = false
   }
 
   private cancelHandler () {
@@ -194,7 +199,7 @@ export default class SourceEditorCard extends WebComponent {
     const sourceContext = this._requireSourceContext()
     const sectionClass = this._editorReady ? 'sourcePaneCard' : 'sourcePaneCard sourcePaneCardLoading'
     const compactContentType = sourceContext.sourcePaneState.contentType?.split(';')[0]
-    const showPrettyButton = !this._editingState && !!compactContentType && compactable[compactContentType]
+    const showPrettyButton = !sourceContext.sourcePaneState.editing && !!compactContentType && compactable[compactContentType]
     const prettyButton = showPrettyButton
       ? html`
           <solid-ui-button class="sourcePanePrettyButton" variant="secondary" @click=${this.prettyHandler}>Prettify</solid-ui-button>
@@ -205,7 +210,7 @@ export default class SourceEditorCard extends WebComponent {
       <section class=${sectionClass}>
         <div class="sourcePaneEditor"></div>
         <div class="sourcePaneEditorFooter">
-          ${this._editingState
+          ${sourceContext.sourcePaneState.editing
             ? html`
                 <solid-ui-button class="sourcePaneCancelButton" variant="secondary" @click=${this.cancelHandler}>Cancel</solid-ui-button>
                 <solid-ui-button class="sourcePaneSaveButton" variant="primary" @click=${this.saveBack}>Save Changes</solid-ui-button>

@@ -90,7 +90,8 @@ const pane = {
       editing: false,
       allowed: undefined,
       contentType: undefined,
-      eTag: undefined
+      eTag: undefined,
+      modified: undefined
     }
 
     const sourcePane = context.dom.createElement('div')
