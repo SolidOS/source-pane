@@ -1,4 +1,4 @@
-import { html } from 'lit'
+import { html, type PropertyValues } from 'lit'
 import { provide } from '@lit/context'
 import { customElement, property } from 'lit/decorators.js'
 import { NamedNode } from 'rdflib'
@@ -69,8 +69,17 @@ export default class SourceProvider extends WebComponent {
     }
   }
 
-  protected willUpdate (changedProperties: Map<string, any>) {
+  protected override willUpdate (changedProperties: PropertyValues<this>) {
     super.willUpdate(changedProperties)
+
+    if (
+      !changedProperties.has('context') &&
+      !changedProperties.has('subject') &&
+      !changedProperties.has('sourcePaneState')
+    ) {
+      return
+    }
+
     const context = this._requireContext()
     const subject = this._requireSubject()
 
