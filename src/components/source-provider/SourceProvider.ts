@@ -72,14 +72,6 @@ export default class SourceProvider extends WebComponent {
   protected override willUpdate (changedProperties: PropertyValues<this>) {
     super.willUpdate(changedProperties)
 
-    if (
-      !changedProperties.has('context') &&
-      !changedProperties.has('subject') &&
-      !changedProperties.has('sourcePaneState')
-    ) {
-      return
-    }
-
     const context = this._requireContext()
     const subject = this._requireSubject()
 
