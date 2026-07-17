@@ -2,7 +2,7 @@ import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
 
 const fetchContentAndMetadata = vi.fn()
 
-vi.mock('../src/helpers.ts', () => ({
+vi.mock('../src/resourceMetadata.ts', () => ({
   fetchContentAndMetadata,
 }))
 

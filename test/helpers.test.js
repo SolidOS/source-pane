@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { fetchContentAndMetadata, getResponseHeaders } from '../src/helpers.ts'
+import { fetchContentAndMetadata, getResponseHeaders } from '../src/resourceMetadata.ts'
 
 describe('helpers', () => {
   beforeEach(() => {
