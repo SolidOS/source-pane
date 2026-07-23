@@ -9,8 +9,7 @@ import { WebComponent } from 'solid-ui'
 import { getStatusSection } from '../../StatusSection'
 import 'solid-ui/components/button'
 import { compactable } from '../../compactableFormats'
-import { SourceContext } from '../../primitives/context'
-import { sourceContext } from '../../primitives/context'
+import { sourceContext, SourceContext } from '../../primitives/context'
 
 @customElement('solid-panes-source-editor-card')
 export default class SourceEditorCard extends WebComponent {
@@ -101,13 +100,6 @@ export default class SourceEditorCard extends WebComponent {
 
   async firstUpdated () {
     await this._initializeEditor()
-  }
-
-  protected updated (changedProperties: Map<string, any>) {
-    super.updated(changedProperties)
-    if (!this._editor && this.sourceContext && this._editorMount) {
-      void this._initializeEditor()
-    }
   }
 
   disconnectedCallback() {

@@ -34,6 +34,11 @@ export class SourceEditor {
       doc: initialDoc,
       extensions: [
         theme === 'dark' ? vscodeDark : vscodeLight,
+        EditorView.theme({
+          '&': {
+            minHeight: '6lh'
+          }
+        }),
         this._languageCompartment.of(languageExtension),
         this._editableCompartment.of(EditorView.editable.of(true)),
         syntaxHighlighting(defaultHighlightStyle, { fallback: true }),
