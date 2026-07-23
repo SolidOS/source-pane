@@ -24,6 +24,7 @@ const defaultSourcePaneState: SourcePaneState = {
 
 @customElement('source-pane-source-provider')
 export default class SourceProvider extends WebComponent {
+
   @property({ attribute: false })
   accessor context: DataBrowserContext | undefined = undefined
 

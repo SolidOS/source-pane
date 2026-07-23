@@ -108,13 +108,6 @@ export default class SourceEditorCard extends WebComponent {
     await this._initializeEditor()
   }
 
-  protected updated (changedProperties: Map<string, any>) {
-    super.updated(changedProperties)
-    if (!this._editor && this.sourceContext && this._editorMount) {
-      void this._initializeEditor()
-    }
-  }
-
   disconnectedCallback() {
     super.disconnectedCallback()
     if (this._editor) {
