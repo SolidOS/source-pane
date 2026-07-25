@@ -8,7 +8,7 @@ import '~icons/lucide/share-2'
 import '~icons/lucide/pencil'
 import '~icons/lucide/ellipsis-vertical'
 import styles from './SourceHeaderControls.styles.css'
-import './SourceHeaderInfo'
+import './SourceHeaderSummary'
 
 @customElement('source-pane-source-header-controls')
 export default class SourceHeaderControls extends WebComponent {

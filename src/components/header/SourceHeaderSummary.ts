@@ -1,23 +1,22 @@
 import { utils, WebComponent } from 'solid-ui'
+import 'solid-ui/components/button'
 import { customElement } from 'lit/decorators.js'
 import { html } from 'lit'
 import { consume } from '@lit/context'
 import { sym } from 'rdflib'
 import { sourceContext, SourceContext } from '../../primitives/context'
 import '~icons/lucide/globe'
-import '~icons/lucide/lock'
-import styles from './SourceHeaderInfo.styles.css'
+import '~icons/lucide/lock-keyhole'
+import '~icons/lucide/arrow-left'
+import styles from './SourceHeaderSummary.styles.css'
 import { sourcePaneIcon } from '../../icons/sourcePaneIcon'
 
-@customElement('source-pane-source-header-info')
-export default class SourceHeaderInfo extends WebComponent {
+@customElement('source-pane-source-header-summary')
+export default class SourceHeaderSummary extends WebComponent {
   static styles = styles
 
   @consume({ context: sourceContext, subscribe: true })
   accessor sourceContext: SourceContext = undefined as unknown as SourceContext
-
-  private accessor isPublic: boolean = false
-  private accessor publicStateForSubject: string | undefined = undefined
 
   private formatModifiedDate (modified: string | undefined) {
     if (!modified) return ''
@@ -48,27 +47,19 @@ export default class SourceHeaderInfo extends WebComponent {
   render () {
     const subject = this.sourceContext?.subject ? sym(this.sourceContext.subject) : undefined
     const label = subject ? utils.label(subject) : ''
-    const modified = this.formatModifiedDate(this.sourceContext?.sourcePaneState.modified)
-
-    if (subject && this.publicStateForSubject !== subject.uri) {
-      this.publicStateForSubject = subject.uri
-      void this.sourceContext?.accessControlService?.isPublic(subject)
-        .then((isPublic) => {
-          this.isPublic = isPublic
-          this.requestUpdate()
-        })
-        .catch(() => {
-          this.isPublic = false
-          this.requestUpdate()
-        })
-    }
+    const modified = this.formatModifiedDate(this.sourceContext?.headerMetadata?.modified)
+    const isPublic = this.sourceContext?.headerMetadata?.isPublic ?? false
 
     return html`
-      <div class="source-pane-header-info">
+      <div class="source-pane-header-summary">
+        <solid-ui-button
+          variant="ghost">
+          <icon-lucide-arrow-left></icon-lucide-arrow-left>
+        </solid-ui-button>
         <span class="source-pane-icon">${sourcePaneIcon}</span>
         <div>
           <h1>${label}</h1>
-          <p>${modified} ${this.isPublic ? html`<icon-lucide-globe></icon-lucide-globe> Public` : html`<icon-lucide-lock></icon-lucide-lock> Private`}</p>
+          <p>${modified} ${isPublic ? html`<span class="source-pane-public"><icon-lucide-globe></icon-lucide-globe> Public</span>` : html`<span class="source-pane-private"><icon-lucide-lock-keyhole></icon-lucide-lock-keyhole> Private</span>`}</p>
         </div>
       </div>
     `

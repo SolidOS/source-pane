@@ -6,11 +6,11 @@ import { WebComponent } from 'solid-ui'
 import 'solid-ui/components/button'
 import type { SourceEditor } from './SourceEditor'
 import { checkSyntax, happy } from '../../helpers'
-import { applyResponseHeaders, fetchContentAndMetadata, getResponseHeaders } from '../../resourceMetadata'
 import styles from './SourceEditorCard.styles.css'
 import { getStatusSection } from '../../StatusSection'
 import { compactable } from '../../compactableFormats'
 import { sourceContext, SourceContext } from '../../primitives/context'
+import { getResponseMetadata } from '../../resourceLoader'
 
 @customElement('source-pane-source-editor-card')
 export default class SourceEditorCard extends WebComponent {
@@ -87,11 +87,9 @@ export default class SourceEditorCard extends WebComponent {
     }
     try {
       const { SourceEditor } = await import('./SourceEditor')
-      const { content, metadata } = await fetchContentAndMetadata(sourceContext.context.session.store as any, new NamedNode(sourceContext.subject), sourceContext.sourcePaneState as any)
-      this.sourceContext?.updateSourcePaneState('modified', metadata.modified)
-      this._originalContent = content
+      this._originalContent = sourceContext.originalContent
       this._editor = new SourceEditor()
-      await this._editor.initialize(sourcePaneEditor, content, metadata.contentType, 'dark', dirty => {
+      await this._editor.initialize(sourcePaneEditor, sourceContext.originalContent ?? '', sourceContext.editorMetadata.contentType, 'dark', dirty => {
         this.updateDirtyState(dirty)
       })
       this._editorReady = true
@@ -134,10 +132,9 @@ export default class SourceEditorCard extends WebComponent {
 
     const store = sourceContext.context.session.store as any
     const subject = new NamedNode(sourceContext.subject)
-    const sourcePaneState = sourceContext.sourcePaneState
     const fetcher = store.fetcher
     const data = this.getEditor()?.getValue() ?? ''
-    const { contentType, eTag } = sourceContext.sourcePaneState
+    const { contentType, eTag } = sourceContext.editorMetadata
     if (!checkSyntax(store, subject as any, data, contentType, subject as any)) {
       const { showError } = getStatusSection()
       showError('Syntax error: fix the document before saving.')
@@ -153,7 +150,8 @@ export default class SourceEditorCard extends WebComponent {
       try {
         const response = await fetcher.webOperation('HEAD', subject.uri) // , defaultFetchHeaders())
         if (!happy(response, 'HEAD')) return
-        applyResponseHeaders(sourcePaneState as any, getResponseHeaders(store, subject as any, response))
+        const metadata = getResponseMetadata(store, subject as any, response)
+        sourceContext.updateMetadata(metadata)
         this._resetEditorState()
       } catch (err) {
         throw err
@@ -167,7 +165,7 @@ export default class SourceEditorCard extends WebComponent {
   private prettyHandler () {
     const sourceContext = this._requireSourceContext()
 
-    const { contentType } = sourceContext.sourcePaneState
+    const { contentType } = sourceContext.editorMetadata
     const compactContentType = contentType?.split(';')[0]
     const { showError } = getStatusSection()
     const store = sourceContext.context.session.store as any
@@ -191,7 +189,7 @@ export default class SourceEditorCard extends WebComponent {
   render() {
     const sourceContext = this._requireSourceContext()
     const sectionClass = this._editorReady ? 'sourcePaneCard' : 'sourcePaneCard sourcePaneCardLoading'
-    const compactContentType = sourceContext.sourcePaneState.contentType?.split(';')[0]
+    const compactContentType = sourceContext.editorMetadata.contentType?.split(';')[0]
     const showPrettyButton = !sourceContext.sourcePaneState.editing && !!compactContentType && compactable[compactContentType]
     const prettyButton = showPrettyButton
       ? html`

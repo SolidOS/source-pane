@@ -10,19 +10,6 @@
   width: 100%;
 }
 
-/* This code is here because currently the shadow DOM isn't
-working just yet because I need to implement the header as a web component first
-once I do that I can move this to the host css of the source-provider */
-source-pane-source-provider {
-  display: flex;
-  flex-direction: column;
-  width: 100%;
-  align-self: stretch;
-  box-sizing: border-box;
-  padding: 20px 20px 29px;
-  gap: 23px;
-}
-
 .sourcePaneCompactButton {
   box-sizing: border-box;
   display: inline-flex;

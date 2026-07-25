@@ -8,7 +8,7 @@ import '~icons/lucide/share-2'
 import '~icons/lucide/pencil'
 import '~icons/lucide/ellipsis-vertical'
 import styles from './SourceHeader.styles.css'
-import './SourceHeaderInfo'
+import './SourceHeaderSummary'
 import './SourceHeaderControls'
 
 @customElement('source-pane-source-header')
@@ -21,7 +21,7 @@ export default class SourceHeader extends WebComponent {
   render () {
     return html`
       <header>
-        <source-pane-source-header-info></source-pane-source-header-info>
+        <source-pane-source-header-summary></source-pane-source-header-summary>
         <source-pane-source-header-controls></source-pane-source-header-controls>
       </header>
     `
