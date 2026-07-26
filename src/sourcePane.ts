@@ -9,6 +9,7 @@ import { DataBrowserContext, NewPaneOptions } from 'pane-registry'
 import * as mime from 'mime-types'
 import { html, render as litRender } from 'lit'
 import { log } from './debug'
+import { getStatusSection } from './StatusSection'
 import './sourcePane.css'
 import './components/source-provider/SourceProvider'
 
@@ -83,7 +84,7 @@ const pane = {
   },
 
   render: function (subject: NamedNode, context: DataBrowserContext) {
- 
+    const { renderStatusSection } = getStatusSection()
     const sourcePane = context.dom.createElement('div')
     sourcePane.setAttribute('class', 'sourcePane')
     litRender(html`
@@ -92,6 +93,7 @@ const pane = {
           .subject=${subject}
         >
         </source-pane-source-provider>
+        ${renderStatusSection()}
     `, sourcePane)
 
     return sourcePane

@@ -185,29 +185,39 @@ export default class SourceEditorCard extends WebComponent {
       }
     }
   }
-  
-  render() {
+
+  private renderFooter() {
     const sourceContext = this._requireSourceContext()
-    const sectionClass = this._editorReady ? 'sourcePaneCard' : 'sourcePaneCard sourcePaneCardLoading'
     const compactContentType = sourceContext.editorMetadata.contentType?.split(';')[0]
     const showPrettyButton = !sourceContext.sourcePaneState.editing && !!compactContentType && compactable[compactContentType]
-    const prettyButton = showPrettyButton
-      ? html`
+
+    if (sourceContext.sourcePaneState.editing) {
+      return html`
+        <div class="sourcePaneEditorFooter">
+          <solid-ui-button class="sourcePaneCancelButton" variant="secondary" @click=${this.cancelHandler}>Cancel</solid-ui-button>
+          <solid-ui-button class="sourcePaneSaveButton" variant="primary" @click=${this.saveBack}>Save Changes</solid-ui-button>
+        </div>
+      `
+    }
+
+    if (showPrettyButton) {
+      return html`
+        <div class="sourcePaneEditorFooter">
           <solid-ui-button class="sourcePanePrettyButton" variant="secondary" @click=${this.prettyHandler}>Prettify</solid-ui-button>
-        `
-      : nothing
+        </div>
+      `
+    }
+
+    return nothing
+  }
+  
+  render() {
+    const sectionClass = this._editorReady ? 'sourcePaneCard' : 'sourcePaneCard sourcePaneCardLoading'
 
     return html`
       <section class=${sectionClass}>
         <div class="sourcePaneEditor"></div>
-        <div class="sourcePaneEditorFooter">
-          ${sourceContext.sourcePaneState.editing
-            ? html`
-                <solid-ui-button class="sourcePaneCancelButton" variant="secondary" @click=${this.cancelHandler}>Cancel</solid-ui-button>
-                <solid-ui-button class="sourcePaneSaveButton" variant="primary" @click=${this.saveBack}>Save Changes</solid-ui-button>
-              `
-            : prettyButton}
-        </div>
+        ${this.renderFooter()}
       </section>
     `
   }

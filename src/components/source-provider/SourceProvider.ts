@@ -173,8 +173,6 @@ export default class SourceProvider extends WebComponent {
   }
 
   render() {
-    const { renderStatusSection } = getStatusSection()
-
     return html`
       ${this.dataLoaded
         ? html`
@@ -182,7 +180,6 @@ export default class SourceProvider extends WebComponent {
             <source-pane-source-editor-card></source-pane-source-editor-card>
           `
         : html``}
-      ${renderStatusSection()}
     `
   }
 }
