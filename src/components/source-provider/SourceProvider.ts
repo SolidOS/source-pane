@@ -102,13 +102,14 @@ export default class SourceProvider extends WebComponent {
   private accessor editorCard: SourceEditorCard | null = null
 
   private loadContentAndMetadata = async () => {
-    if (!this.context) {
-      throw new Error('The element is missing the required `context` property.')
-    }
-    if (!this.subject) {
-      throw new Error('The element is missing the required `subject` property.')
-    }
     try {
+      if (!this.context) {
+        throw new Error('The element is missing the required `context` property.')
+      }
+      if (!this.subject) {
+        throw new Error('The element is missing the required `subject` property.')
+      }
+
       const { content, metadata } = await fetchContentAndMetadata(this.context.session.store as any, this.subject)
       this.originalContent = content
       this.updateEditorMetadata(metadata)

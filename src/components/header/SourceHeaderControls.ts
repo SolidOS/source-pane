@@ -24,7 +24,10 @@ export default class SourceHeaderControls extends WebComponent {
 
   private setEditable() {
     const sourcePaneState = this.sourceContext?.sourcePaneState
-    if (!sourcePaneState || sourcePaneState.broken) return
+    const { canEdit } = this.sourceContext?.headerMetadata ?? { canEdit: false }
+    const subject = this.sourceContext?.subject
+    if (!sourcePaneState || !canEdit || sourcePaneState.broken || (subject && subject.endsWith('/'))) return
+  
     this.sourceContext?.setEditing?.()
   }
 
