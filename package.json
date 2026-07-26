@@ -1,6 +1,6 @@
 {
   "name": "source-pane",
-  "version": "3.1.1-4",
+  "version": "3.1.1-5",
   "description": "Solid-compatible Panes: Source editor",
   "main": "dist/index.cjs.js",
   "exports": {
@@ -55,6 +55,7 @@
   },
   "homepage": "https://github.com/SolidOS/source-pane",
   "devDependencies": {
+    "@iconify-json/lucide": "^1.2.116",
     "@types/mime-types": "^3.0.1",
     "@types/node": "^22.20.0",
     "@vitest/coverage-v8": "^4.0.18",

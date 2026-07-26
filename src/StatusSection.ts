@@ -39,7 +39,7 @@ export function getStatusSection(){
       <section class="sourcePaneStatus" role="alert" data-visible="false">
         <div id="statusMessageArea" hidden>
           <p class="error-text">${statusMessage}</p>
-          <button @click=${() => clearError()}>X</button>
+          <button class="statusCloseButton" aria-label="Dismiss error" @click=${() => clearError()}>X</button>
         </div>
       </section>
     `

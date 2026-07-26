@@ -1,0 +1,12 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  align-self: stretch;
+  box-sizing: border-box;
+  padding-bottom: 39px;
+}
+
+source-pane-source-header {
+  margin-bottom: 23px;
+}

@@ -6,14 +6,46 @@
 
 .sourcePaneStatus[data-visible='true'] {
   display: block;
+  margin: 0;
+  padding: 12px;
+  background: var(--dialog-error-background, var(--pink-500, #ffdde6));
+  border-radius: 5px;
+  border: 1px solid var(--dialog-error-border, var(--pink-700, #ff98b3));
+}
+
+#statusMessageArea {
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .error-text {
   margin: 0;
-  padding: 12px;
-  background-color: #fde8e8;
-  border: 1px solid #f8b4b4;
-  border-radius: 4px;
-  color: #9b1c1c;
+  padding: 10px 12px;
+  background-color: transparent;
+  border: 0;
+  border-radius: 0;
+  color: var(--solid-ui-color-error, #b00020);
   font-weight: 500;
+  flex: 1;
+}
+
+.statusCloseButton {
+  flex: 0 0 auto;
+  margin-top: 0;
+  align-self: center;
+  width: 28px;
+  height: 28px;
+  border: 0;
+  border-radius: 5px;
+  background: transparent;
+  color: var(--solid-ui-color-error, #b00020);
+  font-weight: 600;
+  line-height: 1;
+  padding: 0;
+  cursor: pointer;
+}
+
+.statusCloseButton:hover {
+  background: color-mix(in srgb, var(--solid-ui-color-error, #b00020) 10%, transparent);
 }

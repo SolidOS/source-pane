@@ -9,9 +9,9 @@ import { DataBrowserContext, NewPaneOptions } from 'pane-registry'
 import * as mime from 'mime-types'
 import { html, render as litRender } from 'lit'
 import { log } from './debug'
+import { getStatusSection } from './StatusSection'
 import './sourcePane.css'
 import './components/source-provider/SourceProvider'
-import { SourcePaneState } from './types'
 
 const pane = {
   icon: icons.iconBase + 'noun_109873.svg', // noun_109873_51A7F9.svg
@@ -84,24 +84,16 @@ const pane = {
   },
 
   render: function (subject: NamedNode, context: DataBrowserContext) {
-    const sourcePaneState: SourcePaneState = {
-      broken: false,
-      dirty: false,
-      editing: false,
-      allowed: undefined,
-      contentType: undefined,
-      eTag: undefined
-    }
-
+    const { renderStatusSection } = getStatusSection()
     const sourcePane = context.dom.createElement('div')
     sourcePane.setAttribute('class', 'sourcePane')
     litRender(html`
         <source-pane-source-provider
           .context=${context}
           .subject=${subject}
-          .sourcePaneState=${sourcePaneState}
         >
         </source-pane-source-provider>
+        ${renderStatusSection()}
     `, sourcePane)
 
     return sourcePane

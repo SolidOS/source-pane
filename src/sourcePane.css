@@ -5,38 +5,9 @@
   border: 1px solid var(--color-border, var(--gray-200, #E5E7EB));
 }
 
-.sourcePaneControls {
-  display: flex;
-  justify-content: flex-end;
-  align-items: center;
-  gap: 6px;
-  flex-wrap: wrap;
-  width: 100%;
-  text-align: right;
-  padding: 0 3px 16px 0;
-}
-/* generative ai */
-.sourcePaneControls > * {
-  flex: 0 1 auto;
-}
-
-.sourcePaneHeader,
 .sourcePaneCard,
 .sourcePaneStatus {
   width: 100%;
-}
-
-/* This code is here because currently the shadow DOM isn't
-working just yet because I need to implement the header as a web component first
-once I do that I can move this to the host css of the source-provider */
-source-pane-source-provider {
-  display: flex;
-  flex-direction: column;
-  width: 100%;
-  align-self: stretch;
-  box-sizing: border-box;
-  padding: 20px 20px 29px;
-  gap: 23px;
 }
 
 .sourcePaneCompactButton {
@@ -51,10 +22,6 @@ source-pane-source-provider {
 }
 
 @media (max-width: 900px) {
-  .sourcePaneControls {
-    padding-right: 3px;
-  }
-
   .sourcePaneTextArea {
     margin: 12px 2px;
     padding: 12px;
@@ -62,11 +29,6 @@ source-pane-source-provider {
 }
 
 @media (max-width: 600px) {
-  .sourcePaneControls {
-    justify-content: flex-start;
-    gap: 5px;
-  }
-
   .sourcePaneCompactButton {
     min-width: 0;
   }
@@ -74,12 +36,4 @@ source-pane-source-provider {
 
 .sourcePaneTextAreaError {
   color: var(--solid-ui-color-error, #b00020);
-}
-
-.sourcePaneControlVisible {
-  display: block;
-}
-
-.sourcePaneControlHidden {
-  display: none;
 }

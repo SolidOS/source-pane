@@ -1,8 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { fetchContentAndMetadata, getResponseHeaders } from '../src/helpers.ts'
+import { fetchContentAndMetadata, getResponseMetadata } from '../src/resourceLoader.ts'
 
-describe('helpers', () => {
+describe('resourceLoader', () => {
   beforeEach(() => {
     vi.clearAllMocks()
   })
@@ -12,19 +12,27 @@ describe('helpers', () => {
       headers: {
         get: vi.fn((name) => {
           if (name === 'content-type') return 'text/turtle; charset=utf-8'
-          if (name === 'allow') return 'GET,PUT'
+          if (name === 'wac-allow') return 'user="write", public="read"'
           if (name === 'etag') return '"abc"'
           return null
         })
       }
     }
-    const store = { each: vi.fn(), any: vi.fn(), anyValue: vi.fn(), sym: vi.fn() }
+    const store = {
+      each: vi.fn(),
+      any: vi.fn(),
+      anyValue: vi.fn(() => undefined),
+      sym: vi.fn()
+    }
     const subject = { uri: 'https://example.org/profile/card' }
 
-    expect(getResponseHeaders(store, subject, response)).toEqual({
+    expect(getResponseMetadata(store, subject, response)).toEqual({
       contentType: 'text/turtle',
-      allowed: 'GET,PUT',
+      canEdit: true,
+      isPublic: true,
       eTag: '"abc"'
+      ,
+      modified: undefined
     })
   })
 
@@ -34,7 +42,7 @@ describe('helpers', () => {
       headers: {
         get: vi.fn((name) => {
           if (name === 'content-type') return 'text/turtle'
-          if (name === 'allow') return 'GET,PUT'
+          if (name === 'wac-allow') return 'user="write", public="read"'
           if (name === 'etag') return '"abc"'
           return null
         })
@@ -47,27 +55,22 @@ describe('helpers', () => {
       },
       each: vi.fn(),
       any: vi.fn(),
-      anyValue: vi.fn(),
+      anyValue: vi.fn(() => undefined),
       sym: vi.fn()
     }
     const subject = { uri: 'https://example.org/profile/card' }
-    const sourcePaneState = { broken: false, contentType: undefined, allowed: undefined, eTag: undefined }
 
-    const result = await fetchContentAndMetadata(store, subject, sourcePaneState)
+    const result = await fetchContentAndMetadata(store, subject)
 
     expect(result).toEqual({
       content: '<> a <#Thing>.',
       metadata: {
         contentType: 'text/turtle',
-        allowed: 'GET,PUT',
-        eTag: '"abc"'
+        canEdit: true,
+        isPublic: true,
+        eTag: '"abc"',
+        modified: undefined
       }
-    })
-    expect(sourcePaneState).toEqual({
-      broken: false,
-      contentType: 'text/turtle',
-      allowed: 'GET,PUT',
-      eTag: '"abc"'
     })
   })
 })

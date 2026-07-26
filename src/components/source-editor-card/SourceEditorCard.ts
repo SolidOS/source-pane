@@ -2,26 +2,28 @@ import { html, nothing } from 'lit'
 import { consume } from '@lit/context'
 import { customElement, query, state } from 'lit/decorators.js'
 import { NamedNode, parse, serialize } from 'rdflib'
-import type { SourceEditor } from './SourceEditor'
-import { applyResponseHeaders, checkSyntax, fetchContentAndMetadata, getResponseHeaders, happy } from '../../helpers'
-import styles from './SourceEditorCard.styles.css'
 import { WebComponent } from 'solid-ui'
-import { getStatusSection } from '../../StatusSection'
 import 'solid-ui/components/button'
+import type { SourceEditor } from './SourceEditor'
+import { checkSyntax, happy } from '../../helpers'
+import styles from './SourceEditorCard.styles.css'
+import { getStatusSection } from '../../StatusSection'
 import { compactable } from '../../compactableFormats'
 import { sourceContext, SourceContext } from '../../primitives/context'
+import { getResponseMetadata } from '../../resourceLoader'
 
-@customElement('solid-panes-source-editor-card')
+@customElement('source-pane-source-editor-card')
 export default class SourceEditorCard extends WebComponent {
   static styles = styles
 
   private _editor?: SourceEditor
   private _originalContent?: string
   private _dirtyState = false
-  private _editingState = false
+  private _initializing = false
 
   @state()
   accessor _editorReady = false
+  
   @query('.sourcePaneEditor')
   accessor _editorMount: HTMLDivElement | null = null
 
@@ -63,8 +65,7 @@ export default class SourceEditorCard extends WebComponent {
   }
 
   updateEditingState(editing: boolean) {
-    if (this._editingState === editing) return
-    this._editingState = editing
+    if (this.sourceContext?.sourcePaneState.editing === editing) return
     this.sourceContext?.updateSourcePaneState('editing', editing)
   }
 
@@ -76,18 +77,19 @@ export default class SourceEditorCard extends WebComponent {
   }
 
   private async _initializeEditor () {
-    if (this._editor) return
+    if (this._editor || this._initializing) return
+    this._initializing = true
     const sourcePaneEditor = this._editorMount
     const sourceContext = this.sourceContext
     if (!sourcePaneEditor || !sourceContext) {
+      this._initializing = false
       return
     }
     try {
       const { SourceEditor } = await import('./SourceEditor')
-      const { content, metadata } = await fetchContentAndMetadata(sourceContext.context.session.store as any, new NamedNode(sourceContext.subject), sourceContext.sourcePaneState as any)
-      this._originalContent = content
+      this._originalContent = sourceContext.originalContent
       this._editor = new SourceEditor()
-      await this._editor.initialize(sourcePaneEditor, content, metadata.contentType, 'dark', dirty => {
+      await this._editor.initialize(sourcePaneEditor, sourceContext.originalContent ?? '', sourceContext.editorMetadata.contentType, 'dark', dirty => {
         this.updateDirtyState(dirty)
       })
       this._editorReady = true
@@ -95,6 +97,8 @@ export default class SourceEditorCard extends WebComponent {
     } catch (err) {
       const { showError } = getStatusSection()
       showError('Error fetching content: ' + err)
+    } finally {
+      this._initializing = false
     }
   }
 
@@ -110,7 +114,7 @@ export default class SourceEditorCard extends WebComponent {
     }
     this._editorReady = false
     this._dirtyState = false
-    this._editingState = false
+    this._initializing = false
   }
 
   private cancelHandler () {
@@ -128,10 +132,9 @@ export default class SourceEditorCard extends WebComponent {
 
     const store = sourceContext.context.session.store as any
     const subject = new NamedNode(sourceContext.subject)
-    const sourcePaneState = sourceContext.sourcePaneState
     const fetcher = store.fetcher
     const data = this.getEditor()?.getValue() ?? ''
-    const { contentType, eTag } = sourceContext.sourcePaneState
+    const { contentType, eTag } = sourceContext.editorMetadata
     if (!checkSyntax(store, subject as any, data, contentType, subject as any)) {
       const { showError } = getStatusSection()
       showError('Syntax error: fix the document before saving.')
@@ -147,7 +150,8 @@ export default class SourceEditorCard extends WebComponent {
       try {
         const response = await fetcher.webOperation('HEAD', subject.uri) // , defaultFetchHeaders())
         if (!happy(response, 'HEAD')) return
-        applyResponseHeaders(sourcePaneState as any, getResponseHeaders(store, subject as any, response))
+        const metadata = getResponseMetadata(store, subject as any, response)
+        sourceContext.updateMetadata(metadata)
         this._resetEditorState()
       } catch (err) {
         throw err
@@ -161,7 +165,7 @@ export default class SourceEditorCard extends WebComponent {
   private prettyHandler () {
     const sourceContext = this._requireSourceContext()
 
-    const { contentType } = sourceContext.sourcePaneState
+    const { contentType } = sourceContext.editorMetadata
     const compactContentType = contentType?.split(';')[0]
     const { showError } = getStatusSection()
     const store = sourceContext.context.session.store as any
@@ -181,29 +185,39 @@ export default class SourceEditorCard extends WebComponent {
       }
     }
   }
+
+  private renderFooter() {
+    const sourceContext = this._requireSourceContext()
+    const compactContentType = sourceContext.editorMetadata.contentType?.split(';')[0]
+    const showPrettyButton = !sourceContext.sourcePaneState.editing && !!compactContentType && compactable[compactContentType]
+
+    if (sourceContext.sourcePaneState.editing) {
+      return html`
+        <div class="sourcePaneEditorFooter">
+          <solid-ui-button class="sourcePaneCancelButton" variant="secondary" @click=${this.cancelHandler}>Cancel</solid-ui-button>
+          <solid-ui-button class="sourcePaneSaveButton" variant="primary" @click=${this.saveBack}>Save Changes</solid-ui-button>
+        </div>
+      `
+    }
+
+    if (showPrettyButton) {
+      return html`
+        <div class="sourcePaneEditorFooter">
+          <solid-ui-button class="sourcePanePrettyButton" variant="secondary" @click=${this.prettyHandler}>Prettify</solid-ui-button>
+        </div>
+      `
+    }
+
+    return nothing
+  }
   
   render() {
-    const sourceContext = this._requireSourceContext()
     const sectionClass = this._editorReady ? 'sourcePaneCard' : 'sourcePaneCard sourcePaneCardLoading'
-    const compactContentType = sourceContext.sourcePaneState.contentType?.split(';')[0]
-    const showPrettyButton = !this._editingState && !!compactContentType && compactable[compactContentType]
-    const prettyButton = showPrettyButton
-      ? html`
-          <solid-ui-button class="sourcePanePrettyButton" variant="secondary" @click=${this.prettyHandler}>Prettify</solid-ui-button>
-        `
-      : nothing
 
     return html`
       <section class=${sectionClass}>
         <div class="sourcePaneEditor"></div>
-        <div class="sourcePaneEditorFooter">
-          ${this._editingState
-            ? html`
-                <solid-ui-button class="sourcePaneCancelButton" variant="secondary" @click=${this.cancelHandler}>Cancel</solid-ui-button>
-                <solid-ui-button class="sourcePaneSaveButton" variant="primary" @click=${this.saveBack}>Save Changes</solid-ui-button>
-              `
-            : prettyButton}
-        </div>
+        ${this.renderFooter()}
       </section>
     `
   }

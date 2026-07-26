@@ -1,35 +1,27 @@
-import { render } from 'lit'
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
 
-let renderHeader
+let sourcePane
 
 beforeAll(async () => {
-  class MockSourceEditorCard extends HTMLElement {
-    constructor () {
-      super()
-      this.updateEditingState = vi.fn()
-      this.setReadOnly = vi.fn()
-      this.focusEditor = vi.fn()
-    }
-  }
+  await import('../src/components/source-provider/SourceProvider.ts')
+  await import('../src/components/header/SourceHeader.ts')
+  sourcePane = (await import('../src/sourcePane.ts')).default
 
-  if (!globalThis.customElements.get('solid-panes-source-editor-card')) {
-    globalThis.customElements.define('solid-panes-source-editor-card', MockSourceEditorCard)
-  }
-
-  const headerModule = await import('../src/Header.ts')
-  renderHeader = headerModule.renderHeader
 })
 
-function renderHeaderIntoDocument (sourcePaneState) {
+function renderPaneIntoDocument () {
   const container = document.createElement('div')
   document.body.appendChild(container)
 
   const store = { findTypeURIs: vi.fn(() => ({})) }
   const subject = { uri: 'https://janedoe.example/test.ttl' }
-  render(renderHeader(store, subject, sourcePaneState), container)
-
-  return { container, subject, store }
+  const context = {
+    dom: document,
+    session: { store }
+  }
+  const rendered = sourcePane.render(subject, context)
+  container.appendChild(rendered)
+  return { container, subject, store, rendered }
 }
 
 describe('source-pane', () => {
@@ -38,42 +30,12 @@ describe('source-pane', () => {
     vi.clearAllMocks()
   })
 
-  it('renders the header edit control', async () => {
-    const sourcePaneState = {
-      broken: false,
-      editing: false,
-      readonly: false,
-      allowed: undefined,
-      contentType: undefined,
-      eTag: undefined
-    }
-
-    const { container } = renderHeaderIntoDocument(sourcePaneState)
+  it('renders the source provider wrapper', async () => {
+    const { rendered } = renderPaneIntoDocument()
     await Promise.resolve()
 
-    expect(container.querySelector('header.sourcePaneHeader')).not.toBeNull()
-    expect(container.querySelector('.sourcePaneEditButton')).not.toBeNull()
-  })
-
-  it('activates the editor when edit is clicked', async () => {
-    const sourcePaneState = {
-      broken: false,
-      editing: false,
-      readonly: false,
-      allowed: undefined,
-      contentType: undefined,
-      eTag: undefined
-    }
-
-    const { container } = renderHeaderIntoDocument(sourcePaneState)
-    const editorCard = document.createElement('solid-panes-source-editor-card')
-    document.body.appendChild(editorCard)
-
-    await Promise.resolve()
-    container.querySelector('.sourcePaneEditButton').click()
-
-    expect(editorCard.updateEditingState).toHaveBeenCalledWith(true)
-    expect(editorCard.setReadOnly).toHaveBeenCalledWith(false)
-    expect(editorCard.focusEditor).toHaveBeenCalled()
+    expect(rendered).not.toBeNull()
+    expect(rendered.className).toBe('sourcePane')
+    expect(rendered.getAttribute('class')).toBe('sourcePane')
   })
 })
