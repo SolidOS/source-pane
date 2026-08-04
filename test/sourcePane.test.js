@@ -4,7 +4,6 @@ let sourcePane
 
 beforeAll(async () => {
   await import('../src/components/source-provider/SourceProvider.ts')
-  await import('../src/components/header/SourceHeader.ts')
   sourcePane = (await import('../src/sourcePane.ts')).default
 
 })

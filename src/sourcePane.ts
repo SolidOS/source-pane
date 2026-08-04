@@ -11,6 +11,7 @@ import { html, render as litRender } from 'lit'
 import { log } from './debug'
 import { getStatusSection } from './StatusSection'
 import './sourcePane.css'
+import 'solid-ui/components/dialogs-root'
 import './components/source-provider/SourceProvider'
 
 const pane = {
@@ -87,6 +88,7 @@ const pane = {
     const { renderStatusSection } = getStatusSection()
     const sourcePane = context.dom.createElement('div')
     sourcePane.setAttribute('class', 'sourcePane')
+    const hasDialogsRoot = Boolean(context.dom.querySelector('solid-ui-dialogs-root'))
     litRender(html`
         <source-pane-source-provider
           .context=${context}
@@ -94,6 +96,7 @@ const pane = {
         >
         </source-pane-source-provider>
         ${renderStatusSection()}
+        ${hasDialogsRoot ? '' : html`<solid-ui-dialogs-root></solid-ui-dialogs-root>`}
     `, sourcePane)
 
     return sourcePane
