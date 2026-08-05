@@ -1,31 +1,22 @@
-import { html, type PropertyValues } from 'lit'
+import { html, nothing, type PropertyValues } from 'lit'
 import { provide } from '@lit/context'
 import { customElement, property, query, state } from 'lit/decorators.js'
+import { consume } from '@lit/context'
 import { NamedNode } from 'rdflib'
 import { DataBrowserContext } from 'pane-registry'
 import { getStatusSection } from '../../StatusSection'
 import { WebComponent } from 'solid-ui'
 import { sourceContext, SourceContext } from '../../primitives/context'
-import { SourcePaneState, HeaderMetadata, EditorMetadata, ResourceMetadata } from '../../types'
+import { SourcePaneState, EditorMetadata } from '../../types'
 import type SourceEditorCard from '../source-editor-card/SourceEditorCard'
-import '../header/SourceHeader'
 import { fetchContentAndMetadata } from '../../resourceLoader'
+import { fileExplorerContext, type FileExplorerContext } from 'solid-ui'
 import styles from './SourceProvider.styles.css'
 void import('../source-editor-card/SourceEditorCard').then(() => undefined)
 
 function createDefaultSourcePaneState(): SourcePaneState {
   return { 
-    broken: false,
-    dirty: false,
-    editing: false
-  }
-}
-
-function createDefaultHeaderMetadata(): HeaderMetadata {
-  return { 
-    canEdit: false,
-    isPublic: false,
-    modified: undefined
+    broken: false
   }
 }
 
@@ -37,26 +28,34 @@ function createDefaultEditorMetadata(): EditorMetadata {
 }
 
 function createSourceContextValue(input: {
-  context: DataBrowserContext | undefined
-  subject: NamedNode | undefined
   originalContent: string | undefined
   sourcePaneState: SourcePaneState
-  headerMetadata: HeaderMetadata
   editorMetadata: EditorMetadata
   updateSourcePaneState: SourceProvider['updateSourcePaneState']
   updateMetadata: SourceProvider['updateEditorMetadata']
-  setEditing: SourceProvider['setEditing']
 }): SourceContext {
   return {
-    context: input.context as DataBrowserContext,
-    subject: input.subject?.uri ?? '',
     originalContent: input.originalContent,
     sourcePaneState: input.sourcePaneState,
-    headerMetadata: input.headerMetadata,
     editorMetadata: input.editorMetadata,
     updateSourcePaneState: input.updateSourcePaneState,
     updateMetadata: input.updateMetadata,
-    setEditing: input.setEditing,
+  }
+}
+
+function createFileExplorerContextValue(input: {
+  parentContext?: FileExplorerContext
+  context: DataBrowserContext | undefined
+  subject: NamedNode | undefined
+}): FileExplorerContext {
+  const inherited: Partial<FileExplorerContext> = input.parentContext ?? {}
+
+  return {
+    ...inherited,
+    store: inherited.store ?? (input.context?.session.store as FileExplorerContext['store']),
+    subjectUri: input.subject?.uri ?? inherited.subjectUri,
+    paneSupportsEditing: inherited.paneSupportsEditing ?? true,
+    edit: inherited.edit
   }
 }
 @customElement('source-pane-source-provider')
@@ -69,6 +68,9 @@ export default class SourceProvider extends WebComponent {
   @property({ attribute: false })
   accessor subject: NamedNode | undefined = undefined
 
+  @consume({ context: fileExplorerContext, subscribe: true })
+  accessor parentFileExplorerContext: FileExplorerContext = undefined as unknown as FileExplorerContext
+
   @state()
   accessor originalContent: string | undefined = undefined
 
@@ -79,23 +81,22 @@ export default class SourceProvider extends WebComponent {
   accessor sourcePaneState: SourcePaneState = createDefaultSourcePaneState()
 
   @state()
-  accessor headerMetadata: HeaderMetadata = createDefaultHeaderMetadata()
-
-  @state()
   accessor editorMetadata: EditorMetadata = createDefaultEditorMetadata()
-
 
   @provide({ context: sourceContext })
   accessor sourceContextValue: SourceContext = createSourceContextValue({
-    context: undefined,
-    subject: undefined,
     originalContent: undefined,
     sourcePaneState: createDefaultSourcePaneState(),
-    headerMetadata: createDefaultHeaderMetadata(),
     editorMetadata: createDefaultEditorMetadata(),
     updateSourcePaneState: () => {},
     updateMetadata: () => {},
-    setEditing: () => {},
+  })
+
+  @provide({ context: fileExplorerContext })
+  accessor fileExplorerContextValue: FileExplorerContext = createFileExplorerContextValue({
+    parentContext: undefined,
+    context: undefined,
+    subject: undefined
   })
 
   @query('source-pane-source-editor-card')
@@ -122,15 +123,19 @@ export default class SourceProvider extends WebComponent {
 
   private refreshSourceContextValue() {
     this.sourceContextValue = createSourceContextValue({
-      context: this.context,
-      subject: this.subject,
       originalContent: this.originalContent,
       sourcePaneState: this.sourcePaneState,
-      headerMetadata: this.headerMetadata,
       editorMetadata: this.editorMetadata,
       updateSourcePaneState: this.updateSourcePaneState,
       updateMetadata: this.updateEditorMetadata,
-      setEditing: this.setEditing,
+    })
+  }
+
+  private refreshFileExplorerContextValue() {
+    this.fileExplorerContextValue = createFileExplorerContextValue({
+      parentContext: this.parentFileExplorerContext,
+      context: this.context,
+      subject: this.subject
     })
   }
 
@@ -141,23 +146,15 @@ export default class SourceProvider extends WebComponent {
     }
   }
 
-  updateEditorMetadata = (metadata: ResourceMetadata) => {
+  updateEditorMetadata = (metadata: EditorMetadata) => {
     this.editorMetadata = {
       contentType: metadata.contentType,
       eTag: metadata.eTag
     }
-    this.headerMetadata = {
-      canEdit: metadata.canEdit,
-      isPublic: metadata.isPublic,
-      modified: metadata.modified
-    }
   }
 
-  setEditing = () => {
-    this.updateSourcePaneState('editing', true)
-    this.editorCard?.updateEditingState(true)
-    this.editorCard?.setReadOnly(false)
-    this.editorCard?.focusEditor()
+  beginEditing = () => {
+    this.editorCard?.beginEditing()
   }
 
   protected async firstUpdated() {
@@ -170,17 +167,32 @@ export default class SourceProvider extends WebComponent {
       throw new Error('The element is missing the required `context` property.')
     }
 
-    this.refreshSourceContextValue()
+    if (
+      changedProperties.has('context') ||
+      changedProperties.has('subject') ||
+      changedProperties.has('originalContent') ||
+      changedProperties.has('sourcePaneState') ||
+      changedProperties.has('editorMetadata')
+    ) {
+      this.refreshSourceContextValue()
+    }
+
+    if (
+      changedProperties.has('context') ||
+      changedProperties.has('subject') ||
+      changedProperties.has('parentFileExplorerContext')
+    ) {
+      this.refreshFileExplorerContextValue()
+    }
   }
 
   render() {
     return html`
       ${this.dataLoaded
         ? html`
-            <source-pane-source-header></source-pane-source-header>
             <source-pane-source-editor-card></source-pane-source-editor-card>
           `
-        : html``}
+        : nothing }
     `
   }
 }

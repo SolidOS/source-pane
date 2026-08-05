@@ -1,129 +1,93 @@
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
 
-const fetchContentAndMetadata = vi.fn()
-
-vi.mock('../src/resourceMetadata.ts', () => ({
-  fetchContentAndMetadata,
-}))
-
 beforeAll(async () => {
-  await import('../src/sourcePane.ts')
+  await import('../src/components/source-editor-card/SourceEditorCard.ts')
 })
 
-describe.skip('source-pane-source-editor-card', () => {
+describe('source-pane-source-editor-card', () => {
   beforeEach(() => {
     document.body.innerHTML = ''
     vi.clearAllMocks()
   })
 
-  it('renders the editor controls and initializes the editor with fetched content', async () => {
-    fetchContentAndMetadata.mockResolvedValue({
-      content: 'hello world',
-      metadata: {
-        contentType: 'text/turtle',
-        allowed: 'GET',
-        eTag: '"123"'
-      }
-    })
-
+  function createCard ({ contentType = 'text/turtle' } = {}) {
     const card = document.createElement('source-pane-source-editor-card')
-    card.subject = {
-      uri: 'https://testingsolidos.solidcommunity.net/profile/card',
-      value: 'https://testingsolidos.solidcommunity.net/profile/card'
-    }
-    card.sourcePaneState = {
-      broken: false,
-      contentType: 'text/turtle',
-      allowed: undefined,
-      eTag: undefined
-    }
+
     Object.defineProperty(card, 'sourceContext', {
       value: {
-        context: {
-          session: {
-            store: { fetcher: {} }
-          }
+        originalContent: 'hello world',
+        sourcePaneState: { broken: false },
+        editorMetadata: {
+          contentType,
+          eTag: '"123"'
         },
-        subject: card.subject.uri,
-        sourcePaneState: card.sourcePaneState
+        updateSourcePaneState: vi.fn(),
+        updateMetadata: vi.fn()
       },
       writable: true
     })
 
-    document.body.appendChild(card)
-    await card.updateComplete
-    await new Promise((resolve) => setTimeout(resolve, 0))
-    await card.updateComplete
+    Object.defineProperty(card, 'fileExplorerContext', {
+      value: {
+        store: { fetcher: {} },
+        subjectUri: 'https://testingsolidos.solidcommunity.net/profile/card',
+        paneSupportsEditing: true,
+        edit: {
+          updateDirtyState: vi.fn()
+        }
+      },
+      writable: true
+    })
 
-    expect(fetchContentAndMetadata).toHaveBeenCalledWith(
-      card.sourceContext.context.session.store,
-      expect.objectContaining({ value: card.subject.uri }),
-      card.sourcePaneState
-    )
-    expect(card.getEditor()).not.toBeNull()
-    expect(card.getEditor()?.getValue()).toBe('editor value')
+    return card
+  }
+
+  it('shows prettify when not editing and content is compactable', async () => {
+    const card = createCard({ contentType: 'text/turtle' })
+    document.body.appendChild(card)
+
+    await card.updateComplete
     expect(card.shadowRoot.querySelector('.sourcePanePrettyButton')).not.toBeNull()
   })
 
   it('hides prettify for non-compactable content', async () => {
-    fetchContentAndMetadata.mockResolvedValue({
-      content: 'hello world',
-      metadata: {
-        contentType: 'text/plain',
-        allowed: 'GET',
-        eTag: '"123"'
-      }
-    })
-
-    const card = document.createElement('source-pane-source-editor-card')
-    card.subject = {
-      uri: 'https://testingsolidos.solidcommunity.net/profile/card.txt',
-      value: 'https://testingsolidos.solidcommunity.net/profile/card.txt'
-    }
-    card.sourcePaneState = {
-      broken: false,
-      contentType: 'text/plain',
-      allowed: undefined,
-      eTag: undefined
-    }
-    Object.defineProperty(card, 'sourceContext', {
-      value: {
-        context: {
-          session: {
-            store: { fetcher: {} }
-          }
-        },
-        subject: card.subject.uri,
-        sourcePaneState: card.sourcePaneState
-      },
-      writable: true
-    })
-
+    const card = createCard({ contentType: 'text/plain' })
     document.body.appendChild(card)
-    await card.updateComplete
-    await new Promise((resolve) => setTimeout(resolve, 0))
-    await card.updateComplete
 
+    await card.updateComplete
     expect(card.shadowRoot.querySelector('.sourcePanePrettyButton')).toBeNull()
   })
 
-  it('delegates editor API methods', () => {
-    const card = document.createElement('source-pane-source-editor-card')
-    const editorInstance = {
-      getValue: vi.fn(() => 'editor value'),
+  it('delegates editor API methods and toggles editing controls', async () => {
+    const card = createCard({ contentType: 'text/turtle' })
+    const editor = {
       focusEditor: vi.fn(),
       setReadOnly: vi.fn(),
-      replaceContent: vi.fn()
+      replaceContent: vi.fn(),
+      resetDirtyState: vi.fn(),
+      setLanguage: vi.fn(async () => {}),
+      getValue: vi.fn(() => 'updated'),
+      destroy: vi.fn()
     }
-    card._editor = editorInstance
+
+    card._editor = editor
+    card._editorReady = true
+    document.body.appendChild(card)
+
+    await card.updateComplete
 
     card.focusEditor()
-    expect(editorInstance.focusEditor).toHaveBeenCalled()
+    expect(editor.focusEditor).toHaveBeenCalled()
 
     card.setReadOnly(true)
-    expect(editorInstance.setReadOnly).toHaveBeenCalledWith(true)
+    expect(editor.setReadOnly).toHaveBeenCalledWith(true)
 
     card.setValue('updated')
-    expect(editorInstance.replaceContent).toHaveBeenCalledWith('updated')
+    expect(editor.replaceContent).toHaveBeenCalledWith('updated')
+
+    card.beginEditing()
+    await card.updateComplete
+    expect(card.shadowRoot.querySelector('.sourcePaneSaveButton')).not.toBeNull()
+    expect(card.shadowRoot.querySelector('.sourcePaneCancelButton')).not.toBeNull()
   })
 })

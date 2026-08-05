@@ -3,6 +3,7 @@ import { consume } from '@lit/context'
 import { customElement, query, state } from 'lit/decorators.js'
 import { NamedNode, parse, serialize } from 'rdflib'
 import { WebComponent } from 'solid-ui'
+import { fileExplorerContext, type FileExplorerContext } from 'solid-ui'
 import 'solid-ui/components/button'
 import type { SourceEditor } from './SourceEditor'
 import { checkSyntax, happy } from '../../helpers'
@@ -18,17 +19,23 @@ export default class SourceEditorCard extends WebComponent {
 
   private _editor?: SourceEditor
   private _originalContent?: string
+  private _originalContentType?: string
   private _dirtyState = false
   private _initializing = false
 
   @state()
   accessor _editorReady = false
+
+  private _isEditing = false
   
   @query('.sourcePaneEditor')
   accessor _editorMount: HTMLDivElement | null = null
 
   @consume({ context: sourceContext, subscribe: true })
   accessor sourceContext: SourceContext = undefined as unknown as SourceContext
+
+  @consume({ context: fileExplorerContext, subscribe: true })
+  accessor fileExplorerContext: FileExplorerContext = undefined as unknown as FileExplorerContext
 
   private _requireSourceContext () {
     if (!this.sourceContext) {
@@ -58,15 +65,43 @@ export default class SourceEditorCard extends WebComponent {
     this._editor?.replaceContent(text)
   }
 
+  beginEditing() {
+    this._isEditing = true
+    this.updateEditingState(true)
+    this.setReadOnly(false)
+    this.focusEditor()
+    this.requestUpdate()
+  }
+
+  private async _getViewContent() {
+    const sourceContext = this._requireSourceContext()
+    return {
+      content: sourceContext.originalContent ?? '',
+      contentType: this._originalContentType ?? sourceContext.editorMetadata.contentType ?? 'text/turtle'
+    }
+  }
+
+  private async _syncEditorToCurrentView() {
+    if (!this._editor) return
+
+    const { content, contentType } = await this._getViewContent()
+    await this._editor.setLanguage(contentType)
+    this._editor.setReadOnly(true)
+    this._editor.replaceContent(content)
+    this._editor.resetDirtyState()
+    this.updateDirtyState(false)
+  }
+
   updateDirtyState(dirty: boolean) {
     if (this._dirtyState === dirty) return
     this._dirtyState = dirty
-    this.sourceContext?.updateSourcePaneState('dirty', dirty)
+    this.fileExplorerContext?.edit?.updateDirtyState?.(dirty)
   }
 
   updateEditingState(editing: boolean) {
-    if (this.sourceContext?.sourcePaneState.editing === editing) return
-    this.sourceContext?.updateSourcePaneState('editing', editing)
+    if (this._isEditing === editing) return
+    this._isEditing = editing
+    this.requestUpdate()
   }
 
   private _resetEditorState() {
@@ -81,15 +116,17 @@ export default class SourceEditorCard extends WebComponent {
     this._initializing = true
     const sourcePaneEditor = this._editorMount
     const sourceContext = this.sourceContext
-    if (!sourcePaneEditor || !sourceContext) {
+    if (!sourcePaneEditor || !sourceContext || !this.fileExplorerContext?.store || !this.fileExplorerContext.subjectUri) {
       this._initializing = false
       return
     }
     try {
       const { SourceEditor } = await import('./SourceEditor')
       this._originalContent = sourceContext.originalContent
+      this._originalContentType = sourceContext.editorMetadata.contentType
       this._editor = new SourceEditor()
-      await this._editor.initialize(sourcePaneEditor, sourceContext.originalContent ?? '', sourceContext.editorMetadata.contentType, 'dark', dirty => {
+      const { content, contentType } = await this._getViewContent()
+      await this._editor.initialize(sourcePaneEditor, content, contentType, 'dark', dirty => {
         this.updateDirtyState(dirty)
       })
       this._editorReady = true
@@ -117,25 +154,28 @@ export default class SourceEditorCard extends WebComponent {
     this._initializing = false
   }
 
-  private cancelHandler () {
+  private async cancelHandler () {
     const sourceContext = this.sourceContext
     if (!sourceContext) return
-    const currentContent = this.getEditor()?.getValue()
-    if (this._originalContent !== undefined && currentContent !== this._originalContent) {
-      this.setValue(this._originalContent)
-    }
+    await this._syncEditorToCurrentView()
     this._resetEditorState()
   }
 
   private async saveBack () {
     const sourceContext = this._requireSourceContext()
 
-    const store = sourceContext.context.session.store as any
-    const subject = new NamedNode(sourceContext.subject)
+    const store = this.fileExplorerContext?.store as any
+    const subjectUri = this.fileExplorerContext?.subjectUri
+    if (!store || !subjectUri) {
+      throw new Error('The element is missing the required `fileExplorerContext.store` or `fileExplorerContext.subjectUri` property.')
+    }
+    const subject = new NamedNode(subjectUri)
     const fetcher = store.fetcher
     const data = this.getEditor()?.getValue() ?? ''
-    const { contentType, eTag } = sourceContext.editorMetadata
-    if (!checkSyntax(store, subject as any, data, contentType, subject as any)) {
+    const contentType = this._originalContentType ?? sourceContext.editorMetadata.contentType ?? 'text/turtle'
+    const eTag = sourceContext.editorMetadata.eTag
+    const saveSubject = subject
+    if (!checkSyntax(store, saveSubject as any, data, contentType, saveSubject as any)) {
       const { showError } = getStatusSection()
       showError('Syntax error: fix the document before saving.')
       return
@@ -143,14 +183,14 @@ export default class SourceEditorCard extends WebComponent {
     const options: { data: string; contentType: string | undefined; headers?: { 'if-match': string } } = { data, contentType }
     if (eTag) options.headers = { 'if-match': eTag } // avoid overwriting changed files -> status 412
     try {
-      const response = await fetcher.webOperation('PUT', subject.uri, options)
+      const response = await fetcher.webOperation('PUT', saveSubject.uri, options)
       if (!happy(response, 'PUT')) return
       this._originalContent = data
       /// @@ show edited: make save button disabled until edited again.
       try {
-        const response = await fetcher.webOperation('HEAD', subject.uri) // , defaultFetchHeaders())
+        const response = await fetcher.webOperation('HEAD', saveSubject.uri) // , defaultFetchHeaders())
         if (!happy(response, 'HEAD')) return
-        const metadata = getResponseMetadata(store, subject as any, response)
+        const metadata = getResponseMetadata(store, saveSubject as any, response)
         sourceContext.updateMetadata(metadata)
         this._resetEditorState()
       } catch (err) {
@@ -168,8 +208,12 @@ export default class SourceEditorCard extends WebComponent {
     const { contentType } = sourceContext.editorMetadata
     const compactContentType = contentType?.split(';')[0]
     const { showError } = getStatusSection()
-    const store = sourceContext.context.session.store as any
-    const subjectNode = new NamedNode(sourceContext.subject)
+    const store = this.fileExplorerContext?.store as any
+    const subjectUri = this.fileExplorerContext?.subjectUri
+    if (!store || !subjectUri) {
+      throw new Error('The element is missing the required `fileExplorerContext.store` or `fileExplorerContext.subjectUri` property.')
+    }
+    const subjectNode = new NamedNode(subjectUri)
 
     if (compactContentType && compactable[compactContentType]) {
       try {
@@ -189,9 +233,9 @@ export default class SourceEditorCard extends WebComponent {
   private renderFooter() {
     const sourceContext = this._requireSourceContext()
     const compactContentType = sourceContext.editorMetadata.contentType?.split(';')[0]
-    const showPrettyButton = !sourceContext.sourcePaneState.editing && !!compactContentType && compactable[compactContentType]
+    const showPrettyButton = !this._isEditing && !!compactContentType && compactable[compactContentType]
 
-    if (sourceContext.sourcePaneState.editing) {
+    if (this._isEditing) {
       return html`
         <div class="sourcePaneEditorFooter">
           <solid-ui-button class="sourcePaneCancelButton" variant="secondary" @click=${this.cancelHandler}>Cancel</solid-ui-button>

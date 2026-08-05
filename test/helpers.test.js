@@ -28,11 +28,7 @@ describe('resourceLoader', () => {
 
     expect(getResponseMetadata(store, subject, response)).toEqual({
       contentType: 'text/turtle',
-      canEdit: true,
-      isPublic: true,
       eTag: '"abc"'
-      ,
-      modified: undefined
     })
   })
 
@@ -66,10 +62,7 @@ describe('resourceLoader', () => {
       content: '<> a <#Thing>.',
       metadata: {
         contentType: 'text/turtle',
-        canEdit: true,
-        isPublic: true,
-        eTag: '"abc"',
-        modified: undefined
+        eTag: '"abc"'
       }
     })
   })
