@@ -2,10 +2,9 @@ import { html, nothing } from 'lit'
 import { consume } from '@lit/context'
 import { customElement, query, state } from 'lit/decorators.js'
 import { NamedNode, parse, serialize } from 'rdflib'
-import { WebComponent } from 'solid-ui'
+import { WebComponent, type CodeEditor } from 'solid-ui'
 import { fileExplorerContext, type FileExplorerContext } from 'solid-ui'
 import 'solid-ui/components/button'
-import type { SourceEditor } from './SourceEditor'
 import { checkSyntax, happy } from '../../helpers'
 import styles from './SourceEditorCard.styles.css'
 import { getStatusSection } from '../../StatusSection'
@@ -17,7 +16,7 @@ import { getResponseMetadata } from '../../resourceLoader'
 export default class SourceEditorCard extends WebComponent {
   static styles = styles
 
-  private _editor?: SourceEditor
+  private _editor?: CodeEditor
   private _originalContent?: string
   private _originalContentType?: string
   private _dirtyState = false
@@ -121,19 +120,23 @@ export default class SourceEditorCard extends WebComponent {
       return
     }
     try {
-      const { SourceEditor } = await import('./SourceEditor')
+      const { CodeEditor } = await import('solid-ui')
       this._originalContent = sourceContext.originalContent
       this._originalContentType = sourceContext.editorMetadata.contentType
-      this._editor = new SourceEditor()
+      this._editor = new CodeEditor()
       const { content, contentType } = await this._getViewContent()
-      await this._editor.initialize(sourcePaneEditor, content, contentType, 'dark', dirty => {
-        this.updateDirtyState(dirty)
-      })
+      try {
+        await this._editor.initialize(sourcePaneEditor, content, contentType, 'dark', dirty => {
+          this.updateDirtyState(dirty)
+        })
+      } catch (err) {
+        throw new Error(`Error initializing code editor: ${err instanceof Error ? err.message : String(err)}`)
+      }
       this._editorReady = true
       this._editor?.setReadOnly(true)
     } catch (err) {
       const { showError } = getStatusSection()
-      showError('Error fetching content: ' + err)
+      showError(`Error loading code editor: ${err instanceof Error ? err.message : String(err)}`)
     } finally {
       this._initializing = false
     }
