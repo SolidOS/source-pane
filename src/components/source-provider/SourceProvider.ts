@@ -9,9 +9,9 @@ import { WebComponent } from 'solid-ui'
 import { sourceContext, SourceContext } from '../../primitives/context'
 import { SourcePaneState, EditorMetadata } from '../../types'
 import type SourceEditorCard from '../source-editor-card/SourceEditorCard'
-import { fetchContentAndMetadata } from '../../resourceLoader'
 import { fileExplorerContext, type FileExplorerContext } from 'solid-ui'
 import styles from './SourceProvider.styles.css'
+import { fetchContentAndMetadata } from './resourceLoading'
 void import('../source-editor-card/SourceEditorCard').then(() => undefined)
 
 function createDefaultSourcePaneState(): SourcePaneState {
@@ -111,9 +111,16 @@ export default class SourceProvider extends WebComponent {
         throw new Error('The element is missing the required `subject` property.')
       }
 
-      const { content, metadata } = await fetchContentAndMetadata(this.context.session.store as any, this.subject)
+      const store = (this.fileExplorerContextValue.store ?? this.context?.session.store) as DataBrowserContext['session']['store']
+      const { content, metadata } = await fetchContentAndMetadata(store, this.subject)
+      if (!metadata.contentType) {
+        throw new Error('Error: No content-type available!')
+      }
       this.originalContent = content
-      this.updateEditorMetadata(metadata)
+      this.updateEditorMetadata({
+        contentType: metadata.contentType,
+        eTag: metadata.eTag
+      })
       this.dataLoaded = true
     } catch (error: any) {
       const { showError } = getStatusSection()

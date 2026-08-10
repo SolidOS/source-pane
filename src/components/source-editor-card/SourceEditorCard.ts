@@ -10,7 +10,7 @@ import styles from './SourceEditorCard.styles.css'
 import { getStatusSection } from '../../StatusSection'
 import { compactable } from '../../compactableFormats'
 import { sourceContext, SourceContext } from '../../primitives/context'
-import { getResponseMetadata } from '../../resourceLoader'
+import { fetchMetadata } from '../source-provider/resourceLoading'
 
 @customElement('source-pane-source-editor-card')
 export default class SourceEditorCard extends WebComponent {
@@ -191,10 +191,11 @@ export default class SourceEditorCard extends WebComponent {
       this._originalContent = data
       /// @@ show edited: make save button disabled until edited again.
       try {
-        const response = await fetcher.webOperation('HEAD', saveSubject.uri) // , defaultFetchHeaders())
-        if (!happy(response, 'HEAD')) return
-        const metadata = getResponseMetadata(store, saveSubject as any, response)
-        sourceContext.updateMetadata(metadata)
+        const metadata = await fetchMetadata(store, saveSubject)
+        sourceContext.updateMetadata({
+          contentType: metadata.contentType,
+          eTag: metadata.eTag
+        })
         this._resetEditorState()
       } catch (err) {
         throw err
