@@ -7,6 +7,12 @@
   padding-bottom: 39px;
 }
 
+@media (max-width: 600px) {
+  :host {
+    padding-bottom: 0;
+  }
+}
+
 source-pane-source-header {
   margin-bottom: 23px;
 }
