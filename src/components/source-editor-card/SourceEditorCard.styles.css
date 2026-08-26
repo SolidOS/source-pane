@@ -32,4 +32,10 @@
     border-top: 1px solid var(--solid-ui-color-slate-200, #E2E8F0);
     padding: 20px 5px 15px;
   }
+
+  @media (max-width: 600px) {
+    section {
+      padding: 0;
+    }
+  }
 }

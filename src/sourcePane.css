@@ -3,7 +3,6 @@
   width: 100%;
   box-sizing: border-box;
   border-radius: 5px; 
-  border: 1px solid var(--color-border, var(--gray-200, #E5E7EB));
 }
 
 .sourcePaneCard,
