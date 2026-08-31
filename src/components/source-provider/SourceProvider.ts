@@ -10,7 +10,8 @@ import { sourceContext, SourceContext } from '../../primitives/context'
 import { SourcePaneState, EditorMetadata } from '../../types'
 import type SourceEditorCard from '../source-editor-card/SourceEditorCard'
 import { fetchContentAndMetadata } from '../../resourceLoader'
-import { fileExplorerContext, type FileExplorerContext } from 'solid-ui'
+import { fileExplorerContext, type FileExplorerContext, storeContext, DEFAULT_STORE } from 'solid-ui'
+import type { LiveStore } from 'rdflib'
 import styles from './SourceProvider.styles.css'
 void import('../source-editor-card/SourceEditorCard').then(() => undefined)
 
@@ -45,14 +46,12 @@ function createSourceContextValue(input: {
 
 function createFileExplorerContextValue(input: {
   parentContext?: FileExplorerContext
-  context: DataBrowserContext | undefined
   subject: NamedNode | undefined
 }): FileExplorerContext {
   const inherited: Partial<FileExplorerContext> = input.parentContext ?? {}
 
   return {
     ...inherited,
-    store: inherited.store ?? (input.context?.session.store as FileExplorerContext['store']),
     subjectUri: input.subject?.uri ?? inherited.subjectUri,
     paneSupportsEditing: inherited.paneSupportsEditing ?? true,
     edit: inherited.edit
@@ -70,6 +69,9 @@ export default class SourceProvider extends WebComponent {
 
   @consume({ context: fileExplorerContext, subscribe: true })
   accessor parentFileExplorerContext: FileExplorerContext = undefined as unknown as FileExplorerContext
+
+  @consume({ context: storeContext, subscribe: true })
+  accessor store: LiveStore = DEFAULT_STORE
 
   @state()
   accessor originalContent: string | undefined = undefined
@@ -95,7 +97,6 @@ export default class SourceProvider extends WebComponent {
   @provide({ context: fileExplorerContext })
   accessor fileExplorerContextValue: FileExplorerContext = createFileExplorerContextValue({
     parentContext: undefined,
-    context: undefined,
     subject: undefined
   })
 
@@ -111,7 +112,7 @@ export default class SourceProvider extends WebComponent {
         throw new Error('The element is missing the required `subject` property.')
       }
 
-      const { content, metadata } = await fetchContentAndMetadata(this.context.session.store as any, this.subject)
+      const { content, metadata } = await fetchContentAndMetadata(this.store as any, this.subject)
       this.originalContent = content
       this.updateEditorMetadata(metadata)
       this.dataLoaded = true
@@ -134,7 +135,6 @@ export default class SourceProvider extends WebComponent {
   private refreshFileExplorerContextValue() {
     this.fileExplorerContextValue = createFileExplorerContextValue({
       parentContext: this.parentFileExplorerContext,
-      context: this.context,
       subject: this.subject
     })
   }

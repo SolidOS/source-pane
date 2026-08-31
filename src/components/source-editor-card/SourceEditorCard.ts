@@ -3,7 +3,7 @@ import { consume } from '@lit/context'
 import { customElement, query, state } from 'lit/decorators.js'
 import { NamedNode, parse, serialize } from 'rdflib'
 import { WebComponent, type CodeEditor } from 'solid-ui'
-import { fileExplorerContext, type FileExplorerContext } from 'solid-ui'
+import { fileExplorerContext, type FileExplorerContext, storeContext, DEFAULT_STORE } from 'solid-ui'
 import 'solid-ui/components/button'
 import { checkSyntax, happy } from '../../helpers'
 import styles from './SourceEditorCard.styles.css'
@@ -11,6 +11,7 @@ import { getStatusSection } from '../../StatusSection'
 import { compactable } from '../../compactableFormats'
 import { sourceContext, SourceContext } from '../../primitives/context'
 import { getResponseMetadata } from '../../resourceLoader'
+import type { LiveStore } from 'rdflib'
 
 @customElement('source-pane-source-editor-card')
 export default class SourceEditorCard extends WebComponent {
@@ -35,6 +36,9 @@ export default class SourceEditorCard extends WebComponent {
 
   @consume({ context: fileExplorerContext, subscribe: true })
   accessor fileExplorerContext: FileExplorerContext = undefined as unknown as FileExplorerContext
+
+  @consume({ context: storeContext, subscribe: true })
+  accessor store: LiveStore = DEFAULT_STORE
 
   private _requireSourceContext () {
     if (!this.sourceContext) {
@@ -115,7 +119,7 @@ export default class SourceEditorCard extends WebComponent {
     this._initializing = true
     const sourcePaneEditor = this._editorMount
     const sourceContext = this.sourceContext
-    if (!sourcePaneEditor || !sourceContext || !this.fileExplorerContext?.store || !this.fileExplorerContext.subjectUri) {
+    if (!sourcePaneEditor || !sourceContext || !this.store || !this.fileExplorerContext.subjectUri) {
       this._initializing = false
       return
     }
@@ -167,10 +171,10 @@ export default class SourceEditorCard extends WebComponent {
   private async saveBack () {
     const sourceContext = this._requireSourceContext()
 
-    const store = this.fileExplorerContext?.store as any
+    const store = this.store as any
     const subjectUri = this.fileExplorerContext?.subjectUri
     if (!store || !subjectUri) {
-      throw new Error('The element is missing the required `fileExplorerContext.store` or `fileExplorerContext.subjectUri` property.')
+      throw new Error('The element is missing the required `storeContext.store` or `fileExplorerContext.subjectUri` property.')
     }
     const subject = new NamedNode(subjectUri)
     const fetcher = store.fetcher
@@ -211,10 +215,10 @@ export default class SourceEditorCard extends WebComponent {
     const { contentType } = sourceContext.editorMetadata
     const compactContentType = contentType?.split(';')[0]
     const { showError } = getStatusSection()
-    const store = this.fileExplorerContext?.store as any
+    const store = this.store as any
     const subjectUri = this.fileExplorerContext?.subjectUri
     if (!store || !subjectUri) {
-      throw new Error('The element is missing the required `fileExplorerContext.store` or `fileExplorerContext.subjectUri` property.')
+      throw new Error('The element is missing the required `storeContext.store` or `fileExplorerContext.subjectUri` property.')
     }
     const subjectNode = new NamedNode(subjectUri)
 
