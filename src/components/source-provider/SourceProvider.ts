@@ -5,6 +5,7 @@ import { consume } from '@lit/context'
 import { NamedNode } from 'rdflib'
 import { DataBrowserContext } from 'pane-registry'
 import { getStatusSection } from '../../StatusSection'
+import { warn } from '../../debug'
 import { WebComponent } from 'solid-ui'
 import { sourceContext, SourceContext } from '../../primitives/context'
 import { SourcePaneState, EditorMetadata } from '../../types'
@@ -103,19 +104,19 @@ export default class SourceProvider extends WebComponent {
   private accessor editorCard: SourceEditorCard | null = null
 
   private loadContentAndMetadata = async () => {
-    try {
-      if (!this.context) {
-        throw new Error('The element is missing the required `context` property.')
-      }
-      if (!this.subject) {
-        throw new Error('The element is missing the required `subject` property.')
-      }
+    const subject = this.subject
+    const subjectUri = subject?.uri
+    if (!subjectUri) return
 
-      const { content, metadata } = await fetchContentAndMetadata(this.context.session.store as any, this.subject)
+    try {
+      const { content, metadata } = await fetchContentAndMetadata(this.context!.session.store as any, subject)
+      if (this.subject?.uri !== subjectUri) return
+
       this.originalContent = content
       this.updateEditorMetadata(metadata)
       this.dataLoaded = true
     } catch (error: any) {
+      warn('Failed to load source content', error)
       const { showError } = getStatusSection()
       showError(error.message)
     }
@@ -157,14 +158,14 @@ export default class SourceProvider extends WebComponent {
     this.editorCard?.beginEditing()
   }
 
-  protected async firstUpdated() {
-    await this.loadContentAndMetadata()
-  }
-
   protected willUpdate (changedProperties: PropertyValues<this>) {
     super.willUpdate(changedProperties)
     if (!this.context) {
       throw new Error('The element is missing the required `context` property.')
+    }
+
+    if (changedProperties.has('context') || changedProperties.has('subject')) {
+      this.dataLoaded = false
     }
 
     if (
@@ -183,6 +184,14 @@ export default class SourceProvider extends WebComponent {
       changedProperties.has('parentFileExplorerContext')
     ) {
       this.refreshFileExplorerContextValue()
+    }
+  }
+
+  protected updated (changedProperties: PropertyValues<this>) {
+    super.updated(changedProperties)
+
+    if (changedProperties.has('context') || changedProperties.has('subject')) {
+      void this.loadContentAndMetadata()
     }
   }
 
