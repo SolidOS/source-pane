@@ -104,12 +104,12 @@ export default class SourceProvider extends WebComponent {
   private accessor editorCard: SourceEditorCard | null = null
 
   private loadContentAndMetadata = async () => {
-    const subject = this.subject
-    const subjectUri = subject?.uri
-    if (!subjectUri) return
+    if (!this.context || !this.subject) return
+
+    const subjectUri = this.subject.uri
 
     try {
-      const { content, metadata } = await fetchContentAndMetadata(this.context!.session.store as any, subject)
+      const { content, metadata } = await fetchContentAndMetadata(this.context.session.store as any, this.subject)
       if (this.subject?.uri !== subjectUri) return
 
       this.originalContent = content
