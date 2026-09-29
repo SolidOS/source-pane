@@ -1,6 +1,6 @@
 {
   "name": "source-pane",
-  "version": "4.0.0-0",
+  "version": "4.0.0",
   "description": "Solid-compatible Panes: Source editor",
   "main": "dist/index.cjs.js",
   "exports": {
