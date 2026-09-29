@@ -1,0 +1,41 @@
+:host {
+  display: block;
+  width: 100%;
+
+  section {
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    align-items: stretch;
+    padding: 0 40px;
+  }
+
+  .sourcePaneEditor {
+    box-sizing: border-box;
+    align-self: stretch;
+    min-width: 0;
+    width: 100%;
+  }
+
+  .sourcePaneCardLoading {
+    visibility: hidden;
+  }
+
+  .sourcePaneEditorFooter {
+    box-sizing: border-box;
+    display: flex;
+    justify-content: flex-end;
+    align-self: stretch;
+    width: 100%;
+    gap: 10px;
+    border-top: 1px solid var(--solid-ui-color-slate-200, #E2E8F0);
+    padding: 20px 5px 15px;
+  }
+
+  @media (max-width: 600px) {
+    section {
+      padding: 0;
+    }
+  }
+}

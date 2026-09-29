@@ -14,6 +14,37 @@ Once selected this pane as a view of a file, then the pen icon allows to switch 
 
 Editing can be aborted by the cancel(X) button.
 
+## Contribute
+
+### Tech stack
+
+- JavaScript
+- Vite
+- Eslint
+- SolidOS
+
+### Tests
+
+To run all tests:
+```shell script
+npm test
+```
+### Dev Server
+
+Start a dev server:
+
+```shell script
+npm start
+```
+
+Visit `http://localhost:5173/` to render the pane in a local sandbox. Adjust the settings in `vite.config.mts` to provide different defaults.
+
+### Build
+
+```
+npm run build
+```
+
 ### Generative AI usage
 The SolidOS team is using GitHub Copilot integrated in Visual Studio Code. 
 We have added comments in the code to make it explicit which parts are 100% written by AI.

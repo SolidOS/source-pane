@@ -1,0 +1,39 @@
+.sourcePane {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  border-radius: 5px; 
+}
+
+.sourcePaneCard,
+.sourcePaneStatus {
+  width: 100%;
+}
+
+.sourcePaneCompactButton {
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 96px;
+  padding: 9px 14px;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+@media (max-width: 900px) {
+  .sourcePaneTextArea {
+    margin: 12px 2px;
+    padding: 12px;
+  }
+}
+
+@media (max-width: 600px) {
+  .sourcePaneCompactButton {
+    min-width: 0;
+  }
+}
+
+.sourcePaneTextAreaError {
+  color: var(--solid-ui-color-error, #b00020);
+}

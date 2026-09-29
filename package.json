@@ -1,28 +1,36 @@
 {
   "name": "source-pane",
-  "version": "3.2.0",
+  "version": "4.0.0",
   "description": "Solid-compatible Panes: Source editor",
-  "main": "lib/source-pane.js",
+  "main": "dist/index.cjs.js",
+  "exports": {
+    ".": {
+      "import": "./dist/index.esm.js",
+      "require": "./dist/index.cjs.js"
+    }
+  },
   "files": [
-    "/lib",
+    "/dist",
     "README.md",
     "LICENSE"
   ],
   "sideEffects": [
-    "**/*.css"
+    "**/*.css",
+    "src/components/**/*.ts"
   ],
   "scripts": {
-    "clean": "rm -rf lib",
-    "build": "npm run clean && npm run build-dist",
-    "build-dist": "webpack --progress",
+    "clean": "rm -rf dist",
+    "build": "npm run typecheck && npm run clean && vite build",
+    "typecheck": "tsc --noEmit",
+    "watch": "vite build --watch",
     "lint": "eslint",
     "lint-fix": "eslint --fix",
-    "test": "jest --no-coverage",
-    "test-coverage": "jest --coverage --collectCoverageFrom=src/**/*.[jt]s",
+    "test": "npm run typecheck-test && vitest run",
+    "test-coverage": "vitest run --coverage",
+    "typecheck-test": "tsc --noEmit -p tsconfig.test.json",
     "prepublishOnly": "npm run test && npm run build",
     "preversion": "npm run lint && npm test",
-    "postpublish": "git push origin main --follow-tags",
-    "start": "webpack serve --config webpack.dev.config.mjs --open"
+    "start": "vite"
   },
   "repository": {
     "type": "git",
@@ -46,32 +54,37 @@
     "url": "https://github.com/SolidOS/source-pane/issues"
   },
   "homepage": "https://github.com/SolidOS/source-pane",
-  "peerDependencies": {
-    "rdflib": "^2.3.6",
-    "solid-logic": "^5.0.0",
-    "solid-ui": "^4.0.0"
-  },
   "devDependencies": {
-    "@babel/eslint-parser": "^7.28.6",
-    "@babel/preset-env": "^7.28.6",
-    "@testing-library/dom": "^10.4.1",
-    "babel-loader": "^10.0.0",
-    "babel-plugin-inline-import": "^3.0.0",
-    "copy-webpack-plugin": "^14.0.0",
-    "css-loader": "^7.1.2",
+    "@iconify-json/lucide": "^1.2.116",
+    "@types/mime-types": "^3.0.1",
+    "@types/node": "^22.20.0",
+    "@vitest/coverage-v8": "^4.0.18",
     "eslint": "^9.39.2",
-    "html-webpack-plugin": "^5.6.6",
-    "jest": "^30.2.0",
-    "jest-environment-jsdom": "^30.2.0",
-    "jest-fetch-mock": "^3.0.3",
-    "node-polyfill-webpack-plugin": "^4.1.0",
-    "rdflib": "^2.4.0",
-    "solid-logic": "^5.0.0",
-    "solid-ui": "^4.0.0",
-    "style-loader": "^4.0.0",
-    "terser-webpack-plugin": "^5.4.0",
-    "webpack": "^5.97.1",
-    "webpack-cli": "^7.0.2",
-    "webpack-dev-server": "^5.2.3"
+    "eslint-plugin-import": "^2.32.0",
+    "jsdom": "^28.1.0",
+    "mime-types": "^3.0.2",
+    "solidos-toolkit": "dev",
+    "typescript": "^5.9.3"
+  },
+  "dependencies": {
+    "@lit/context": "^1.1.6",
+    "@typescript-eslint/parser": "^8.63.0",
+    "lit": "^3.3.3",
+    "pane-registry": "5.0.1",
+    "rdflib": "2.4.1",
+    "solid-logic": "6.0.0",
+    "solid-ui": "5.0.1",
+    "vite": "^8.0.16",
+    "vitest": "^4.0.18",
+    "vitest-axe": "^0.1.0"
+  },
+  "solidosDependencies": [
+    "rdflib",
+    "solid-logic",
+    "pane-registry",
+    "solid-ui"
+  ],
+  "allowScripts": {
+    "fsevents@2.3.3": true
   }
 }
