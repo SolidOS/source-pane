@@ -22,6 +22,9 @@ export default class SourceEditorCard extends WebComponent {
   private _loadedResourceUri?: string
   private _dirtyState = false
   private _initializing = false
+  private _syncGeneration = 0
+  private _syncQueue: Promise<void> = Promise.resolve()
+  private _editingRequested = false
 
   @state()
   accessor _editorReady = false
@@ -68,6 +71,12 @@ export default class SourceEditorCard extends WebComponent {
   }
 
   beginEditing() {
+    if (!this._editorReady) {
+      this._editingRequested = true
+      return
+    }
+
+    this._editingRequested = false
     this._isEditing = true
     this.updateEditingState(true)
     this.setReadOnly(false)
@@ -83,18 +92,27 @@ export default class SourceEditorCard extends WebComponent {
     }
   }
 
-  private async _syncEditorToCurrentView() {
+  private async _syncEditorToCurrentView (syncGeneration?: number) {
     if (!this._editor) return
 
+    this.updateEditingState(false)
     const sourceContext = this._requireSourceContext()
     this._originalContent = sourceContext.originalContent
     this._originalContentType = sourceContext.editorMetadata.contentType
-    const { content, contentType } = await this._getViewContent()
+    const content = sourceContext.originalContent ?? ''
+    const contentType = this._originalContentType ?? 'text/turtle'
     await this._editor.setLanguage(contentType)
+    if (syncGeneration !== undefined && syncGeneration !== this._syncGeneration) return
     this._editor.setReadOnly(true)
     this._editor.replaceContent(content)
     this._editor.resetDirtyState()
     this.updateDirtyState(false)
+  }
+
+  private queueEditorSynchronization () {
+    const syncGeneration = ++this._syncGeneration
+    this._syncQueue = this._syncQueue.then(() => this._syncEditorToCurrentView(syncGeneration))
+    return this._syncQueue
   }
 
   updateDirtyState(dirty: boolean) {
@@ -142,6 +160,7 @@ export default class SourceEditorCard extends WebComponent {
       this._editorReady = true
       this._loadedResourceUri = sourceContext.resourceUri
       this._editor?.setReadOnly(true)
+      if (this._editingRequested) this.beginEditing()
     } catch (err) {
       const { showError } = getStatusSection()
       showError(`Error loading code editor: ${err instanceof Error ? err.message : String(err)}`)
@@ -155,6 +174,11 @@ export default class SourceEditorCard extends WebComponent {
   }
 
   protected async updated (changedProperties: Map<string, unknown>) {
+    if (changedProperties.has('sourceContext') && !this.sourceContext?.dataLoaded) {
+      this._loadedResourceUri = undefined
+      return
+    }
+
     if ((!changedProperties.has('sourceContext') && !changedProperties.has('fileExplorerContext')) ||
       !this.sourceContext?.dataLoaded) return
 
@@ -162,7 +186,7 @@ export default class SourceEditorCard extends WebComponent {
       await this._initializeEditor()
     } else if (this._loadedResourceUri !== this.sourceContext.resourceUri) {
       this._loadedResourceUri = this.sourceContext.resourceUri
-      await this._syncEditorToCurrentView()
+      await this.queueEditorSynchronization()
     }
   }
 
@@ -181,7 +205,7 @@ export default class SourceEditorCard extends WebComponent {
   private async cancelHandler () {
     const sourceContext = this.sourceContext
     if (!sourceContext) return
-    await this._syncEditorToCurrentView()
+    await this.queueEditorSynchronization()
     this._resetEditorState()
   }
 

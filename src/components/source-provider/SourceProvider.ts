@@ -112,6 +112,8 @@ export default class SourceProvider extends WebComponent {
 
   private unregisterEditor?: () => void
   private registeredWith?: FileExplorerContext['registerEditor']
+  private _editingRequested = false
+  private _childObserver?: MutationObserver
 
   updateSourcePaneState = <K extends keyof SourcePaneState>(key: K, value: SourcePaneState[K]) => {
     this.sourcePaneState = {
@@ -128,7 +130,20 @@ export default class SourceProvider extends WebComponent {
   }
 
   beginEditing = () => {
-    this.querySelector<SourceEditorCard>('source-pane-source-editor-card')?.beginEditing()
+    const editorCard = this.querySelector<SourceEditorCard>('source-pane-source-editor-card')
+    if (editorCard) {
+      editorCard.beginEditing()
+    } else {
+      this._editingRequested = true
+    }
+  }
+
+  private applyPendingEditing () {
+    if (!this._editingRequested) return
+    const editorCard = this.querySelector<SourceEditorCard>('source-pane-source-editor-card')
+    if (!editorCard) return
+    this._editingRequested = false
+    editorCard.beginEditing()
   }
 
   private refreshEditorRegistration () {
@@ -151,10 +166,14 @@ export default class SourceProvider extends WebComponent {
 
   connectedCallback () {
     super.connectedCallback()
+    this._childObserver = new MutationObserver(() => this.applyPendingEditing())
+    this._childObserver.observe(this, { childList: true })
     this.requestUpdate()
   }
 
   disconnectedCallback () {
+    this._childObserver?.disconnect()
+    this._childObserver = undefined
     this.unregisterEditor?.()
     this.unregisterEditor = undefined
     this.registeredWith = undefined

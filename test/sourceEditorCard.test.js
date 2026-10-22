@@ -14,6 +14,14 @@ vi.mock('solid-ui', async importOriginal => ({
   }
 }))
 
+function deferred () {
+  let resolve
+  const promise = new Promise(resolvePromise => {
+    resolve = resolvePromise
+  })
+  return { promise, resolve }
+}
+
 beforeAll(async () => {
   await import('../src/components/source-editor-card/SourceEditorCard.ts')
 })
@@ -169,5 +177,102 @@ describe('source-pane-source-editor-card', () => {
     expect(editor.setLanguage).toHaveBeenCalledWith('text/plain')
     expect(editor.replaceContent).toHaveBeenCalledWith('plain text')
     expect(card.getOriginalContent()).toBe('plain text')
+  })
+
+  it('refreshes retained editor content after a same-resource reload', async () => {
+    const card = createCard()
+    const editor = {
+      setReadOnly: vi.fn(),
+      replaceContent: vi.fn(),
+      resetDirtyState: vi.fn(),
+      setLanguage: vi.fn(async () => {}),
+      destroy: vi.fn()
+    }
+    card._editor = editor
+    card._loadedResourceUri = card.sourceContext.resourceUri
+
+    card.sourceContext = {
+      ...card.sourceContext,
+      dataLoaded: false
+    }
+    await card.updated(new Map([['sourceContext', undefined]]))
+    expect(card._loadedResourceUri).toBeUndefined()
+
+    card.sourceContext = {
+      ...card.sourceContext,
+      dataLoaded: true,
+      originalContent: 'fresh content',
+      editorMetadata: { contentType: 'text/plain', eTag: '"456"' }
+    }
+    await card.updated(new Map([['sourceContext', undefined]]))
+
+    expect(editor.replaceContent).toHaveBeenCalledWith('fresh content')
+    expect(card.getOriginalContent()).toBe('fresh content')
+  })
+
+  it('leaves editing mode when synchronizing a new resource', async () => {
+    const card = createCard()
+    const editor = {
+      setReadOnly: vi.fn(),
+      replaceContent: vi.fn(),
+      resetDirtyState: vi.fn(),
+      setLanguage: vi.fn(async () => {}),
+      destroy: vi.fn()
+    }
+    card._editor = editor
+    card._loadedResourceUri = 'https://example.test/one.ttl'
+    card._isEditing = true
+    card.sourceContext = {
+      ...card.sourceContext,
+      resourceUri: 'https://example.test/two.txt',
+      originalContent: 'new content',
+      editorMetadata: { contentType: 'text/plain', eTag: '"456"' }
+    }
+
+    await card.updated(new Map([['sourceContext', undefined]]))
+
+    expect(card._isEditing).toBe(false)
+    expect(editor.setReadOnly).toHaveBeenCalledWith(true)
+  })
+
+  it('does not apply an older synchronization after a newer one starts', async () => {
+    const firstLanguage = deferred()
+    const secondLanguage = deferred()
+    const card = createCard()
+    const editor = {
+      setReadOnly: vi.fn(),
+      replaceContent: vi.fn(),
+      resetDirtyState: vi.fn(),
+      setLanguage: vi.fn()
+        .mockImplementationOnce(() => firstLanguage.promise)
+        .mockImplementationOnce(() => secondLanguage.promise),
+      destroy: vi.fn()
+    }
+    card._editor = editor
+    card._loadedResourceUri = card.sourceContext.resourceUri
+
+    card.sourceContext = {
+      ...card.sourceContext,
+      resourceUri: 'https://example.test/two.txt',
+      originalContent: 'content two',
+      editorMetadata: { contentType: 'text/plain', eTag: '"two"' }
+    }
+    const firstUpdate = card.updated(new Map([['sourceContext', undefined]]))
+
+    card.sourceContext = {
+      ...card.sourceContext,
+      resourceUri: 'https://example.test/three.json',
+      originalContent: 'content three',
+      editorMetadata: { contentType: 'application/json', eTag: '"three"' }
+    }
+    const secondUpdate = card.updated(new Map([['sourceContext', undefined]]))
+
+    firstLanguage.resolve()
+    await firstUpdate
+    secondLanguage.resolve()
+    await secondUpdate
+
+    expect(editor.replaceContent).toHaveBeenCalledTimes(1)
+    expect(editor.replaceContent).toHaveBeenCalledWith('content three')
   })
 })

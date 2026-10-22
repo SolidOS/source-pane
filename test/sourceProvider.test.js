@@ -185,6 +185,28 @@ describe('source-pane-source-provider', () => {
     expect(beginEditing).toHaveBeenCalledTimes(1)
   })
 
+  it('queues the editing action until the editor card is appended', async () => {
+    const provider = document.createElement('source-pane-source-provider')
+    provider.context = {
+      session: {
+        store: {}
+      }
+    }
+    provider.subject = { uri: 'https://example.test/one.ttl' }
+    const context = createFileExplorerContext()
+    provider.fileExplorerContext = context
+    document.body.appendChild(provider)
+    await flushUpdates(provider)
+
+    context.registerEditor.mock.calls[0][0].beginEditing()
+    const card = document.createElement('source-pane-source-editor-card')
+    const beginEditing = vi.spyOn(card, 'beginEditing')
+    provider.appendChild(card)
+    await Promise.resolve()
+
+    expect(beginEditing).toHaveBeenCalledTimes(1)
+  })
+
   it('reloads when subject changes and re-renders after the new async load', async () => {
     const secondLoad = deferred()
 
