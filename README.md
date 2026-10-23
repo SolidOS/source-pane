@@ -14,6 +14,19 @@ Once selected this pane as a view of a file, then the pen icon allows to switch 
 
 Editing can be aborted by the cancel(X) button.
 
+## File explorer integration
+
+The pane returns a headless `source-pane-source-provider` and loads
+`SourceEditorCard` only when Source is selected. Mount the returned pane beneath
+`solid-ui-file-explorer-provider` (using `composeExplorer`) so the provider and
+card receive the shared store, resource URI and editor registration contract.
+The editor waits for both the subscribed explorer context and fetched content;
+either may arrive after its first render. Context accessors used by Lit lifecycle
+change checks must also be reactive properties.
+
+JavaScript files (`.js`, `.mjs`, `.cjs`) offer and prefer Source even when a
+server omits MIME metadata or erroneously types the file as an LDP container.
+
 ## Contribute
 
 ### Tech stack

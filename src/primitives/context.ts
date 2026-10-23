@@ -2,6 +2,8 @@ import { createContext } from '@lit/context'
 import { EditorMetadata, SourcePaneState } from '../types'
 
 export interface SourceContext {
+  dataLoaded: boolean,
+  resourceUri: string | undefined,
   originalContent: string | undefined,
   sourcePaneState: SourcePaneState,
   editorMetadata: EditorMetadata,

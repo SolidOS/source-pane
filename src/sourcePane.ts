@@ -20,6 +20,8 @@ const pane = {
   name: 'source',
 
   label: function (subject: NamedNode, context: DataBrowserContext) {
+    // Servers can omit MIME types or incorrectly advertise files as LDP containers.
+    if (/\.[cm]?js$/i.test(new URL(subject.uri).pathname)) return 'Javascript Source'
     const store = context.session.store
     const typeURIs = store.findTypeURIs(subject)
     const prefix = Util.mediaTypeClass('text/*').uri.split('*')[0]
@@ -32,10 +34,24 @@ const pane = {
     return null
   },
 
+  shouldGetFocus: function (subject: NamedNode) {
+    return /\.[cm]?js$/i.test(new URL(subject.uri).pathname)
+  },
+
   // Create a new text file in a Solid system,
   mintNew: function (context: DataBrowserContext, newPaneOptions: NewPaneOptions) {
     const store = context.session.store
     let newInstance = newPaneOptions.newInstance
+    // The folder pane supplies a candidate URI for every pane and appends a
+    // slash while constructing it. A source resource must not retain that
+    // container marker: it changes the MIME lookup and makes the server treat
+    // the PUT as an LDP container creation.
+    if (newInstance?.uri.endsWith('/')) {
+      const uri = newInstance.uri.slice(0, -1)
+      newInstance = store.sym(uri)
+      newPaneOptions.newInstance = newInstance
+      newPaneOptions.newBase = uri
+    }
     if (!newInstance) {
       let uri = newPaneOptions.newBase
       if (uri.endsWith('/')) {
@@ -89,15 +105,26 @@ const pane = {
     const sourcePane = context.dom.createElement('div')
     sourcePane.setAttribute('class', 'sourcePane')
     const hasDialogsRoot = Boolean(context.dom.querySelector('solid-ui-dialogs-root'))
+
     litRender(html`
         <source-pane-source-provider
           .context=${context}
           .subject=${subject}
-        >
-        </source-pane-source-provider>
+        ></source-pane-source-provider>
         ${renderStatusSection()}
         ${hasDialogsRoot ? '' : html`<solid-ui-dialogs-root></solid-ui-dialogs-root>`}
-    `, sourcePane)
+      `, sourcePane)
+
+    void import('./components/source-editor-card/SourceEditorCard')
+      .then(() => {
+        const sourceProvider = sourcePane.querySelector('source-pane-source-provider')
+        sourceProvider?.append(context.dom.createElement('source-pane-source-editor-card'))
+      })
+      .catch(error => {
+        const message = `Failed to load source editor: ${error instanceof Error ? error.message : String(error)}`
+        log(message)
+        getStatusSection().showError(message)
+      })
 
     return sourcePane
   }
