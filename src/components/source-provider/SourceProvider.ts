@@ -32,6 +32,7 @@ function createSourceContextValue(input: {
   sourcePaneState: SourcePaneState
   editorMetadata: EditorMetadata
   updateSourcePaneState: SourceProvider['updateSourcePaneState']
+  updateContent: SourceProvider['updateOriginalContent']
   updateMetadata: SourceProvider['updateEditorMetadata']
 }): SourceContext {
   return {
@@ -41,6 +42,7 @@ function createSourceContextValue(input: {
     sourcePaneState: input.sourcePaneState,
     editorMetadata: input.editorMetadata,
     updateSourcePaneState: input.updateSourcePaneState,
+    updateContent: input.updateContent,
     updateMetadata: input.updateMetadata,
   }
 }
@@ -76,17 +78,21 @@ export default class SourceProvider extends WebComponent {
     sourcePaneState: createDefaultSourcePaneState(),
     editorMetadata: createDefaultEditorMetadata(),
     updateSourcePaneState: () => {},
+    updateContent: () => {},
     updateMetadata: () => {},
   })
+
+  private loadGeneration = 0
 
   private loadContentAndMetadata = async () => {
     if (!this.context || !this.subject) return
 
     const subjectUri = this.subject.uri
+    const loadGeneration = ++this.loadGeneration
 
     try {
       const { content, metadata } = await solidLogicSingleton.resource.fetchContentAndMetadata(this.subject)
-      if (this.subject?.uri !== subjectUri) return
+      if (this.subject?.uri !== subjectUri || loadGeneration !== this.loadGeneration) return
 
       this.originalContent = content
       this.updateEditorMetadata(metadata)
@@ -99,13 +105,20 @@ export default class SourceProvider extends WebComponent {
   }
 
   private refreshSourceContextValue() {
+    const resourceUri = this.subject?.uri
+    const updateContent = (content: string) => {
+      if (this.subject?.uri !== resourceUri) return
+      this.updateOriginalContent(content)
+    }
+
     this.sourceContextValue = createSourceContextValue({
       dataLoaded: this.dataLoaded,
-      resourceUri: this.subject?.uri,
+      resourceUri,
       originalContent: this.originalContent,
       sourcePaneState: this.sourcePaneState,
       editorMetadata: this.editorMetadata,
       updateSourcePaneState: this.updateSourcePaneState,
+      updateContent,
       updateMetadata: this.updateEditorMetadata,
     })
   }
@@ -120,6 +133,10 @@ export default class SourceProvider extends WebComponent {
       ...this.sourcePaneState,
       [key]: value
     }
+  }
+
+  updateOriginalContent = (content: string) => {
+    this.originalContent = content
   }
 
   updateEditorMetadata = (metadata: EditorMetadata) => {
@@ -187,6 +204,7 @@ export default class SourceProvider extends WebComponent {
     }
 
     if (changedProperties.has('context') || changedProperties.has('subject')) {
+      this.loadGeneration++
       this.dataLoaded = false
     }
 

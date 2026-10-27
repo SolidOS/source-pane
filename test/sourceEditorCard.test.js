@@ -1,6 +1,7 @@
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
 import { ContextProvider } from '@lit/context'
 import { DEFAULT_FILE_EXPLORER_CONTEXT, fileExplorerContext } from 'solid-ui'
+import { solidLogicSingleton } from 'solid-logic'
 import { sourceContext } from '../src/primitives/context'
 
 const { initializeEditor } = vi.hoisted(() => ({ initializeEditor: vi.fn(async () => {}) }))
@@ -45,6 +46,7 @@ describe('source-pane-source-editor-card', () => {
         eTag: '"123"'
       },
       updateSourcePaneState: vi.fn(),
+      updateContent: vi.fn(),
       updateMetadata: vi.fn()
     }
 
@@ -274,5 +276,50 @@ describe('source-pane-source-editor-card', () => {
 
     expect(editor.replaceContent).toHaveBeenCalledTimes(1)
     expect(editor.replaceContent).toHaveBeenCalledWith('content three')
+  })
+
+  it('finalizes a successful save when metadata refresh fails', async () => {
+    const webOperation = vi.fn()
+      .mockResolvedValueOnce({ ok: true, status: 200 })
+      .mockResolvedValueOnce({ ok: true, status: 200 })
+    const fetchMetadata = vi.spyOn(solidLogicSingleton.resource, 'fetchMetadata')
+      .mockRejectedValueOnce(new Error('metadata unavailable'))
+    const card = createCard({ contentType: 'text/plain' })
+    const editor = {
+      focusEditor: vi.fn(),
+      setReadOnly: vi.fn(),
+      replaceContent: vi.fn(),
+      resetDirtyState: vi.fn(),
+      setLanguage: vi.fn(async () => {}),
+      getValue: vi.fn(() => 'updated'),
+      destroy: vi.fn()
+    }
+    card._editor = editor
+    card._editorReady = true
+    card.fileExplorerContext = {
+      ...card.fileExplorerContext,
+      store: {
+        fetcher: {
+          webOperation,
+          load: vi.fn(async () => {})
+        }
+      }
+    }
+    document.body.appendChild(card)
+    card.beginEditing()
+    await card.updateComplete
+
+    await card.saveBack()
+
+    expect(webOperation).toHaveBeenNthCalledWith(
+      1,
+      'PUT',
+      card.fileExplorerContext.subjectUri,
+      expect.objectContaining({ data: 'updated' })
+    )
+    expect(fetchMetadata).toHaveBeenCalledOnce()
+    expect(card.sourceContext.updateContent).toHaveBeenCalledWith('updated')
+    expect(card.shadowRoot.querySelector('.sourcePaneSaveButton')).toBeNull()
+    fetchMetadata.mockRestore()
   })
 })

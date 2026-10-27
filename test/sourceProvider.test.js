@@ -275,4 +275,19 @@ describe('source-pane-source-provider', () => {
     expect(provider.originalContent).toBe('fresh content')
     expect(provider.editorMetadata).toEqual({ contentType: 'text/plain', eTag: '"fresh"' })
   })
+
+  it('ignores content updates from a previous resource after the subject changes', async () => {
+    const provider = createProvider()
+    document.body.appendChild(provider)
+    await flushUpdates(provider)
+
+    const updateContentForFirstResource = provider.sourceContextValue.updateContent
+    provider.subject = { uri: 'https://example.test/two.txt' }
+    await provider.updateComplete
+
+    updateContentForFirstResource('stale content')
+
+    expect(provider.originalContent).toBe('content one')
+    expect(provider.sourceContextValue.resourceUri).toBe('https://example.test/two.txt')
+  })
 })

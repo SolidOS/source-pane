@@ -8,6 +8,7 @@ export interface SourceContext {
   sourcePaneState: SourcePaneState,
   editorMetadata: EditorMetadata,
   updateSourcePaneState: <K extends keyof SourcePaneState>(key: K, value: SourcePaneState[K]) => void,
+  updateContent: (content: string) => void,
   updateMetadata: (metadata: EditorMetadata) => void,
 }
 
