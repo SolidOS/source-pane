@@ -230,26 +230,49 @@ export default class SourceEditorCard extends WebComponent {
     }
     const options: { data: string; contentType: string | undefined; headers?: { 'if-match': string } } = { data, contentType }
     if (eTag) options.headers = { 'if-match': eTag } // avoid overwriting changed files -> status 412
+
+    let response: Response
     try {
-      const response = await fetcher.webOperation('PUT', saveSubject.uri, options)
+      response = await fetcher.webOperation('PUT', saveSubject.uri, options)
       if (!happy(response, 'PUT')) return
+    } catch (err: any) {
+      const { showError } = getStatusSection()
+      showError('Error saving back: ' + err)
+      return
+    }
+
+    if (sourceContext.resourceUri === saveSubject.uri) {
       this._originalContent = data
-      /// @@ show edited: make save button disabled until edited again.
-      try {
-        const response = await fetcher.webOperation('HEAD', saveSubject.uri) // , defaultFetchHeaders())
-        if (!happy(response, 'HEAD')) return
-        const metadata = await solidLogicSingleton.resource.fetchMetadata(saveSubject)
+      sourceContext.updateContent(data)
+    }
+
+    let refreshError: unknown
+    try {
+      if (typeof fetcher.load === 'function') {
+        await fetcher.load(saveSubject, { force: true, clearPreviousData: true })
+      }
+      const metadataResponse = await fetcher.webOperation('HEAD', saveSubject.uri) // , defaultFetchHeaders())
+      if (!metadataResponse.ok) {
+        throw new Error(`HTTP error on HEAD! Status: ${metadataResponse.status}`)
+      }
+      const metadata = await solidLogicSingleton.resource.fetchMetadata(saveSubject)
+      if (sourceContext.resourceUri === saveSubject.uri) {
         sourceContext.updateMetadata({
           contentType: metadata.contentType,
           eTag: metadata.eTag
         })
-        this._resetEditorState()
-      } catch (err) {
-        throw err
       }
-    } catch (err: any) {
+    } catch (err) {
+      refreshError = err
+    }
+
+    if (refreshError) {
       const { showError } = getStatusSection()
-      showError('Error saving back: ' + err)
+      showError('Saved, but failed to refresh metadata: ' + refreshError)
+    }
+
+    if (sourceContext.resourceUri === saveSubject.uri) {
+      this._resetEditorState()
     }
   }
 
