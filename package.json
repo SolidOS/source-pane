@@ -58,25 +58,26 @@
     "@iconify-json/lucide": "^1.2.116",
     "@types/mime-types": "^3.0.1",
     "@types/node": "^22.20.0",
+    "@typescript-eslint/parser": "^8.63.0",
     "@vitest/coverage-v8": "^4.0.18",
     "eslint": "^9.39.2",
     "eslint-plugin-import": "^2.32.0",
     "jsdom": "^28.1.0",
     "mime-types": "^3.0.2",
+    "vite": "^8.0.16",
+    "vitest": "^4.0.18",
+    "vitest-axe": "^0.1.0",
     "solidos-toolkit": "dev",
     "typescript": "^5.9.3"
   },
   "dependencies": {
     "@lit/context": "^1.1.6",
-    "@typescript-eslint/parser": "^8.63.0",
     "lit": "^3.3.3",
     "pane-registry": "5.0.2-1",
     "rdflib": "2.4.1",
     "solid-logic": "6.0.1-5",
-    "solid-ui": "5.0.2-4",
-    "vite": "^8.0.16",
-    "vitest": "^4.0.18",
-    "vitest-axe": "^0.1.0"
+    "solid-ui": "5.0.2-4"
+
   },
   "solidosDependencies": [
     "rdflib",
