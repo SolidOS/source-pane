@@ -99,7 +99,8 @@ export default class SourceProvider extends WebComponent {
       this.dataLoaded = true
     } catch (error: any) {
       warn('Failed to load source content', error)
-      const { showError } = getStatusSection()
+      if (!this.isConnected) return
+      const { showError } = getStatusSection(this.closest('.sourcePane') ?? this)
       showError(error.message)
     }
   }

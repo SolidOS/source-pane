@@ -1,46 +1,43 @@
-import { html } from 'lit'
+import { html, nothing, render } from 'lit'
 import './StatusSection.css'
+import 'solid-ui/components/error-state'
 
-export function getStatusSection(){
-  function showError(message: string) {
-    const statusSection = document.querySelector('.sourcePaneStatus') as HTMLElement | null
-    const statusMessageArea = statusSection?.querySelector('#statusMessageArea') as HTMLElement | null
+type ErrorOptions = {
+  title?: string
+  details?: string
+  onRetry?: () => void
+}
+
+export function getStatusSection(root: ParentNode = document){
+  function showError(message: string, options: ErrorOptions = {}) {
+    const statusSection = root.querySelector<HTMLElement>('.sourcePaneStatus')
     if (statusSection) {
+      if (statusSection.querySelector('solid-ui-error-state') && !options.title) return
       statusSection.dataset.visible = 'true'
-    }
-    if (statusMessageArea) {
-      statusMessageArea.hidden = false
-      const errorText = statusMessageArea.querySelector('.error-text')
-      if (errorText) {
-        errorText.textContent = message
-      }
+      render(html`
+        <solid-ui-error-state title=${options.title ?? ''} message=${message} @close=${clearError}>
+          ${options.onRetry
+            ? html`<button type="button" @click=${options.onRetry}>Try again</button>`
+            : nothing}
+          ${options.details
+            ? html`<details><summary>Technical details</summary><pre>${options.details}</pre></details>`
+            : nothing}
+        </solid-ui-error-state>
+      `, statusSection)
     }
   }
 
   function clearError() {
-    const statusSection = document.querySelector('.sourcePaneStatus') as HTMLElement | null
-    const statusMessageArea = statusSection?.querySelector('#statusMessageArea') as HTMLElement | null
+    const statusSection = root.querySelector<HTMLElement>('.sourcePaneStatus')
     if (statusSection) {
       statusSection.dataset.visible = 'false'
-    }
-    if (statusMessageArea) {
-      statusMessageArea.hidden = true
-      const errorText = statusMessageArea.querySelector('.error-text')
-      if (errorText) {
-        errorText.textContent = ''
-      }
+      render(nothing, statusSection)
     }
   }
 
   function renderStatusSection() {
-    const statusMessage = ''
-
     return html`
-      <section class="sourcePaneStatus" role="alert" data-visible="false">
-        <div id="statusMessageArea" hidden>
-          <p class="error-text">${statusMessage}</p>
-          <button class="statusCloseButton" aria-label="Dismiss error" @click=${() => clearError()}>X</button>
-        </div>
+      <section class="sourcePaneStatus" data-visible="false">
       </section>
     `
   }
