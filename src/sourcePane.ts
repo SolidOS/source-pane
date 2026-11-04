@@ -8,7 +8,7 @@ import { icons } from 'solid-ui'
 import { DataBrowserContext, NewPaneOptions } from 'pane-registry'
 import * as mime from 'mime-types'
 import { html, render as litRender } from 'lit'
-import { log } from './debug'
+import { error as logError, log } from './debug'
 import { getStatusSection } from './StatusSection'
 import './sourcePane.css'
 import 'solid-ui/components/dialogs-root'
@@ -115,16 +115,32 @@ const pane = {
         ${hasDialogsRoot ? '' : html`<solid-ui-dialogs-root></solid-ui-dialogs-root>`}
       `, sourcePane)
 
-    void import('./components/source-editor-card/SourceEditorCard')
-      .then(() => {
+    const status = getStatusSection(sourcePane)
+    let loadingEditor = false
+    const loadEditor = async () => {
+      if (loadingEditor || sourcePane.querySelector('source-pane-source-editor-card')) return
+      loadingEditor = true
+      status.clearError()
+      try {
+        await import('./components/source-editor-card/SourceEditorCard')
         const sourceProvider = sourcePane.querySelector('source-pane-source-provider')
         sourceProvider?.append(context.dom.createElement('source-pane-source-editor-card'))
-      })
-      .catch(error => {
-        const message = `Failed to load source editor: ${error instanceof Error ? error.message : String(error)}`
-        log(message)
-        getStatusSection().showError(message)
-      })
+      } catch (error) {
+        logError('Failed to load source editor', { resourceUri: subject.uri, error })
+        if (!sourcePane.isConnected) return
+        status.showError(
+          'The editor could not be started. Your file has not been changed. Try again; if it still fails, refresh the page. Save any unsaved work elsewhere before refreshing.',
+          {
+            title: 'Could not start the source editor',
+            details: error instanceof Error ? error.stack ?? error.message : String(error),
+            onRetry: () => { void loadEditor() }
+          }
+        )
+      } finally {
+        loadingEditor = false
+      }
+    }
+    void loadEditor()
 
     return sourcePane
   }
