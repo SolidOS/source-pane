@@ -176,6 +176,7 @@ export default class SourceEditorCard extends WebComponent {
 
     this._initializing = true
     this._editorError = false
+    getStatusSection(this._statusRoot()).clearError()
     try {
       const { CodeEditor } = await import('solid-ui')
       this._originalContent = sourceContext.originalContent
