@@ -29,6 +29,9 @@ export default class SourceEditorCard extends WebComponent {
   @state()
   accessor _editorReady = false
 
+  @state()
+  accessor _editorError = false
+
   private _isEditing = false
   
   @query('.sourcePaneEditor')
@@ -64,6 +67,34 @@ export default class SourceEditorCard extends WebComponent {
 
   setReadOnly (readOnly: boolean) {
     this._editor?.setReadOnly(readOnly)
+    this._editor?.setAccessibility?.({
+      label: this._editorLabel(),
+      description: readOnly
+        ? 'Source content. This content is read-only until Edit is selected.'
+        : 'Source editor. You can edit this content and use Save or Cancel when finished.'
+    })
+  }
+
+  private _editorLabel () {
+    return `Source editor for ${this.sourceContext?.resourceUri ?? 'the selected resource'}`
+  }
+
+  private _statusRoot (): ParentNode {
+    return this.shadowRoot ?? this.closest('.sourcePane') ?? document
+  }
+
+  private _preservePaneDuringResize (preserve: boolean) {
+    const sourcePane = this.closest('.sourcePane')
+    if (!sourcePane) return
+    if (preserve) {
+      sourcePane.setAttribute('data-preserve-pane-on-resize', 'true')
+    } else {
+      sourcePane.removeAttribute('data-preserve-pane-on-resize')
+    }
+  }
+
+  private _focusEditorAfterUpdate () {
+    void this.updateComplete.then(() => this.focusEditor())
   }
 
   setValue (text: string) {
@@ -77,7 +108,6 @@ export default class SourceEditorCard extends WebComponent {
     }
 
     this._editingRequested = false
-    this._isEditing = true
     this.updateEditingState(true)
     this.setReadOnly(false)
     this.focusEditor()
@@ -103,7 +133,7 @@ export default class SourceEditorCard extends WebComponent {
     const contentType = this._originalContentType ?? 'text/turtle'
     await this._editor.setLanguage(contentType)
     if (syncGeneration !== undefined && syncGeneration !== this._syncGeneration) return
-    this._editor.setReadOnly(true)
+    this.setReadOnly(true)
     this._editor.replaceContent(content)
     this._editor.resetDirtyState()
     this.updateDirtyState(false)
@@ -122,6 +152,7 @@ export default class SourceEditorCard extends WebComponent {
   }
 
   updateEditingState(editing: boolean) {
+    this._preservePaneDuringResize(editing)
     if (this._isEditing === editing) return
     this._isEditing = editing
     this.requestUpdate()
@@ -131,7 +162,7 @@ export default class SourceEditorCard extends WebComponent {
     this._editor?.resetDirtyState()
     this.updateDirtyState(false)
     this.updateEditingState(false)
-    this._editor?.setReadOnly(true)
+    this.setReadOnly(true)
   }
 
   private async _initializeEditor () {
@@ -144,6 +175,7 @@ export default class SourceEditorCard extends WebComponent {
       !explorerContext.store || !explorerContext.subjectUri) return
 
     this._initializing = true
+    this._editorError = false
     try {
       const { CodeEditor } = await import('solid-ui')
       this._originalContent = sourceContext.originalContent
@@ -151,18 +183,30 @@ export default class SourceEditorCard extends WebComponent {
       this._editor = new CodeEditor()
       const { content, contentType } = await this._getViewContent()
       try {
-        await this._editor.initialize(sourcePaneEditor, content, contentType, 'dark', dirty => {
-          this.updateDirtyState(dirty)
-        })
+        await this._editor.initialize(
+          sourcePaneEditor,
+          content,
+          contentType,
+          'dark',
+          dirty => { this.updateDirtyState(dirty) },
+          {
+            label: this._editorLabel(),
+            description: 'Source content. This content is read-only until Edit is selected.'
+          }
+        )
       } catch (err) {
         throw new Error(`Error initializing code editor: ${err instanceof Error ? err.message : String(err)}`)
       }
       this._editorReady = true
       this._loadedResourceUri = sourceContext.resourceUri
-      this._editor?.setReadOnly(true)
+      this.setReadOnly(true)
       if (this._editingRequested) this.beginEditing()
     } catch (err) {
-      const { showError } = getStatusSection()
+      this._editorReady = false
+      this._editorError = true
+      this._editor?.destroy()
+      this._editor = undefined
+      const { showError } = getStatusSection(this._statusRoot())
       showError(`Error loading code editor: ${err instanceof Error ? err.message : String(err)}`)
     } finally {
       this._initializing = false
@@ -183,6 +227,7 @@ export default class SourceEditorCard extends WebComponent {
       !this.sourceContext?.dataLoaded) return
 
     if (!this._editor) {
+      this._editorError = false
       await this._initializeEditor()
     } else if (this._loadedResourceUri !== this.sourceContext.resourceUri) {
       this._loadedResourceUri = this.sourceContext.resourceUri
@@ -207,6 +252,8 @@ export default class SourceEditorCard extends WebComponent {
     if (!sourceContext) return
     await this.queueEditorSynchronization()
     this._resetEditorState()
+    getStatusSection(this._statusRoot()).showStatus('Source changes canceled.')
+    this._focusEditorAfterUpdate()
   }
 
   private async saveBack () {
@@ -223,9 +270,7 @@ export default class SourceEditorCard extends WebComponent {
     const contentType = this._originalContentType ?? sourceContext.editorMetadata.contentType ?? 'text/turtle'
     const eTag = sourceContext.editorMetadata.eTag
     const saveSubject = subject
-    if (!checkSyntax(store, saveSubject as any, data, contentType, saveSubject as any)) {
-      const { showError } = getStatusSection()
-      showError('Syntax error: fix the document before saving.')
+    if (!checkSyntax(store, saveSubject as any, data, contentType, saveSubject as any, this._statusRoot())) {
       return
     }
     const options: { data: string; contentType: string | undefined; headers?: { 'if-match': string } } = { data, contentType }
@@ -234,9 +279,9 @@ export default class SourceEditorCard extends WebComponent {
     let response: Response
     try {
       response = await fetcher.webOperation('PUT', saveSubject.uri, options)
-      if (!happy(response, 'PUT')) return
+      if (!happy(response, 'PUT', this._statusRoot())) return
     } catch (err: any) {
-      const { showError } = getStatusSection()
+      const { showError } = getStatusSection(this._statusRoot())
       showError('Error saving back: ' + err)
       return
     }
@@ -267,12 +312,13 @@ export default class SourceEditorCard extends WebComponent {
     }
 
     if (refreshError) {
-      const { showError } = getStatusSection()
+      const { showError } = getStatusSection(this._statusRoot())
       showError('Saved, but failed to refresh metadata: ' + refreshError)
     }
 
     if (sourceContext.resourceUri === saveSubject.uri) {
       this._resetEditorState()
+      this._focusEditorAfterUpdate()
     }
   }
 
@@ -281,7 +327,7 @@ export default class SourceEditorCard extends WebComponent {
 
     const { contentType } = sourceContext.editorMetadata
     const compactContentType = contentType?.split(';')[0]
-    const { showError } = getStatusSection()
+    const { showError } = getStatusSection(this._statusRoot())
     const store = this.fileExplorerContext?.store as any
     const subjectUri = this.fileExplorerContext?.subjectUri
     if (!store || !subjectUri) {
@@ -330,13 +376,25 @@ export default class SourceEditorCard extends WebComponent {
   }
   
   render() {
-    const sectionClass = this._editorReady && this.sourceContext?.dataLoaded
+    const ready = this._editorReady && this.sourceContext?.dataLoaded && !this._editorError
+    const sectionClass = ready
       ? 'sourcePaneCard'
       : 'sourcePaneCard sourcePaneCardLoading'
 
     return html`
-      <section class=${sectionClass}>
+      <section
+        class=${sectionClass}
+        role="region"
+        aria-busy=${ready || this._editorError ? 'false' : 'true'}
+        aria-label=${this._editorLabel()}
+      >
+        ${ready || this._editorError ? nothing : html`
+          <div class="sourcePaneCardLoadingMessage" role="status">
+            Loading source editor
+          </div>
+        `}
         <div class="sourcePaneEditor"></div>
+        ${getStatusSection().renderStatusSection()}
         ${this.renderFooter()}
       </section>
     `

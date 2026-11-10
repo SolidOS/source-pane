@@ -104,6 +104,9 @@ const pane = {
     const { renderStatusSection } = getStatusSection()
     const sourcePane = context.dom.createElement('div')
     sourcePane.setAttribute('class', 'sourcePane')
+    sourcePane.setAttribute('role', 'region')
+    sourcePane.setAttribute('aria-label', `Source pane for ${subject.uri}`)
+    sourcePane.setAttribute('aria-busy', 'true')
     const hasDialogsRoot = Boolean(context.dom.querySelector('solid-ui-dialogs-root'))
 
     litRender(html`
@@ -125,8 +128,10 @@ const pane = {
         await import('./components/source-editor-card/SourceEditorCard')
         const sourceProvider = sourcePane.querySelector('source-pane-source-provider')
         sourceProvider?.append(context.dom.createElement('source-pane-source-editor-card'))
+        sourcePane.setAttribute('aria-busy', 'false')
       } catch (error) {
         logError('Failed to load source editor', { resourceUri: subject.uri, error })
+        sourcePane.setAttribute('aria-busy', 'false')
         if (!sourcePane.isConnected) return
         status.showError(
           'The editor could not be started. Your file has not been changed. Try again; if it still fails, refresh the page. Save any unsaved work elsewhere before refreshing.',
