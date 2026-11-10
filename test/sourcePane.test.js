@@ -100,6 +100,7 @@ describe('source-pane', () => {
     await vi.waitFor(() => {
       expect(rendered.querySelector('source-pane-source-editor-card')).not.toBeNull()
     })
+    expect(rendered.getAttribute('aria-busy')).toBe('false')
     expect(fileExplorer.registerEditor).toHaveBeenCalledOnce()
   })
 })

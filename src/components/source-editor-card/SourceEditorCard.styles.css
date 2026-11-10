@@ -18,14 +18,43 @@
     width: 100%;
   }
 
+  .sourcePaneStatus {
+    align-self: stretch;
+    width: calc(100% + 80px);
+    margin-left: -40px;
+    margin-top: 3px;
+  }
+
+  .sourcePaneStatus solid-ui-error-state {
+    display: block;
+    width: 100%;
+  }
+
   .sourcePaneCardLoading {
+    min-height: 3rem;
+  }
+
+  .sourcePaneCardLoading .sourcePaneEditor {
     visibility: hidden;
+  }
+
+  .sourcePaneCardLoadingMessage {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
   }
 
   .sourcePaneEditorFooter {
     box-sizing: border-box;
     display: flex;
     justify-content: flex-end;
+    flex-wrap: wrap;
     align-self: stretch;
     width: 100%;
     gap: 10px;
@@ -33,9 +62,14 @@
     padding: 20px 5px 15px;
   }
 
-  @media (max-width: 600px) {
+  @media (max-width: 768px) {
     section {
       padding: 0;
+    }
+
+    .sourcePaneStatus {
+      width: 100%;
+      margin-left: 0;
     }
   }
 }
