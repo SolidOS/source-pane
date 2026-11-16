@@ -12,39 +12,15 @@ const parseable: Record<string, boolean> = {
   'application/ld+json': true
 }
 
-export function happy (response: Response, method: string) {
+export function happy (response: Response, method: string, root: ParentNode = document) {
   if (!response.ok) {
     let msg = 'HTTP error on ' + method + '! Status: ' + response.status
     error(msg)
     if (response.status === 412) msg = 'Error: File changed by someone else'
-    const { showError } = getStatusSection()
+    const { showError } = getStatusSection(root)
     showError(msg)
   }
   return response.ok
-}
-
-/** Set Caret position in a text box
-* @param {Element} elem - the element to be tweaked
-* @param {Integer} caretPos - the poisition starting at zero
-* @credit  https://stackoverflow.com/questions/512528/set-keyboard-caret-position-in-html-textbox
-*/
-function setCaretPosition (elem: HTMLTextAreaElement, cause: { characterInFile: number, lineNo?: number }) {
-  if (elem != null) {
-    if (cause.characterInFile === -1 && cause.lineNo) cause.lineNo += 1
-    const pos = cause.lineNo ? elem.value.split('\n', cause.lineNo).join('\n').length : 0
-    const caretPos = pos + cause.characterInFile
-    const textArea = elem as HTMLTextAreaElement & { createTextRange?: () => any }
-    if (textArea.createTextRange) {
-      const range = textArea.createTextRange()
-      range.move('character', caretPos)
-      range.select()
-    } else {
-      elem.focus()
-      if (elem.selectionStart) {
-        elem.setSelectionRange(caretPos, caretPos)
-      }
-    }
-  }
 }
 
 function HTMLDataIsland (data: string): [string, string] {
@@ -66,19 +42,24 @@ function HTMLDataIsland (data: string): [string, string] {
   return [dataIsland, dataIslandContentType]
 }
 
-export function checkSyntax (store: LiveStore, subject: NamedNode, data: string, contentType: string | undefined, base: NamedNode) {
+export function checkSyntax (
+  store: LiveStore,
+  subject: NamedNode,
+  data: string,
+  contentType: string | undefined,
+  base: NamedNode,
+  root: ParentNode = document
+) {
   const fetcher = store.fetcher
-  const { showError, clearError } = getStatusSection()
-  const textArea = document.querySelector('.sourcePaneTextArea') as HTMLTextAreaElement
-  
-  if (!showError || !clearError) return true
+  const { showError, clearError } = getStatusSection(root)
+
+  clearError()
   if (!contentType || !parseable[contentType]) return true // don't check things we don't understand
   if (contentType === 'text/html') {
     [data, contentType] = HTMLDataIsland(data)
     if (!contentType) return true
   }
   try {
-    clearError()
     if (contentType === 'application/json') {
       JSON.parse(data)
       return true
@@ -111,14 +92,15 @@ export function checkSyntax (store: LiveStore, subject: NamedNode, data: string,
     }
     return true
   } catch (e: any) {
-    showError(e.message)
+    let message = e.message
     let cause: any = e
     while (cause && cause.cause) {
       cause = cause.cause
-      if (cause && cause.characterInFile) {
-        setCaretPosition(textArea, cause)
+      if (cause && typeof cause.characterInFile === 'number') {
+        message = `${message} (at character ${cause.characterInFile})`
       }
     }
+    showError(message)
     return false
   }
   return true

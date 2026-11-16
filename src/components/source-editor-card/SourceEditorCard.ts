@@ -1,16 +1,16 @@
 import { html, nothing } from 'lit'
 import { consume } from '@lit/context'
-import { customElement, query, state } from 'lit/decorators.js'
+import { customElement, property, query, state } from 'lit/decorators.js'
 import { NamedNode, parse, serialize } from 'rdflib'
 import { WebComponent, type CodeEditor } from 'solid-ui'
-import { fileExplorerContext, type FileExplorerContext } from 'solid-ui'
+import { DEFAULT_FILE_EXPLORER_CONTEXT, fileExplorerContext } from 'solid-ui'
+import { solidLogicSingleton } from 'solid-logic'
 import 'solid-ui/components/button'
 import { checkSyntax, happy } from '../../helpers'
 import styles from './SourceEditorCard.styles.css'
 import { getStatusSection } from '../../StatusSection'
 import { compactable } from '../../compactableFormats'
 import { sourceContext, SourceContext } from '../../primitives/context'
-import { getResponseMetadata } from '../../resourceLoader'
 
 @customElement('source-pane-source-editor-card')
 export default class SourceEditorCard extends WebComponent {
@@ -19,11 +19,18 @@ export default class SourceEditorCard extends WebComponent {
   private _editor?: CodeEditor
   private _originalContent?: string
   private _originalContentType?: string
+  private _loadedResourceUri?: string
   private _dirtyState = false
   private _initializing = false
+  private _syncGeneration = 0
+  private _syncQueue: Promise<void> = Promise.resolve()
+  private _editingRequested = false
 
   @state()
   accessor _editorReady = false
+
+  @state()
+  accessor _editorError = false
 
   private _isEditing = false
   
@@ -31,10 +38,12 @@ export default class SourceEditorCard extends WebComponent {
   accessor _editorMount: HTMLDivElement | null = null
 
   @consume({ context: sourceContext, subscribe: true })
+  @property({ attribute: false })
   accessor sourceContext: SourceContext = undefined as unknown as SourceContext
 
   @consume({ context: fileExplorerContext, subscribe: true })
-  accessor fileExplorerContext: FileExplorerContext = undefined as unknown as FileExplorerContext
+  @property({ attribute: false })
+  accessor fileExplorerContext = DEFAULT_FILE_EXPLORER_CONTEXT
 
   private _requireSourceContext () {
     if (!this.sourceContext) {
@@ -58,6 +67,34 @@ export default class SourceEditorCard extends WebComponent {
 
   setReadOnly (readOnly: boolean) {
     this._editor?.setReadOnly(readOnly)
+    this._editor?.setAccessibility?.({
+      label: this._editorLabel(),
+      description: readOnly
+        ? 'Source content. This content is read-only until Edit is selected.'
+        : 'Source editor. You can edit this content and use Save or Cancel when finished.'
+    })
+  }
+
+  private _editorLabel () {
+    return `Source editor for ${this.sourceContext?.resourceUri ?? 'the selected resource'}`
+  }
+
+  private _statusRoot (): ParentNode {
+    return this.shadowRoot ?? this.closest('.sourcePane') ?? document
+  }
+
+  private _preservePaneDuringResize (preserve: boolean) {
+    const sourcePane = this.closest('.sourcePane')
+    if (!sourcePane) return
+    if (preserve) {
+      sourcePane.setAttribute('data-preserve-pane-on-resize', 'true')
+    } else {
+      sourcePane.removeAttribute('data-preserve-pane-on-resize')
+    }
+  }
+
+  private _focusEditorAfterUpdate () {
+    void this.updateComplete.then(() => this.focusEditor())
   }
 
   setValue (text: string) {
@@ -65,7 +102,12 @@ export default class SourceEditorCard extends WebComponent {
   }
 
   beginEditing() {
-    this._isEditing = true
+    if (!this._editorReady) {
+      this._editingRequested = true
+      return
+    }
+
+    this._editingRequested = false
     this.updateEditingState(true)
     this.setReadOnly(false)
     this.focusEditor()
@@ -80,24 +122,37 @@ export default class SourceEditorCard extends WebComponent {
     }
   }
 
-  private async _syncEditorToCurrentView() {
+  private async _syncEditorToCurrentView (syncGeneration?: number) {
     if (!this._editor) return
 
-    const { content, contentType } = await this._getViewContent()
+    this.updateEditingState(false)
+    const sourceContext = this._requireSourceContext()
+    this._originalContent = sourceContext.originalContent
+    this._originalContentType = sourceContext.editorMetadata.contentType
+    const content = sourceContext.originalContent ?? ''
+    const contentType = this._originalContentType ?? 'text/turtle'
     await this._editor.setLanguage(contentType)
-    this._editor.setReadOnly(true)
+    if (syncGeneration !== undefined && syncGeneration !== this._syncGeneration) return
+    this.setReadOnly(true)
     this._editor.replaceContent(content)
     this._editor.resetDirtyState()
     this.updateDirtyState(false)
   }
 
+  private queueEditorSynchronization () {
+    const syncGeneration = ++this._syncGeneration
+    this._syncQueue = this._syncQueue.then(() => this._syncEditorToCurrentView(syncGeneration))
+    return this._syncQueue
+  }
+
   updateDirtyState(dirty: boolean) {
     if (this._dirtyState === dirty) return
     this._dirtyState = dirty
-    this.fileExplorerContext?.edit?.updateDirtyState?.(dirty)
+    this.fileExplorerContext.setDirty(dirty)
   }
 
   updateEditingState(editing: boolean) {
+    this._preservePaneDuringResize(editing)
     if (this._isEditing === editing) return
     this._isEditing = editing
     this.requestUpdate()
@@ -107,18 +162,21 @@ export default class SourceEditorCard extends WebComponent {
     this._editor?.resetDirtyState()
     this.updateDirtyState(false)
     this.updateEditingState(false)
-    this._editor?.setReadOnly(true)
+    this.setReadOnly(true)
   }
 
   private async _initializeEditor () {
     if (this._editor || this._initializing) return
-    this._initializing = true
     const sourcePaneEditor = this._editorMount
     const sourceContext = this.sourceContext
-    if (!sourcePaneEditor || !sourceContext || !this.fileExplorerContext?.store || !this.fileExplorerContext.subjectUri) {
-      this._initializing = false
-      return
-    }
+    const explorerContext = this.fileExplorerContext
+    if (!sourcePaneEditor || !sourceContext?.dataLoaded ||
+      !explorerContext || explorerContext === DEFAULT_FILE_EXPLORER_CONTEXT ||
+      !explorerContext.store || !explorerContext.subjectUri) return
+
+    this._initializing = true
+    this._editorError = false
+    getStatusSection(this._statusRoot()).clearError()
     try {
       const { CodeEditor } = await import('solid-ui')
       this._originalContent = sourceContext.originalContent
@@ -126,16 +184,30 @@ export default class SourceEditorCard extends WebComponent {
       this._editor = new CodeEditor()
       const { content, contentType } = await this._getViewContent()
       try {
-        await this._editor.initialize(sourcePaneEditor, content, contentType, 'dark', dirty => {
-          this.updateDirtyState(dirty)
-        })
+        await this._editor.initialize(
+          sourcePaneEditor,
+          content,
+          contentType,
+          'dark',
+          dirty => { this.updateDirtyState(dirty) },
+          {
+            label: this._editorLabel(),
+            description: 'Source content. This content is read-only until Edit is selected.'
+          }
+        )
       } catch (err) {
         throw new Error(`Error initializing code editor: ${err instanceof Error ? err.message : String(err)}`)
       }
       this._editorReady = true
-      this._editor?.setReadOnly(true)
+      this._loadedResourceUri = sourceContext.resourceUri
+      this.setReadOnly(true)
+      if (this._editingRequested) this.beginEditing()
     } catch (err) {
-      const { showError } = getStatusSection()
+      this._editorReady = false
+      this._editorError = true
+      this._editor?.destroy()
+      this._editor = undefined
+      const { showError } = getStatusSection(this._statusRoot())
       showError(`Error loading code editor: ${err instanceof Error ? err.message : String(err)}`)
     } finally {
       this._initializing = false
@@ -144,6 +216,24 @@ export default class SourceEditorCard extends WebComponent {
 
   async firstUpdated () {
     await this._initializeEditor()
+  }
+
+  protected async updated (changedProperties: Map<string, unknown>) {
+    if (changedProperties.has('sourceContext') && !this.sourceContext?.dataLoaded) {
+      this._loadedResourceUri = undefined
+      return
+    }
+
+    if ((!changedProperties.has('sourceContext') && !changedProperties.has('fileExplorerContext')) ||
+      !this.sourceContext?.dataLoaded) return
+
+    if (!this._editor) {
+      this._editorError = false
+      await this._initializeEditor()
+    } else if (this._loadedResourceUri !== this.sourceContext.resourceUri) {
+      this._loadedResourceUri = this.sourceContext.resourceUri
+      await this.queueEditorSynchronization()
+    }
   }
 
   disconnectedCallback() {
@@ -155,13 +245,16 @@ export default class SourceEditorCard extends WebComponent {
     this._editorReady = false
     this._dirtyState = false
     this._initializing = false
+    this._loadedResourceUri = undefined
   }
 
   private async cancelHandler () {
     const sourceContext = this.sourceContext
     if (!sourceContext) return
-    await this._syncEditorToCurrentView()
+    await this.queueEditorSynchronization()
     this._resetEditorState()
+    getStatusSection(this._statusRoot()).showStatus('Source changes canceled.')
+    this._focusEditorAfterUpdate()
   }
 
   private async saveBack () {
@@ -178,30 +271,55 @@ export default class SourceEditorCard extends WebComponent {
     const contentType = this._originalContentType ?? sourceContext.editorMetadata.contentType ?? 'text/turtle'
     const eTag = sourceContext.editorMetadata.eTag
     const saveSubject = subject
-    if (!checkSyntax(store, saveSubject as any, data, contentType, saveSubject as any)) {
-      const { showError } = getStatusSection()
-      showError('Syntax error: fix the document before saving.')
+    if (!checkSyntax(store, saveSubject as any, data, contentType, saveSubject as any, this._statusRoot())) {
       return
     }
     const options: { data: string; contentType: string | undefined; headers?: { 'if-match': string } } = { data, contentType }
     if (eTag) options.headers = { 'if-match': eTag } // avoid overwriting changed files -> status 412
+
+    let response: Response
     try {
-      const response = await fetcher.webOperation('PUT', saveSubject.uri, options)
-      if (!happy(response, 'PUT')) return
-      this._originalContent = data
-      /// @@ show edited: make save button disabled until edited again.
-      try {
-        const response = await fetcher.webOperation('HEAD', saveSubject.uri) // , defaultFetchHeaders())
-        if (!happy(response, 'HEAD')) return
-        const metadata = getResponseMetadata(store, saveSubject as any, response)
-        sourceContext.updateMetadata(metadata)
-        this._resetEditorState()
-      } catch (err) {
-        throw err
-      }
+      response = await fetcher.webOperation('PUT', saveSubject.uri, options)
+      if (!happy(response, 'PUT', this._statusRoot())) return
     } catch (err: any) {
-      const { showError } = getStatusSection()
+      const { showError } = getStatusSection(this._statusRoot())
       showError('Error saving back: ' + err)
+      return
+    }
+
+    if (sourceContext.resourceUri === saveSubject.uri) {
+      this._originalContent = data
+      sourceContext.updateContent(data)
+    }
+
+    let refreshError: unknown
+    try {
+      if (typeof fetcher.load === 'function') {
+        await fetcher.load(saveSubject, { force: true, clearPreviousData: true })
+      }
+      const metadataResponse = await fetcher.webOperation('HEAD', saveSubject.uri) // , defaultFetchHeaders())
+      if (!metadataResponse.ok) {
+        throw new Error(`HTTP error on HEAD! Status: ${metadataResponse.status}`)
+      }
+      const metadata = await solidLogicSingleton.resource.fetchMetadata(saveSubject)
+      if (sourceContext.resourceUri === saveSubject.uri) {
+        sourceContext.updateMetadata({
+          contentType: metadata.contentType,
+          eTag: metadata.eTag
+        })
+      }
+    } catch (err) {
+      refreshError = err
+    }
+
+    if (refreshError) {
+      const { showError } = getStatusSection(this._statusRoot())
+      showError('Saved, but failed to refresh metadata: ' + refreshError)
+    }
+
+    if (sourceContext.resourceUri === saveSubject.uri) {
+      this._resetEditorState()
+      this._focusEditorAfterUpdate()
     }
   }
 
@@ -210,7 +328,7 @@ export default class SourceEditorCard extends WebComponent {
 
     const { contentType } = sourceContext.editorMetadata
     const compactContentType = contentType?.split(';')[0]
-    const { showError } = getStatusSection()
+    const { showError } = getStatusSection(this._statusRoot())
     const store = this.fileExplorerContext?.store as any
     const subjectUri = this.fileExplorerContext?.subjectUri
     if (!store || !subjectUri) {
@@ -259,11 +377,25 @@ export default class SourceEditorCard extends WebComponent {
   }
   
   render() {
-    const sectionClass = this._editorReady ? 'sourcePaneCard' : 'sourcePaneCard sourcePaneCardLoading'
+    const ready = this._editorReady && this.sourceContext?.dataLoaded && !this._editorError
+    const sectionClass = ready
+      ? 'sourcePaneCard'
+      : 'sourcePaneCard sourcePaneCardLoading'
 
     return html`
-      <section class=${sectionClass}>
+      <section
+        class=${sectionClass}
+        role="region"
+        aria-busy=${ready || this._editorError ? 'false' : 'true'}
+        aria-label=${this._editorLabel()}
+      >
+        ${ready || this._editorError ? nothing : html`
+          <div class="sourcePaneCardLoadingMessage" role="status">
+            Loading source editor
+          </div>
+        `}
         <div class="sourcePaneEditor"></div>
+        ${getStatusSection().renderStatusSection()}
         ${this.renderFooter()}
       </section>
     `

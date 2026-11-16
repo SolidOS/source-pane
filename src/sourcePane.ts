@@ -8,7 +8,7 @@ import { icons } from 'solid-ui'
 import { DataBrowserContext, NewPaneOptions } from 'pane-registry'
 import * as mime from 'mime-types'
 import { html, render as litRender } from 'lit'
-import { log } from './debug'
+import { error as logError, log } from './debug'
 import { getStatusSection } from './StatusSection'
 import './sourcePane.css'
 import 'solid-ui/components/dialogs-root'
@@ -20,6 +20,8 @@ const pane = {
   name: 'source',
 
   label: function (subject: NamedNode, context: DataBrowserContext) {
+    // Servers can omit MIME types or incorrectly advertise files as LDP containers.
+    if (/\.[cm]?js$/i.test(new URL(subject.uri).pathname)) return 'Javascript Source'
     const store = context.session.store
     const typeURIs = store.findTypeURIs(subject)
     const prefix = Util.mediaTypeClass('text/*').uri.split('*')[0]
@@ -32,10 +34,24 @@ const pane = {
     return null
   },
 
+  shouldGetFocus: function (subject: NamedNode) {
+    return /\.[cm]?js$/i.test(new URL(subject.uri).pathname)
+  },
+
   // Create a new text file in a Solid system,
   mintNew: function (context: DataBrowserContext, newPaneOptions: NewPaneOptions) {
     const store = context.session.store
     let newInstance = newPaneOptions.newInstance
+    // The folder pane supplies a candidate URI for every pane and appends a
+    // slash while constructing it. A source resource must not retain that
+    // container marker: it changes the MIME lookup and makes the server treat
+    // the PUT as an LDP container creation.
+    if (newInstance?.uri.endsWith('/')) {
+      const uri = newInstance.uri.slice(0, -1)
+      newInstance = store.sym(uri)
+      newPaneOptions.newInstance = newInstance
+      newPaneOptions.newBase = uri
+    }
     if (!newInstance) {
       let uri = newPaneOptions.newBase
       if (uri.endsWith('/')) {
@@ -88,16 +104,48 @@ const pane = {
     const { renderStatusSection } = getStatusSection()
     const sourcePane = context.dom.createElement('div')
     sourcePane.setAttribute('class', 'sourcePane')
+    sourcePane.setAttribute('role', 'region')
+    sourcePane.setAttribute('aria-label', `Source pane for ${subject.uri}`)
+    sourcePane.setAttribute('aria-busy', 'true')
     const hasDialogsRoot = Boolean(context.dom.querySelector('solid-ui-dialogs-root'))
+
     litRender(html`
         <source-pane-source-provider
           .context=${context}
           .subject=${subject}
-        >
-        </source-pane-source-provider>
+        ></source-pane-source-provider>
         ${renderStatusSection()}
         ${hasDialogsRoot ? '' : html`<solid-ui-dialogs-root></solid-ui-dialogs-root>`}
-    `, sourcePane)
+      `, sourcePane)
+
+    const status = getStatusSection(sourcePane)
+    let loadingEditor = false
+    const loadEditor = async () => {
+      if (loadingEditor || sourcePane.querySelector('source-pane-source-editor-card')) return
+      loadingEditor = true
+      status.clearError()
+      try {
+        await import('./components/source-editor-card/SourceEditorCard')
+        const sourceProvider = sourcePane.querySelector('source-pane-source-provider')
+        sourceProvider?.append(context.dom.createElement('source-pane-source-editor-card'))
+        sourcePane.setAttribute('aria-busy', 'false')
+      } catch (error) {
+        logError('Failed to load source editor', { resourceUri: subject.uri, error })
+        sourcePane.setAttribute('aria-busy', 'false')
+        if (!sourcePane.isConnected) return
+        status.showError(
+          'The editor could not be started. Your file has not been changed. Try again; if it still fails, refresh the page. Save any unsaved work elsewhere before refreshing.',
+          {
+            title: 'Could not start the source editor',
+            details: error instanceof Error ? error.stack ?? error.message : String(error),
+            onRetry: () => { void loadEditor() }
+          }
+        )
+      } finally {
+        loadingEditor = false
+      }
+    }
+    void loadEditor()
 
     return sourcePane
   }
