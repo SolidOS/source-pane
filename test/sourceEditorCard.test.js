@@ -2,6 +2,7 @@ import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
 import { ContextProvider } from '@lit/context'
 import { DEFAULT_FILE_EXPLORER_CONTEXT, fileExplorerContext } from 'solid-ui'
 import { solidLogicSingleton } from 'solid-logic'
+import { graph, sym } from 'rdflib'
 import { sourceContext } from '../src/primitives/context'
 
 const { initializeEditor } = vi.hoisted(() => ({ initializeEditor: vi.fn(async () => {}) }))
@@ -51,8 +52,10 @@ describe('source-pane-source-editor-card', () => {
       updateMetadata: vi.fn()
     }
 
+    const store = graph()
+    store.sym = sym
     card.fileExplorerContext = {
-      store: { fetcher: {} },
+      store,
       subjectUri: 'https://testingsolidos.solidcommunity.net/profile/card',
       pane: undefined,
       isDirty: false,
@@ -134,6 +137,22 @@ describe('source-pane-source-editor-card', () => {
     expect(card.shadowRoot.querySelector('.sourcePaneStatus solid-ui-error-state')).not.toBeNull()
   })
 
+  it('queues editing and safely handles editor actions before initialization', async () => {
+    const card = createCard()
+
+    card.focusEditor()
+    card.setReadOnly(true)
+    card.setValue('draft')
+    card.beginEditing()
+    card.updateDirtyState(false)
+    card.updateEditingState(true)
+    card.updateEditingState(true)
+
+    expect(card._editingRequested).toBe(true)
+    expect(card._isEditing).toBe(true)
+    expect(card.fileExplorerContext.setDirty).not.toHaveBeenCalled()
+  })
+
   it('keeps the loading status available without exposing stale editor controls', async () => {
     const card = createCard()
     card._editorReady = false
@@ -167,6 +186,36 @@ describe('source-pane-source-editor-card', () => {
 
     await card.updateComplete
     expect(card.shadowRoot.querySelector('.sourcePanePrettyButton')).toBeNull()
+  })
+
+  it('prettifies valid compactable content and reports invalid content', async () => {
+    const card = createCard({ contentType: 'text/turtle' })
+    const editor = {
+      getValue: vi.fn()
+        .mockReturnValueOnce('<https://example.test/one> <https://example.test/name> "One".')
+        .mockReturnValueOnce('not valid turtle'),
+      replaceContent: vi.fn(),
+      setReadOnly: vi.fn(),
+      resetDirtyState: vi.fn(),
+      setLanguage: vi.fn(async () => {}),
+      destroy: vi.fn()
+    }
+    card._editor = editor
+    card._editorReady = true
+    document.body.appendChild(card)
+    await card.updateComplete
+    await card._syncQueue
+    editor.replaceContent.mockClear()
+
+    await card.prettyHandler()
+    expect(editor.replaceContent).toHaveBeenCalledOnce()
+    const [prettifiedContent] = editor.replaceContent.mock.calls[0]
+    expect(prettifiedContent).toContain('exa:one')
+    expect(prettifiedContent).not.toBe('hello world')
+    expect(card.shadowRoot.querySelector('solid-ui-error-state')).toBeNull()
+
+    await card.prettyHandler()
+    expect(card.shadowRoot.querySelector('solid-ui-error-state')).not.toBeNull()
   })
 
   it('delegates editor API methods and toggles editing controls', async () => {
@@ -286,6 +335,7 @@ describe('source-pane-source-editor-card', () => {
   it('refreshes retained editor content after a same-resource reload', async () => {
     const card = createCard()
     const editor = {
+      focusEditor: vi.fn(),
       setReadOnly: vi.fn(),
       replaceContent: vi.fn(),
       resetDirtyState: vi.fn(),
@@ -476,5 +526,53 @@ describe('source-pane-source-editor-card', () => {
       expect(status.dataset.visible).toBe('false')
     }
     fetchMetadata.mockRestore()
+  })
+
+  it('saves without an ETag and reports a metadata HEAD failure', async () => {
+    const fetchMetadata = vi.spyOn(solidLogicSingleton.resource, 'fetchMetadata')
+      .mockResolvedValue({ contentType: 'text/plain', eTag: undefined })
+    const webOperation = vi.fn()
+      .mockResolvedValueOnce({ ok: true, status: 200 })
+      .mockResolvedValueOnce({ ok: false, status: 500 })
+    const card = createCard({ contentType: 'text/plain' })
+    card.sourceContext = {
+      ...card.sourceContext,
+      editorMetadata: { contentType: 'text/plain', eTag: undefined }
+    }
+    const editor = {
+      focusEditor: vi.fn(),
+      setReadOnly: vi.fn(),
+      replaceContent: vi.fn(),
+      resetDirtyState: vi.fn(),
+      setLanguage: vi.fn(async () => {}),
+      getValue: vi.fn(() => 'updated'),
+      destroy: vi.fn()
+    }
+    card._editor = editor
+    card._editorReady = true
+    card.fileExplorerContext = {
+      ...card.fileExplorerContext,
+      store: { fetcher: { webOperation, load: vi.fn(async () => {}) } }
+    }
+    document.body.appendChild(card)
+    await card.updateComplete
+    card.beginEditing()
+    await card.saveBack()
+
+    expect(webOperation).toHaveBeenNthCalledWith(1, 'PUT', card.fileExplorerContext.subjectUri, {
+      data: 'updated',
+      contentType: 'text/plain'
+    })
+    expect(fetchMetadata).not.toHaveBeenCalled()
+    expect(card.shadowRoot.querySelector('solid-ui-error-state')?.getAttribute('message'))
+      .toContain('Saved, but failed to refresh metadata')
+    fetchMetadata.mockRestore()
+  })
+
+  it('throws when saving without the required file explorer context', async () => {
+    const card = createCard()
+    card.fileExplorerContext = { store: undefined, subjectUri: undefined }
+
+    await expect(card.saveBack()).rejects.toThrow('fileExplorerContext.store')
   })
 })

@@ -13,7 +13,13 @@ export default defineConfig({
     environment: 'jsdom',
     setupFiles: ['test/helpers/setup.ts'],
     coverage: {
-      include: ['src/**/*.[jt]s']
+      include: ['src/**/*.[jt]s'],
+      thresholds: {
+        statements: 85,
+        branches: 85,
+        functions: 85,
+        lines: 85
+      }
     }
   }
 })
