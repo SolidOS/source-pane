@@ -395,7 +395,7 @@ export default class SourceEditorCard extends WebComponent {
           </div>
         `}
         <div class="sourcePaneEditor"></div>
-        ${getStatusSection().renderStatusSection()}
+        ${getStatusSection(this.shadowRoot ?? this.closest('.sourcePane') ?? this).renderStatusSection()}
         ${this.renderFooter()}
       </section>
     `

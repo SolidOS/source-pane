@@ -1,6 +1,33 @@
 import { graph, sym } from 'rdflib'
 import { vi } from 'vitest'
 
+Object.defineProperty(HTMLCanvasElement.prototype, 'getContext', {
+  configurable: true,
+  value: function (type: string) {
+    if (type !== '2d') return null
+    const canvas = this
+    return {
+      canvas,
+      font: '',
+      textAlign: 'left',
+      textBaseline: 'top',
+      measureText: () => ({ width: 30 }),
+      fillText: () => {},
+      clearRect: () => {},
+      getImageData: () => ({
+        data: new Uint8ClampedArray(Math.max(1, canvas.width * canvas.height * 4))
+      })
+    }
+  }
+})
+
+const nativeGetComputedStyle = window.getComputedStyle.bind(window)
+Object.defineProperty(window, 'getComputedStyle', {
+  configurable: true,
+  value: (element: Element, pseudoElement?: string | null) =>
+    nativeGetComputedStyle(element)
+})
+
 const webOperationMocks: Array<{ pattern: string | RegExp; handler: any }> = []
 
 function toHeaders (headers: any) {

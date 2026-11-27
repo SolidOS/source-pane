@@ -65,4 +65,15 @@ describe('Source Pane status section', () => {
     expect(first.querySelector('.sourcePaneStatusMessage')?.textContent).toBe('First source saved.')
     expect(second.querySelector('.sourcePaneStatusMessage')).toBeNull()
   })
+
+  it('does nothing when a status root has no status element', () => {
+    const root = document.createElement('div')
+    const status = getStatusSection(root)
+
+    expect(() => {
+      status.showError('error')
+      status.showStatus('status')
+      status.clearError()
+    }).not.toThrow()
+  })
 })
